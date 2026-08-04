@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import HeroSectionContainer from "@/components/student/HeroSectionContainer";
 import LearningGridContainer from "@/components/student/LearningGridContainer";
@@ -23,7 +23,7 @@ export default function StudentDashboardPage() {
 
   const actionCards = activeLessonData.actionCards || {};
   const architectureUrl = actionCards.architecture || activeLessonData.vercelLink || "#";
-  const videoUrl = actionCards.video || "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+  const videoUrl = actionCards.video || "";
   const edunotesUrl = actionCards.edunotes || "/student/lesson/edunotes";
   const practiceUrl = actionCards.practice || "/student/quiz/practice-1";
 
@@ -62,9 +62,9 @@ export default function StudentDashboardPage() {
     // Dot 2 — Story & Interactive Simulation
     {
       tag: "Story & Interactive Simulation",
-      title: `Story & Simulation: ${activeLessonData.title}`,
-      subtitle: `Why this matters: ${activeLessonData.title} connects to real-life situations! ✦ Understand the concept visually ✦ Learn through real-life examples ✦ Improve logical thinking ✦ Interactive exploration ✦ Better concept retention`,
-      ctaText: isArchCompleted ? "Launch Simulation ✓ (Completed)" : `Launch Story & Simulation (+${xpAwardForArch} XP, +${gemsAwardForArch} Gems)`,
+      title: `Story & Simulation`,
+      subtitle: `✦ Understand the concept visually ✦ Learn through real-life examples ✦ Improve logical thinking ✦ Interactive exploration ✦ Better concept retention`,
+      ctaText: isArchCompleted ? "Launch Simulation ✓ (Completed)" : `Launch Story & Simulation`,
       ctaUrl: architectureUrl,
       visualizerKey: "symmetry",
       visualizerData: activeLessonData.heroSlide?.visualizerData || { number: 246 },
@@ -76,7 +76,7 @@ export default function StudentDashboardPage() {
     {
       tag: "Practice Challenge",
       title: `Practice: ${activeLessonData.title}`,
-      subtitle: `Put your knowledge to the test! ✦ Interactive questions ✦ Instant feedback ✦ XP rewards ✦ Accuracy improvement ✦ Confidence building`,
+      subtitle: `Put your knowledge to the test! ✦ Interactive questions ✦ Instant feedback ✦ Accuracy improvement ✦ Confidence building`,
       ctaText: isPracticeCompleted ? "Practice Again ✓ (Completed)" : "Start Practice (+30 XP) 🏆",
       ctaUrl: practiceUrl,
       visualizerKey: "fraction",
@@ -191,8 +191,8 @@ export default function StudentDashboardPage() {
         activeLessonId={activeLessonData.id}
         onCtaClick={handleHeroCtaClick}
       />
-      <LearningGridContainer 
-        cards={mappedCards as any} 
+      <LearningGridContainer
+        cards={mappedCards as any}
         onCardClick={handleCardClick}
       />
       <BottomNavigationContainer
