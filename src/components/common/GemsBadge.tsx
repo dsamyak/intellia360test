@@ -5,7 +5,7 @@ interface GemsBadgeProps {
   learningGems?: number;
 }
 
-export default function GemsBadge({ learningGems = 25 }: GemsBadgeProps) {
+export default function GemsBadge({ learningGems = 0 }: GemsBadgeProps) {
   const handleClick = () => {
     alert(`You have earned ${learningGems} Learning Gems!`);
   };

@@ -5,7 +5,7 @@ interface StreakBadgeProps {
   streakDays?: number;
 }
 
-export default function StreakBadge({ streakDays = 12 }: StreakBadgeProps) {
+export default function StreakBadge({ streakDays = 1 }: StreakBadgeProps) {
   const handleClick = () => {
     alert(`You are on a ${streakDays} day streak! Keep it up!`);
   };

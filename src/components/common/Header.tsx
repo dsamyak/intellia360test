@@ -14,7 +14,7 @@ import { useStudentContext } from "@/context/StudentContext";
 
 export default function Header() {
   const profile = studentProfileData;
-  const { xpPoints, learningGems, currentGrade, setCurrentGrade } = useStudentContext();
+  const { xpPoints, learningGems, streakDays, currentGrade, setCurrentGrade } = useStudentContext();
 
   return (
     <header className="header-container">
@@ -34,9 +34,9 @@ export default function Header() {
       </div>
 
       <div className="header-right">
-        <StreakBadge streakDays={profile.streakDays} />
-        <XPBadge xpPoints={xpPoints > 0 ? xpPoints : profile.xpPoints} />
-        <GemsBadge learningGems={learningGems > 0 ? learningGems : profile.learningGems} />
+        <StreakBadge streakDays={streakDays} />
+        <XPBadge xpPoints={xpPoints} />
+        <GemsBadge learningGems={learningGems} />
         <NotificationButton />
         <ProfileMenu avatarUrl={profile.avatar} studentName={profile.name} />
       </div>

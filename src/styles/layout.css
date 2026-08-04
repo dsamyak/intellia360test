@@ -576,9 +576,9 @@
 }
 
 .hero-title {
-  font-size: 2.5rem;
+  font-size: 2.15rem;
   font-weight: 800;
-  color: var(--color-text-main);
+  color: #000000;
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
@@ -1163,5 +1163,16 @@
 
   .quest-path-milestones {
     order: 1;
+  }
+}
+
+@keyframes slideUpPopup {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

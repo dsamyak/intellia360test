@@ -1,62 +1,129 @@
 "use client";
-import React from "react";
+import { useState, useEffect } from "react";
 import type { DashboardHeroSlide } from "@/types/student";
 
 interface HeroSectionContainerProps {
-  slide: DashboardHeroSlide;
-  totalSlides: number;
+  slide?: DashboardHeroSlide;
+  slides?: DashboardHeroSlide[];
+  totalSlides?: number;
   activeSlideIndex?: number;
+  activeLessonId?: string;
+  onCtaClick?: (slide: DashboardHeroSlide, slideIndex: number) => void;
 }
 
 export default function HeroSectionContainer({
   slide,
-  totalSlides,
-  activeSlideIndex = 0,
+  slides: inputSlides,
+  totalSlides = 4,
+  activeSlideIndex: initialSlideIndex = 0,
+  activeLessonId = "",
+  onCtaClick,
 }: HeroSectionContainerProps) {
-  const hundreds = slide.visualizerData?.hundreds ?? 1;
-  const tens = slide.visualizerData?.tens ?? 3;
-  const ones = slide.visualizerData?.ones ?? 5;
-  const number = slide.visualizerData?.number ?? (hundreds * 100 + tens * 10 + ones);
+  // Construct array of slides
+  const slides: DashboardHeroSlide[] = inputSlides && inputSlides.length > 0 
+    ? inputSlides 
+    : slide 
+      ? [slide] 
+      : [];
+
+  const [activeIndex, setActiveIndex] = useState(initialSlideIndex);
+
+  // Reset slide index when active lesson changes
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [activeLessonId]);
+
+  // Auto-slide every 5 seconds
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [slides.length, activeLessonId]);
+
+  const currentSlide = slides[activeIndex] || slides[0] || slide;
+  const slideCount = slides.length || totalSlides;
+
+  if (!currentSlide) return null;
+
+  const hundreds = currentSlide.visualizerData?.hundreds ?? 1;
+  const tens = currentSlide.visualizerData?.tens ?? 3;
+  const ones = currentSlide.visualizerData?.ones ?? 5;
+  const number = currentSlide.visualizerData?.number ?? (hundreds * 100 + tens * 10 + ones);
+
+  const handleCtaClick = (e: React.MouseEvent) => {
+    if (onCtaClick) {
+      onCtaClick(currentSlide, activeIndex);
+    }
+  };
 
   return (
     <section className="hero-section-container">
-      <div className="hero-banner-content">
+      <div 
+        key={`hero-banner-${activeIndex}-${activeLessonId}`} 
+        className="hero-banner-content"
+        style={{
+          transition: "all 0.4s ease-in-out",
+        }}
+      >
         <div className="hero-tag-ribbon">
-          <span className="star-icon">⭐</span> {slide.tag}
+          <span className="star-icon">⭐</span> {currentSlide.tag}
         </div>
 
-        <h1 className="hero-title">{slide.title}</h1>
-        <p className="hero-subtitle">{slide.subtitle}</p>
+        <h1 className="hero-title">{currentSlide.title}</h1>
+        <p className="hero-subtitle">{currentSlide.subtitle}</p>
 
         <div className="hero-mascot-cta">
           <div className="hero-mascot-placeholder" title="Kid Mascot">
             👦⭐
           </div>
-          {slide.ctaUrl ? (
-            <a href={slide.ctaUrl} target="_blank" rel="noopener noreferrer" className="btn-primary-hero" style={{textDecoration: "none", display: "inline-block"}}>
-              {slide.ctaText}
+          {currentSlide.ctaUrl ? (
+            <a 
+              href={currentSlide.ctaUrl} 
+              target={currentSlide.ctaUrl.startsWith("http") ? "_blank" : "_self"} 
+              rel="noopener noreferrer" 
+              className="btn-primary-hero" 
+              style={{textDecoration: "none", display: "inline-block"}}
+              onClick={handleCtaClick}
+            >
+              {currentSlide.ctaText}
             </a>
           ) : (
-            <button className="btn-primary-hero">
-              {slide.ctaText}
+            <button className="btn-primary-hero" onClick={handleCtaClick}>
+              {currentSlide.ctaText}
             </button>
           )}
         </div>
 
         <div className="carousel-dots-group">
-          {Array.from({ length: totalSlides }).map((_, idx) => (
+          {Array.from({ length: slideCount }).map((_, idx) => (
             <span
               key={idx}
-              className={`carousel-dot ${idx === activeSlideIndex ? "active" : ""}`}
+              role="button"
+              tabIndex={0}
+              aria-label={`Slide ${idx + 1}`}
+              className={`carousel-dot ${idx === activeIndex ? "active" : ""}`}
+              onClick={() => setActiveIndex(idx)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setActiveIndex(idx);
+                }
+              }}
+              style={{ cursor: "pointer" }}
             />
           ))}
         </div>
       </div>
 
       <div className="hero-visualizer-slot">
-        <div className="math-visualizer-card">
-          {/* Dynamic Educational Visualizer Scene based on lesson topic */}
-          {renderVisualizerScene(slide)}
+        <div 
+          key={`hero-vis-${activeIndex}-${activeLessonId}`} 
+          className="math-visualizer-card"
+          style={{ transition: "all 0.4s ease-in-out" }}
+        >
+          {/* Dynamic Educational Visualizer Scene based on slide & lesson topic */}
+          {renderVisualizerScene(currentSlide)}
         </div>
       </div>
     </section>

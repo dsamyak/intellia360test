@@ -5,7 +5,7 @@ interface XPBadgeProps {
   xpPoints?: number;
 }
 
-export default function XPBadge({ xpPoints = 980 }: XPBadgeProps) {
+export default function XPBadge({ xpPoints = 0 }: XPBadgeProps) {
   const handleClick = () => {
     alert(`You have ${xpPoints} XP Points! Keep completing lessons to earn more.`);
   };
