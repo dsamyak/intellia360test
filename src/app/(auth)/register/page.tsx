@@ -7,10 +7,11 @@ import type { UserRole } from "@/types/auth";
 
 // ── Role Options ──────────────────────────────────────────────────────────────
 const ROLES: { value: UserRole; label: string; icon: string; sub: string }[] = [
-  { value: "STUDENT", label: "Student",  icon: "🎓", sub: "Learn & Grow"      },
+  { value: "STUDENT", label: "Student",  icon: "🎓",  sub: "Learn & Grow"      },
   { value: "TEACHER", label: "Teacher",  icon: "👩‍🏫", sub: "Teach & Inspire"   },
+  { value: "EDITOR",  label: "Editor",   icon: "✏️",  sub: "Create & Publish"  },
   { value: "USER",    label: "Parent",   icon: "👨‍👧", sub: "Support & Track"   },
-  { value: "ADMIN",   label: "Admin",    icon: "🛡️", sub: "Manage & Monitor"  },
+  { value: "ADMIN",   label: "Admin",    icon: "🛡️",  sub: "Manage & Monitor"  },
 ];
 
 // ── Icons ────────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 const ROLES: { value: UserRole; label: string; icon: string }[] = [
   { value: "STUDENT", label: "Student", icon: "🎓" },
   { value: "TEACHER", label: "Teacher", icon: "👩‍🏫" },
+  { value: "EDITOR",  label: "Editor",  icon: "✏️" },
   { value: "USER",    label: "Parent",  icon: "👨‍👧" },
   { value: "ADMIN",   label: "Admin",   icon: "🛡️" },
 ];
