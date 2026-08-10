@@ -1,0 +1,32 @@
+[
+  {
+    "id": "prompt_1",
+    "label": "Explain Again",
+    "icon": "💡",
+    "promptText": "Can you explain today's lesson again in simpler terms?"
+  },
+  {
+    "id": "prompt_2",
+    "label": "Give Me Another Example",
+    "icon": "📗",
+    "promptText": "Show me another step-by-step math example."
+  },
+  {
+    "id": "prompt_3",
+    "label": "Quiz Me",
+    "icon": "❓",
+    "promptText": "Give me a quick practice question on this topic."
+  },
+  {
+    "id": "prompt_4",
+    "label": "Homework Help",
+    "icon": "✏️",
+    "promptText": "I need help understanding a homework question."
+  },
+  {
+    "id": "prompt_5",
+    "label": "Explain with Animation",
+    "icon": "🎬",
+    "promptText": "Can you visualize this concept for me?"
+  }
+]
