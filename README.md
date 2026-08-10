@@ -1,221 +1,107 @@
-# 🚀 Intellia360
+# Intellia360 API — Phase 1 (Auth)
 
-> AI-Powered Gamified Learning Management System
+Backend deliverable for Arnav's Week 1 scope: JWT auth, register/login, hardcoded
+role guards, basic API docs. Built with NestJS + TypeORM + PostgreSQL per the
+Intellia360 TRD, scoped down using the "easy alternative" column (no refresh
+tokens yet, roles hardcoded via an enum, Swagger included instead of a
+separate doc).
 
-## 📌 Project Overview
+No frontend exists yet — CORS is left open by default and the API is
+versionless/stateless behind a single `/api` prefix, so it can be pointed at
+from any frontend later without changes here.
 
-Intellia360 is a modern AI-powered Learning Management System (LMS) designed for K-10 students. The platform combines interactive learning, gamification, AI tutoring, and teacher management into a single scalable application.
+## Requirements
 
----
+- Node.js 18+
+- PostgreSQL (a `docker-compose.yml` is included if you don't have one running)
 
-# 🎯 Current Development Phase
+## Setup
 
-### Phase 1 – Frontend Development
-
-Current Scope:
-
-- Student Dashboard
-- Teacher Dashboard
-
-Authentication, Backend APIs, Database, and AI integrations will be implemented in later phases.
-
----
-
-# 📂 Project Documents
-
-```
-PRD/
-    Intellia360_PRD.docx
-
-TRD/
-    Intellia360_TRD.docx
-
-Reference/
-    student-dashboard.png
+```bash
+npm install
+cp .env.example .env      # then fill in JWT_SECRET at minimum
+docker compose up -d      # starts local Postgres (skip if you have your own)
+npm run start:dev
 ```
 
-These documents are the single source of truth.
+The API listens on `http://localhost:3000/api` by default.
+Interactive Swagger docs: `http://localhost:3000/api/docs`.
 
-All development must strictly follow:
+`synchronize: true` is enabled outside production, so tables are created
+automatically on first boot — no manual migration step needed for Week 1.
 
-- Product Requirements Document (PRD)
-- Technical Requirements Document (TRD)
-- Reference Dashboard Design
+## Endpoints
 
----
+| Method | Path                | Auth           | Description                              |
+|--------|---------------------|----------------|-------------------------------------------|
+| GET    | `/api/health`        | none           | Liveness check                            |
+| POST   | `/api/auth/register`| none           | Create an account (defaults to `student`) |
+| POST   | `/api/auth/login`   | none           | Log in, returns a JWT access token        |
+| GET    | `/api/auth/profile` | Bearer token   | Returns the current authenticated user    |
+| GET    | `/api/auth/admin-only` | Bearer token, role=`admin` | Example role-guarded route |
 
-# 🎨 UI Goal
+### Register
 
-The Student Dashboard must match the provided reference design as closely as possible.
+```
+POST /api/auth/register
+{
+  "email": "student@example.com",
+  "password": "StrongPass123",
+  "fullName": "Aditi Sharma",
+  "role": "student"          // optional — admin | student | parent | teacher | school | coach
+}
+```
 
-Requirements:
+### Login
 
-- Pixel-perfect UI
-- Same spacing
-- Same typography
-- Same border radius
-- Same shadows
-- Same colors
-- Same responsive behaviour
-- Production-quality code
+```
+POST /api/auth/login
+{
+  "email": "student@example.com",
+  "password": "StrongPass123"
+}
+```
 
-No redesigns unless explicitly approved.
+Both return:
 
----
+```json
+{
+  "accessToken": "<jwt>",
+  "user": { "id": "...", "email": "...", "role": "student", "fullName": "..." }
+}
+```
 
-# 🛠 Tech Stack
+Send the token back as `Authorization: Bearer <jwt>` on protected routes.
 
-Frontend
+## Roles
 
-- Next.js 15
-- React
-- TypeScript
-- Plain CSS
+Hardcoded in `src/common/enums/role.enum.ts` per the TRD's role list:
+`admin`, `student`, `parent`, `teacher`, `school`, `coach`. New routes can
+restrict access with:
 
-Backend (Later)
+```ts
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN, Role.TEACHER)
+```
 
-- NestJS
-- PostgreSQL
-- Prisma
-- Redis
+## What's deliberately out of scope this week
 
----
+- Refresh tokens (single 7-day access token for now — see the note in
+  `auth.service.ts` for how to extend this later)
+- Password reset flow
+- DB-driven permissions (roles are a fixed enum, not a table)
 
-# 📁 Frontend Structure
+## Project layout
 
 ```
 src/
-
-app/
-
-components/
-
-styles/
-
-assets/
-
-data/
+  auth/            # register, login, JWT strategy, guards, decorators
+  users/           # User entity, UsersService (hashing, lookups)
+  common/enums/     # shared Role enum
+  app.module.ts     # TypeORM + module wiring
+  main.ts           # bootstrap, global validation, CORS, Swagger
 ```
 
----
-
-# 🎯 Development Rules
-
-- Build frontend first
-- Use mock JSON data
-- No authentication
-- No backend integration
-- No API calls
-- No database
-- No hardcoded inline styles
-- Use reusable React components
-- Use page-based CSS
-
----
-
-# 🎨 CSS Rules
-
-Each major page has its own CSS file.
-
-Example:
-
-```
-student-dashboard.css
-teacher-dashboard.css
-header.css
-sidebar.css
-hero.css
-cards.css
-chatbot.css
-responsive.css
-```
-
----
-
-# 📦 Assets
-
-```
-assets/
-
-images/
-
-icons/
-
-avatars/
-
-illustrations/
-
-backgrounds/
-```
-
----
-
-# 📋 Development Order
-
-1. Project Architecture
-2. Folder Structure
-3. Student Dashboard
-4. Responsive Design
-5. Teacher Dashboard
-6. Authentication
-7. Backend Integration
-8. Database
-9. AI Integration
-10. Production Deployment
-
----
-
-# 🚫 Out of Scope (Current Phase)
-
-- Authentication
-- Login
-- Signup
-- Database
-- API Integration
-- AI Backend
-- Payments
-- Notifications
-
----
-
-# 📌 Git Workflow
-
-Create feature branches.
-
-Example:
-
-```
-feature/student-dashboard
-feature/teacher-dashboard
-feature/authentication
-```
-
-Commit frequently with meaningful commit messages.
-
-Example:
-
-```
-feat: create student dashboard layout
-
-style: add dashboard responsive css
-
-refactor: optimize sidebar component
-```
-
----
-
-# ✅ Definition of Done
-
-A task is complete only when:
-
-- UI matches the reference image
-- Responsive on Desktop, Tablet, Mobile
-- Clean reusable components
-- Organized CSS
-- No console errors
-- No TypeScript errors
-- Production-ready structure
-
----
-
-© Intellia360
+This mirrors the module layout in the TRD (`auth/`, `users/`, ...) so later
+modules (courses, gamification, payments, etc.) can be added as siblings
+without restructuring anything here.

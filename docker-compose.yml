@@ -1,0 +1,19 @@
+version: '3.8'
+
+# Local Postgres only — enough to run the Week 1 auth module.
+# Extend with redis/other services in later phases per the TRD.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: intellia360
+    ports:
+      - '5432:5432'
+    volumes:
+      - intellia360_pgdata:/var/lib/postgresql/data
+
+volumes:
+  intellia360_pgdata:
