@@ -1,13 +1,13 @@
-// Prisma schema for Intellia360
+// Prisma schema for Intellia360 — MongoDB
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ enum UserRole {
 // ─── User ─────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String    @id @default(cuid())
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   email        String    @unique
   username     String?   @unique
@@ -38,23 +38,17 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   resetTokens  PasswordResetToken[]
-
-  @@index([email])
-  @@index([username])
 }
 
 // ─── Password Reset Token ─────────────────────────────────────────────────────
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
-  userId    String
+  userId    String   @db.ObjectId
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([userId])
 }
