@@ -45,9 +45,7 @@ model User {
   missionProgress     MissionProgress[]
   quizAttempts        QuizAttempt[]
   submissions         AssignmentSubmission[]
-
-  // Auth — password reset tokens (Next.js auth layer)
-  resetTokens PasswordResetToken[]
+  resetTokens         PasswordResetToken[]
 
   @@index([role])
   @@map("users")
