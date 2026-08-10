@@ -25,15 +25,10 @@ export async function POST(request: NextRequest) {
     // ── Look up token ───────────────────────────────────────────────────────
     const resetToken = await db.passwordResetToken.findUnique({
       where: { token },
-      include: { user: { select: { id: true, isActive: true } } },
+      include: { user: { select: { id: true } } },
     });
 
-    if (
-      !resetToken ||
-      resetToken.used ||
-      resetToken.expiresAt < new Date() ||
-      !resetToken.user.isActive
-    ) {
+    if (!resetToken || resetToken.used || resetToken.expiresAt < new Date()) {
       return NextResponse.json<AuthResponse>(
         {
           success: false,
@@ -43,14 +38,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Hash the new password ───────────────────────────────────────────────
-    const passwordHash = await hashPassword(password);
-
     // ── Update password and mark token as used in a transaction ────────────
+    const hashed = await hashPassword(password);
     await db.$transaction([
       db.user.update({
         where: { id: resetToken.userId },
-        data: { passwordHash },
+        data: { password: hashed },
       }),
       db.passwordResetToken.update({
         where: { id: resetToken.id },

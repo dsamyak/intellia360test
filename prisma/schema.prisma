@@ -1,5 +1,5 @@
 // Prisma schema for Intellia360 — MongoDB
-// Docs: https://pris.ly/d/prisma-schema
+// Aligned with origin/main schema
 
 generator client {
   provider = "prisma-client-js"
@@ -12,43 +12,210 @@ datasource db {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-enum UserRole {
-  SUPER_ADMIN
+enum Role {
   ADMIN
-  MANAGER
-  TEACHER
-  EDITOR
   STUDENT
-  USER
+  PARENT
+  TEACHER
+  SCHOOL
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  DRAFT
+  COMPLETED
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
 model User {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  email        String    @unique
-  username     String?   @unique
-  dateOfBirth  String?
-  passwordHash String
-  role         UserRole  @default(STUDENT)
-  isVerified   Boolean   @default(false)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id        String   @id @default(uuid()) @map("_id")
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  resetTokens  PasswordResetToken[]
+  studentProfile      StudentProfile?
+  teacherProfile      TeacherProfile?
+  completedLessons    CompletedLesson[]
+  completedActivities CompletedActivity[]
+  unlockedBadges      UnlockedBadge[]
+  missionProgress     MissionProgress[]
+  quizAttempts        QuizAttempt[]
+  submissions         AssignmentSubmission[]
+
+  // Auth — password reset tokens (Next.js auth layer)
+  resetTokens PasswordResetToken[]
+
+  @@index([role])
+  @@map("users")
 }
 
-// ─── Password Reset Token ─────────────────────────────────────────────────────
+// ─── Profiles ─────────────────────────────────────────────────────────────────
+
+model StudentProfile {
+  id             String      @id @default(uuid()) @map("_id")
+  userId         String      @unique
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar         String?
+  grade          String      @default("grade1")
+  xpPoints       Int         @default(0)
+  learningGems   Int         @default(0)
+  streakDays     Int         @default(1)
+  lastActiveDate DateTime?
+  classId        String?
+  class          ClassGroup? @relation(fields: [classId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([classId])
+  @@map("student_profiles")
+}
+
+model TeacherProfile {
+  id         String       @id @default(uuid()) @map("_id")
+  userId     String       @unique
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar     String?
+  schoolName String?
+  classes    ClassGroup[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@map("teacher_profiles")
+}
+
+// ─── Classes ──────────────────────────────────────────────────────────────────
+
+model ClassGroup {
+  id          String           @id @default(uuid()) @map("_id")
+  className   String
+  grade       String
+  teacherId   String
+  teacher     TeacherProfile   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  students    StudentProfile[]
+  assignments Assignment[]
+  createdAt   DateTime         @default(now())
+
+  @@index([teacherId])
+  @@map("class_groups")
+}
+
+// ─── Student Progress ─────────────────────────────────────────────────────────
+
+model CompletedLesson {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String
+  grade       String
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@map("completed_lessons")
+}
+
+model CompletedActivity {
+  id           String   @id @default(uuid()) @map("_id")
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String
+  activityType String
+  xpAwarded    Int      @default(0)
+  gemsAwarded  Int      @default(0)
+  completedAt  DateTime @default(now())
+
+  @@unique([userId, lessonId, activityType])
+  @@index([userId])
+  @@map("completed_activities")
+}
+
+model UnlockedBadge {
+  id         String   @id @default(uuid()) @map("_id")
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId    String
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("unlocked_badges")
+}
+
+model MissionProgress {
+  id          String    @id @default(uuid()) @map("_id")
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId   String
+  progress    Int       @default(0)
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, missionId])
+  @@index([userId])
+  @@map("mission_progress")
+}
+
+model QuizAttempt {
+  id           String   @id @default(uuid()) @map("_id")
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String
+  quizId       String
+  scorePercent Int
+  submittedAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([lessonId])
+  @@map("quiz_attempts")
+}
+
+// ─── Assignments ──────────────────────────────────────────────────────────────
+
+model Assignment {
+  id           String                 @id @default(uuid()) @map("_id")
+  title        String
+  classId      String
+  class        ClassGroup             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  lessonId     String?
+  assignedDate DateTime               @default(now())
+  dueDate      DateTime
+  status       AssignmentStatus       @default(ACTIVE)
+  submissions  AssignmentSubmission[]
+
+  @@index([classId])
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid()) @map("_id")
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submittedAt  DateTime?
+  scorePercent Int?
+
+  @@unique([assignmentId, studentId])
+  @@map("assignment_submissions")
+}
+
+// ─── Password Reset Token (Next.js auth layer) ────────────────────────────────
 
 model PasswordResetToken {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid()) @map("_id")
   token     String   @unique
-  userId    String   @db.ObjectId
+  userId    String
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }

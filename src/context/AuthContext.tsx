@@ -17,6 +17,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ─── Role → dashboard mapping ─────────────────────────────────────────────────
+function getDashboardPath(role: UserRole): string {
+  if (role === "TEACHER" || role === "SCHOOL" || role === "ADMIN") {
+    return "/teacher/dashboard";
+  }
+  return "/student/dashboard";
+}
+
 // ─── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -51,16 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const json = await res.json();
     if (json.success && json.data) {
-      setUser(json.data as AuthUser);
-      // Redirect based on role
-      const role = (json.data as AuthUser).role;
-      if (role === "TEACHER" || role === "ADMIN" || role === "SUPER_ADMIN" || role === "MANAGER") {
-        router.push("/teacher/dashboard");
-      } else if (role === "EDITOR") {
-        router.push("/editor/dashboard");
-      } else {
-        router.push("/student/dashboard");
-      }
+      const authUser = json.data as AuthUser;
+      setUser(authUser);
+      router.push(getDashboardPath(authUser.role));
     }
     return { success: json.success, message: json.message };
   }, [router]);
@@ -73,15 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const json = await res.json();
     if (json.success && json.data) {
-      setUser(json.data as AuthUser);
-      const role = (json.data as AuthUser).role;
-      if (role === "TEACHER" || role === "ADMIN" || role === "SUPER_ADMIN" || role === "MANAGER") {
-        router.push("/teacher/dashboard");
-      } else if (role === "EDITOR") {
-        router.push("/editor/dashboard");
-      } else {
-        router.push("/student/dashboard");
-      }
+      const authUser = json.data as AuthUser;
+      setUser(authUser);
+      router.push(getDashboardPath(authUser.role));
     }
     return { success: json.success, message: json.message };
   }, [router]);

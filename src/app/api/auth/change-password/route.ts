@@ -7,7 +7,6 @@ import type { AuthResponse } from "@/types/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    // ── Require authenticated session ───────────────────────────────────────
     const payload = await getSession();
     if (!payload) {
       return NextResponse.json<AuthResponse>(
@@ -17,7 +16,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-
     const result = ChangePasswordSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json<AuthResponse>(
@@ -32,10 +30,9 @@ export async function POST(request: NextRequest) {
 
     const { currentPassword, newPassword } = result.data;
 
-    // ── Fetch user with passwordHash ────────────────────────────────────────
     const dbUser = await db.user.findUnique({
-      where: { id: payload.sub, isActive: true },
-      select: { id: true, passwordHash: true },
+      where: { id: payload.sub },
+      select: { id: true, password: true },
     });
 
     if (!dbUser) {
@@ -45,8 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Verify current password ─────────────────────────────────────────────
-    const valid = await verifyPassword(currentPassword, dbUser.passwordHash);
+    const valid = await verifyPassword(currentPassword, dbUser.password);
     if (!valid) {
       return NextResponse.json<AuthResponse>(
         {
@@ -58,11 +54,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Hash and persist new password ───────────────────────────────────────
-    const passwordHash = await hashPassword(newPassword);
+    const hashed = await hashPassword(newPassword);
     await db.user.update({
       where: { id: dbUser.id },
-      data: { passwordHash },
+      data: { password: hashed },
     });
 
     return NextResponse.json<AuthResponse>(

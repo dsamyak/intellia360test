@@ -5,7 +5,6 @@ import type { AuthResponse, AuthUser } from "@/types/auth";
 
 export async function GET() {
   try {
-    // ── Verify session cookie ───────────────────────────────────────────────
     const payload = await getSession();
     if (!payload) {
       return NextResponse.json<AuthResponse>(
@@ -14,16 +13,13 @@ export async function GET() {
       );
     }
 
-    // ── Fetch fresh user data from DB ───────────────────────────────────────
-    // This catches deactivated accounts or role changes that occurred after
-    // the JWT was issued.
     const dbUser = await db.user.findUnique({
-      where: { id: payload.sub, isActive: true },
+      where: { id: payload.sub },
     });
 
     if (!dbUser) {
       return NextResponse.json<AuthResponse>(
-        { success: false, message: "User not found or account deactivated" },
+        { success: false, message: "User not found" },
         { status: 401 }
       );
     }
@@ -32,11 +28,7 @@ export async function GET() {
       id: dbUser.id,
       name: dbUser.name,
       email: dbUser.email,
-      username: dbUser.username ?? undefined,
-      dateOfBirth: dbUser.dateOfBirth ?? undefined,
       role: dbUser.role,
-      isVerified: dbUser.isVerified,
-      isActive: dbUser.isActive,
       createdAt: dbUser.createdAt.toISOString(),
       updatedAt: dbUser.updatedAt.toISOString(),
     };

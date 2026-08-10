@@ -25,39 +25,30 @@ export async function POST(request: NextRequest) {
 
     const { emailOrUsername, password, rememberMe } = result.data;
 
-    // ── Look up user by email or username ───────────────────────────────────
-    const dbUser = await db.user.findFirst({
-      where: {
-        OR: [{ email: emailOrUsername }, { username: emailOrUsername }],
-        isActive: true,
-      },
+    // ── Look up user by email ───────────────────────────────────────────────
+    const dbUser = await db.user.findUnique({
+      where: { email: emailOrUsername },
     });
 
-    // Use a constant-time comparison path regardless of whether the user exists
-    // to prevent user enumeration via timing attacks.
-    const DUMMY_HASH =
-      "$2a$12$placeholder.hash.to.prevent.timing.attacks.xxxxxxxxxxxxxx";
+    // Timing-safe: always run bcrypt even when user not found
+    const DUMMY_HASH = "$2a$12$placeholder.hash.to.prevent.timing.attacks.xxxxxxxxxxxxxx";
     const passwordMatch = dbUser
-      ? await verifyPassword(password, dbUser.passwordHash)
+      ? await verifyPassword(password, dbUser.password)
       : await verifyPassword(password, DUMMY_HASH).then(() => false);
 
     if (!dbUser || !passwordMatch) {
       return NextResponse.json<AuthResponse>(
-        { success: false, message: "Invalid email/username or password" },
+        { success: false, message: "Invalid email or password" },
         { status: 401 }
       );
     }
 
-    // ── Build response user object (never expose passwordHash) ──────────────
+    // ── Build response user (never expose password hash) ────────────────────
     const user: AuthUser = {
       id: dbUser.id,
       name: dbUser.name,
       email: dbUser.email,
-      username: dbUser.username ?? undefined,
-      dateOfBirth: dbUser.dateOfBirth ?? undefined,
       role: dbUser.role,
-      isVerified: dbUser.isVerified,
-      isActive: dbUser.isActive,
       createdAt: dbUser.createdAt.toISOString(),
       updatedAt: dbUser.updatedAt.toISOString(),
     };
