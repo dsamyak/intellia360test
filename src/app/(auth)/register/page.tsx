@@ -7,11 +7,11 @@ import type { UserRole } from "@/types/auth";
 
 // ── Role Options ──────────────────────────────────────────────────────────────
 const ROLES: { value: UserRole; label: string; icon: string; sub: string }[] = [
-  { value: "STUDENT", label: "Student",  icon: "🎓",  sub: "Learn & Grow"      },
-  { value: "TEACHER", label: "Teacher",  icon: "👩‍🏫", sub: "Teach & Inspire"   },
-  { value: "EDITOR",  label: "Editor",   icon: "✏️",  sub: "Create & Publish"  },
-  { value: "USER",    label: "Parent",   icon: "👨‍👧", sub: "Support & Track"   },
-  { value: "ADMIN",   label: "Admin",    icon: "🛡️",  sub: "Manage & Monitor"  },
+  { value: "STUDENT", label: "Student", icon: "🎓",  sub: "Learn & Grow"      },
+  { value: "TEACHER", label: "Teacher", icon: "👩‍🏫", sub: "Teach & Inspire"   },
+  { value: "PARENT",  label: "Parent",  icon: "👨‍👧", sub: "Support & Track"   },
+  { value: "SCHOOL",  label: "School",  icon: "🏫",  sub: "Manage & Monitor"  },
+  { value: "ADMIN",   label: "Admin",   icon: "🛡️",  sub: "Full Access"       },
 ];
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -113,8 +113,6 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>("STUDENT");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -131,7 +129,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const result = await register({
-        name, email, username, dateOfBirth, password,
+        name, email, password,
         confirmPassword, role, agreeToTerms,
       });
       if (!result.success) setError(result.message);
@@ -206,26 +204,6 @@ export default function RegisterPage() {
                   <span className="auth-input-icon"><MailIcon /></span>
                   <input id="reg-email" type="email" className="auth-input" placeholder="Enter your email"
                     value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-                </div>
-              </div>
-            </div>
-
-            {/* Username + DOB */}
-            <div className="auth-form-row">
-              <div className="auth-field">
-                <label className="auth-field-label" htmlFor="reg-username">Username</label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><PersonIcon /></span>
-                  <input id="reg-username" type="text" className="auth-input" placeholder="Choose a username"
-                    value={username} onChange={(e) => setUsername(e.target.value)} required autoComplete="username" />
-                </div>
-              </div>
-              <div className="auth-field">
-                <label className="auth-field-label" htmlFor="reg-dob">Date of Birth</label>
-                <div className="auth-input-wrap">
-                  <span className="auth-input-icon"><CalendarIcon /></span>
-                  <input id="reg-dob" type="date" className="auth-input"
-                    value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
                 </div>
               </div>
             </div>

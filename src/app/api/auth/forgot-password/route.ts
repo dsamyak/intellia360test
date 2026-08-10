@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // ── Look up user ────────────────────────────────────────────────────────
     const user = await db.user.findUnique({
-      where: { email, isActive: true },
+      where: { email },
       select: { id: true, name: true, email: true },
     });
 

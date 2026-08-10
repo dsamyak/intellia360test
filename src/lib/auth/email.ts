@@ -1,16 +1,4 @@
-import nodemailer from "nodemailer";
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: false, // STARTTLS
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
+import { Resend } from "resend";
 
 /**
  * Send a password reset email containing the reset link.
@@ -20,14 +8,19 @@ export async function sendPasswordResetEmail(
   name: string,
   resetToken: string
 ): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not set");
+  }
+
+  // Instantiate lazily so missing key only throws at call-time, not module load
+  const resend = new Resend(apiKey);
   const baseUrl = process.env.FRONTEND_URL ?? "http://localhost:3000";
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
-  const from = process.env.SMTP_FROM ?? "noreply@intellia360.com";
+  const from = process.env.RESEND_FROM ?? "Intellia360 <noreply@intellia360.com>";
 
-  const transporter = createTransporter();
-
-  await transporter.sendMail({
-    from: `"Intellia360" <${from}>`,
+  const { error } = await resend.emails.send({
+    from,
     to,
     subject: "Reset your Intellia360 password",
     html: `
@@ -43,8 +36,12 @@ export async function sendPasswordResetEmail(
           This link expires in <strong>1 hour</strong>. If you didn't request a password reset, you can safely ignore this email.
         </p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
-        <p style="color:#94a3b8;font-size:12px;">© 2025 Intellia360 · All rights reserved.</p>
+        <p style="color:#94a3b8;font-size:12px;">© 2026 Intellia360 · All rights reserved.</p>
       </div>
     `,
   });
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
+  }
 }

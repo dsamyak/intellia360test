@@ -9,18 +9,16 @@ const SESSION_COOKIE = "intellia_session";
 
 // ── Route Categories ──────────────────────────────────────────────────────────
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
-
 const STUDENT_ROUTES = ["/student"];
 const TEACHER_ROUTES = ["/teacher"];
-const EDITOR_ROUTES = ["/editor"];
 const ADMIN_ROUTES = ["/admin"];
 
-type UserRole = "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "TEACHER" | "EDITOR" | "STUDENT" | "USER";
+type Role = "ADMIN" | "STUDENT" | "PARENT" | "TEACHER" | "SCHOOL";
 
 interface JWTPayload {
   sub: string;
   email: string;
-  role: UserRole;
+  role: Role;
   name: string;
 }
 
@@ -44,58 +42,38 @@ export async function proxy(request: NextRequest) {
   const payload = token ? await getPayload(token) : null;
   const isAuthenticated = payload !== null;
 
-  // ── Already authenticated → redirect away from auth pages ────────────────
+  // ── Authenticated users → redirect away from auth pages ──────────────────
   if (isAuthenticated && matchesAny(pathname, PUBLIC_ROUTES)) {
     const role = payload!.role;
     const dest =
-      role === "TEACHER" || role === "ADMIN" || role === "SUPER_ADMIN" || role === "MANAGER"
+      role === "TEACHER" || role === "SCHOOL" || role === "ADMIN"
         ? "/teacher/dashboard"
-        : role === "EDITOR"
-        ? "/editor/dashboard"
         : "/student/dashboard";
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
   // ── Protect student routes ────────────────────────────────────────────────
   if (matchesAny(pathname, STUDENT_ROUTES)) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+    if (!isAuthenticated) return NextResponse.redirect(new URL("/login", request.url));
     const role = payload!.role;
-    if (role !== "STUDENT" && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+    if (role !== "STUDENT" && role !== "PARENT" && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
   // ── Protect teacher routes ────────────────────────────────────────────────
   if (matchesAny(pathname, TEACHER_ROUTES)) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+    if (!isAuthenticated) return NextResponse.redirect(new URL("/login", request.url));
     const role = payload!.role;
-    if (role !== "TEACHER" && role !== "ADMIN" && role !== "SUPER_ADMIN" && role !== "MANAGER") {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-  }
-
-  // ── Protect editor routes ─────────────────────────────────────────────────
-  if (matchesAny(pathname, EDITOR_ROUTES)) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    const role = payload!.role;
-    if (role !== "EDITOR" && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+    if (role !== "TEACHER" && role !== "SCHOOL" && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
   // ── Protect admin routes ──────────────────────────────────────────────────
   if (matchesAny(pathname, ADMIN_ROUTES)) {
-    if (!isAuthenticated) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    const role = payload!.role;
-    if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+    if (!isAuthenticated) return NextResponse.redirect(new URL("/login", request.url));
+    if (payload!.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -105,14 +83,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except:
-     * - _next/static
-     * - _next/image
-     * - favicon.ico
-     * - public assets (images, svg, etc.)
-     * - api routes (they handle their own auth checks)
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$|api/).*)",
   ],
 };

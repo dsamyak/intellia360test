@@ -1,30 +1,24 @@
-// ─── User Roles ───────────────────────────────────────────────────────────────
+// ─── User Roles (aligned with Prisma Role enum) ───────────────────────────────
 export type UserRole =
-  | "SUPER_ADMIN"
   | "ADMIN"
-  | "MANAGER"
-  | "TEACHER"
-  | "EDITOR"
   | "STUDENT"
-  | "USER";
+  | "PARENT"
+  | "TEACHER"
+  | "SCHOOL";
 
 // ─── Core User Model ──────────────────────────────────────────────────────────
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  username?: string;
-  dateOfBirth?: string;
   role: UserRole;
-  isVerified: boolean;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 // ─── Session stored in JWT payload ────────────────────────────────────────────
 export interface JWTPayload {
-  sub: string;          // user id
+  sub: string;    // user id
   email: string;
   role: UserRole;
   name: string;
@@ -49,8 +43,6 @@ export interface LoginInput {
 export interface RegisterInput {
   name: string;
   email: string;
-  username: string;
-  dateOfBirth?: string;
   password: string;
   confirmPassword: string;
   role: UserRole;

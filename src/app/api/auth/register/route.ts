@@ -23,49 +23,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, username, dateOfBirth, password, role } = result.data;
+    const { name, email, password, role } = result.data;
 
-    // ── Check for duplicate email or username ───────────────────────────────
-    const existing = await db.user.findFirst({
-      where: { OR: [{ email }, ...(username ? [{ username }] : [])] },
-      select: { email: true, username: true },
-    });
-
+    // ── Check for duplicate email ───────────────────────────────────────────
+    const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
-      const field = existing.email === email ? "email" : "username";
       return NextResponse.json<AuthResponse>(
         {
           success: false,
-          message:
-            field === "email"
-              ? "An account with this email already exists"
-              : "That username is already taken",
-          errors: {
-            [field]: [
-              field === "email"
-                ? "An account with this email already exists"
-                : "That username is already taken",
-            ],
-          },
+          message: "An account with this email already exists",
+          errors: { email: ["An account with this email already exists"] },
         },
         { status: 409 }
       );
     }
 
-    // ── Hash password and persist ───────────────────────────────────────────
-    const passwordHash = await hashPassword(password);
+    // ── Hash password and create user + profile in a transaction ────────────
+    const hashedPassword = await hashPassword(password);
 
-    const dbUser = await db.user.create({
-      data: {
-        name,
-        email,
-        username,
-        dateOfBirth,
-        passwordHash,
-        role,
-        isVerified: false,
-        isActive: true,
-      },
+    const dbUser = await db.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { name, email, password: hashedPassword, role },
+      });
+
+      // Auto-create the appropriate profile
+      if (role === "TEACHER" || role === "SCHOOL") {
+        await tx.teacherProfile.create({ data: { userId: newUser.id } });
+      } else {
+        await tx.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            grade: "grade1",
+            xpPoints: 0,
+            learningGems: 0,
+            streakDays: 1,
+            lastActiveDate: new Date(),
+          },
+        });
+      }
+
+      return newUser;
     });
 
     // ── Issue JWT ───────────────────────────────────────────────────────────
@@ -73,11 +70,7 @@ export async function POST(request: NextRequest) {
       id: dbUser.id,
       name: dbUser.name,
       email: dbUser.email,
-      username: dbUser.username ?? undefined,
-      dateOfBirth: dbUser.dateOfBirth ?? undefined,
       role: dbUser.role,
-      isVerified: dbUser.isVerified,
-      isActive: dbUser.isActive,
       createdAt: dbUser.createdAt.toISOString(),
       updatedAt: dbUser.updatedAt.toISOString(),
     };

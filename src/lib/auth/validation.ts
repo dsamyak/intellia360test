@@ -8,9 +8,7 @@ const passwordSchema = z
   .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
 
 export const LoginSchema = z.object({
-  emailOrUsername: z
-    .string()
-    .min(1, "Email or username is required"),
+  emailOrUsername: z.string().min(1, "Email or username is required"),
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().optional().default(false),
 });
@@ -19,14 +17,9 @@ export const RegisterSchema = z
   .object({
     name: z.string().min(2, "Full name must be at least 2 characters"),
     email: z.string().email("Enter a valid email address"),
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
-    dateOfBirth: z.string().optional(),
     password: passwordSchema,
     confirmPassword: z.string(),
-    role: z.enum(["SUPER_ADMIN", "ADMIN", "MANAGER", "TEACHER", "EDITOR", "STUDENT", "USER"]),
+    role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL"]),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

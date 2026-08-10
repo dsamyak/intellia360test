@@ -1,25 +1,19 @@
 /**
- * Prisma client singleton.
+ * Prisma client singleton — MongoDB (Prisma 6).
  *
- * Prisma 7 requires a driver adapter. We use @prisma/adapter-pg with the `pg`
- * pool. In development, Next.js hot-reload would create a new PrismaClient on
- * every module reload, quickly exhausting database connections. We store the
- * instance on the Node.js global object so it survives hot-reloads.
+ * In development, Next.js hot-reload creates a new module instance on every
+ * change, which would exhaust the connection pool. We store the client on
+ * the Node.js global object so it survives hot-reloads.
  */
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function createPrismaClient(): PrismaClient {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter });
-}
-
 export const db: PrismaClient =
-  globalForPrisma.prisma ?? createPrismaClient();
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
