@@ -1,5 +1,5 @@
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -91,7 +91,8 @@ async function main() {
     },
   ];
 
-  const createdStudents: any[] = [];
+  type SeedStudent = Awaited<ReturnType<typeof prisma.user.create>>;
+  const createdStudents: SeedStudent[] = [];
 
   for (const sData of studentDataList) {
     const studentUser = await prisma.user.create({
