@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
       // Auto-create the appropriate profile
       if (role === "TEACHER" || role === "SCHOOL") {
         await tx.teacherProfile.create({ data: { userId: newUser.id } });
+      } else if (role === "ADMIN" || role === "EDITOR") {
+        // Admin and Editor don't need a student/teacher profile
       } else {
         await tx.studentProfile.create({
           data: {

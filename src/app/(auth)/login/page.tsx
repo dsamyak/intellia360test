@@ -12,6 +12,7 @@ const ROLES: { value: UserRole; label: string; icon: string }[] = [
   { value: "TEACHER", label: "Teacher", icon: "👩‍🏫" },
   { value: "PARENT",  label: "Parent",  icon: "👨‍👧" },
   { value: "SCHOOL",  label: "School",  icon: "🏫" },
+  { value: "EDITOR",  label: "Editor",  icon: "✏️" },
   { value: "ADMIN",   label: "Admin",   icon: "🛡️" },
 ];
 

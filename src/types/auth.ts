@@ -4,7 +4,8 @@ export type UserRole =
   | "STUDENT"
   | "PARENT"
   | "TEACHER"
-  | "SCHOOL";
+  | "SCHOOL"
+  | "EDITOR";
 
 // ─── Core User Model ──────────────────────────────────────────────────────────
 export interface AuthUser {
