@@ -7,3 +7,15 @@ dist/
 coverage/
 *.sqlite
 *.db
+
+# next.js
+.next/
+out/
+build
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
