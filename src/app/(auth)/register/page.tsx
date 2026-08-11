@@ -11,6 +11,7 @@ const ROLES: { value: UserRole; label: string; icon: string; sub: string }[] = [
   { value: "TEACHER", label: "Teacher", icon: "👩‍🏫", sub: "Teach & Inspire"   },
   { value: "PARENT",  label: "Parent",  icon: "👨‍👧", sub: "Support & Track"   },
   { value: "SCHOOL",  label: "School",  icon: "🏫",  sub: "Manage & Monitor"  },
+  { value: "EDITOR",  label: "Editor",  icon: "✏️",  sub: "Create Content"    },
   { value: "ADMIN",   label: "Admin",   icon: "🛡️",  sub: "Full Access"       },
 ];
 
@@ -249,9 +250,9 @@ export default function RegisterPage() {
               <input type="checkbox" id="reg-terms" checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)} />
               I agree to the{" "}
-              <Link href="/terms" style={{ color: "#2563eb", fontWeight: 600 }}>Terms of Service</Link>
+              <Link href="/terms" style={{ color: "#f97316", fontWeight: 600 }}>Terms of Service</Link>
               {" "}and{" "}
-              <Link href="/privacy" style={{ color: "#2563eb", fontWeight: 600 }}>Privacy Policy</Link>
+              <Link href="/privacy" style={{ color: "#f97316", fontWeight: 600 }}>Privacy Policy</Link>
             </label>
 
             {/* Submit */}

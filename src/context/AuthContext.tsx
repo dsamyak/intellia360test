@@ -19,9 +19,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 // ─── Role → dashboard mapping ─────────────────────────────────────────────────
 function getDashboardPath(role: UserRole): string {
-  if (role === "TEACHER" || role === "SCHOOL" || role === "ADMIN") {
-    return "/teacher/dashboard";
-  }
+  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
+  if (role === "ADMIN" || role === "EDITOR")   return "/editor/dashboard";
   return "/student/dashboard";
 }
 
