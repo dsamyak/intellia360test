@@ -8,15 +8,20 @@ import type { AuthResponse } from "@/types/auth";
 // Token is valid for 1 hour
 const EXPIRY_MS = 60 * 60 * 1000;
 
-// Generic response — never reveals whether the email exists (anti-enumeration)
-const GENERIC_RESPONSE = NextResponse.json<AuthResponse>(
-  {
-    success: true,
-    message:
-      "If an account with that email exists, you will receive a password reset link shortly.",
-  },
-  { status: 200 }
-);
+// Generic response — never reveals whether the email exists (anti-enumeration).
+// Built fresh per call so each request gets its own Response instance; Response
+// bodies are single-use streams and sharing one instance across concurrent
+// requests would cause "body already read" failures.
+function genericResponse() {
+  return NextResponse.json<AuthResponse>(
+    {
+      success: true,
+      message:
+        "If an account with that email exists, you will receive a password reset link shortly.",
+    },
+    { status: 200 }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return the generic response immediately if no matching account
-    if (!user) return GENERIC_RESPONSE;
+    if (!user) return genericResponse();
 
     // ── Invalidate any existing unused tokens for this user ─────────────────
     await db.passwordResetToken.updateMany({
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
       console.error("[auth/forgot-password] email send failed:", err);
     });
 
-    return GENERIC_RESPONSE;
+    return genericResponse();
   } catch (error) {
     console.error("[auth/forgot-password]", error);
     return NextResponse.json<AuthResponse>(

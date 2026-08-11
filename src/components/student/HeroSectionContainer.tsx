@@ -47,10 +47,10 @@ export default function HeroSectionContainer({
 
   if (!currentSlide) return null;
 
-  const hundreds = currentSlide.visualizerData?.hundreds ?? 1;
-  const tens = currentSlide.visualizerData?.tens ?? 3;
-  const ones = currentSlide.visualizerData?.ones ?? 5;
-  const number = currentSlide.visualizerData?.number ?? (hundreds * 100 + tens * 10 + ones);
+  const hundreds = (currentSlide.visualizerData?.hundreds as number) ?? 1;
+  const tens = (currentSlide.visualizerData?.tens as number) ?? 3;
+  const ones = (currentSlide.visualizerData?.ones as number) ?? 5;
+  const number = (currentSlide.visualizerData?.number as number) ?? (hundreds * 100 + tens * 10 + ones);
 
   const handleCtaClick = (e: React.MouseEvent) => {
     if (onCtaClick) {
@@ -158,10 +158,10 @@ function renderVisualizerScene(slide: DashboardHeroSlide) {
   }
 
   // Default: Place Value / Hundreds, Tens, Ones scene
-  const hundreds = slide.visualizerData?.hundreds ?? 1;
-  const tens = slide.visualizerData?.tens ?? 3;
-  const ones = slide.visualizerData?.ones ?? 5;
-  const number = slide.visualizerData?.number ?? (hundreds * 100 + tens * 10 + ones);
+  const hundreds = (slide.visualizerData?.hundreds as number) ?? 1;
+  const tens = (slide.visualizerData?.tens as number) ?? 3;
+  const ones = (slide.visualizerData?.ones as number) ?? 5;
+  const number = (slide.visualizerData?.number as number) ?? (hundreds * 100 + tens * 10 + ones);
 
   return (
     <PlaceValueVisualizerScene hundreds={hundreds} tens={tens} ones={ones} number={number} />

@@ -5,6 +5,34 @@ import LearningGridContainer from "@/components/student/LearningGridContainer";
 import BottomNavigationContainer from "@/components/student/BottomNavigationContainer";
 import { useStudentContext } from "@/context/StudentContext";
 
+interface HeroSlideWithActivity {
+  tag?: string;
+  title?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  visualizerKey?: string;
+  visualizerData?: Record<string, unknown>;
+  activityType?: string;
+  xpReward?: number;
+  gemsReward?: number;
+}
+
+interface ExtendedActionCard {
+  id?: string;
+  activityType?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  icon?: string;
+  buttonColor?: "purple" | "blue" | "orange" | "accent";
+  targetUrl?: string;
+  enabled?: boolean;
+  isCompleted?: boolean;
+  xpReward?: number;
+  gemsReward?: number;
+}
+
 export default function StudentDashboardPage() {
   const {
     activeLessonData,
@@ -100,7 +128,7 @@ export default function StudentDashboardPage() {
     },
   ];
 
-  const handleHeroCtaClick = (slide: any) => {
+  const handleHeroCtaClick = (slide: HeroSlideWithActivity, _slideIndex?: number) => {
     if (slide.activityType) {
       completeActivity(
         activeLessonData.id,
@@ -122,7 +150,7 @@ export default function StudentDashboardPage() {
       subtitle: "Learn, Practice, Win!",
       description: `Clear, concise notes for ${activeLessonData.title}. Designed to simplify concepts and boost confidence.`,
       icon: "📖",
-      buttonColor: "purple",
+      buttonColor: "purple" as const,
       targetUrl: edunotesUrl,
       enabled: true,
       isCompleted: isEdunotesCompleted,
@@ -136,7 +164,7 @@ export default function StudentDashboardPage() {
       subtitle: "Visual Concepts",
       description: `Interactive breakdown and 3D architectural representation of ${activeLessonData.title}. Earn +${xpAwardForArch} XP & +${gemsAwardForArch} Gems!`,
       icon: "🧊",
-      buttonColor: "blue",
+      buttonColor: "blue" as const,
       targetUrl: architectureUrl,
       enabled: true,
       isCompleted: isArchCompleted,
@@ -150,7 +178,7 @@ export default function StudentDashboardPage() {
       subtitle: "Watch & Learn",
       description: `Engaging video lesson explaining ${activeLessonData.title} step-by-step.`,
       icon: "▶",
-      buttonColor: "orange",
+      buttonColor: "orange" as const,
       targetUrl: videoUrl,
       enabled: true,
       isCompleted: isVideoCompleted,
@@ -164,7 +192,7 @@ export default function StudentDashboardPage() {
       subtitle: "Interactive Exercises",
       description: `Fun exercises to test your understanding of ${activeLessonData.title} with instant rewards!`,
       icon: "🏆",
-      buttonColor: "accent",
+      buttonColor: "accent" as const,
       targetUrl: practiceUrl,
       enabled: true,
       isCompleted: isPracticeCompleted,
@@ -173,7 +201,7 @@ export default function StudentDashboardPage() {
     },
   ];
 
-  const handleCardClick = (card: any) => {
+  const handleCardClick = (card: ExtendedActionCard) => {
     if (card.activityType) {
       completeActivity(
         activeLessonData.id,
@@ -187,12 +215,12 @@ export default function StudentDashboardPage() {
   return (
     <div className="student-dashboard-page">
       <HeroSectionContainer
-        slides={heroSlides as any}
+        slides={heroSlides}
         activeLessonId={activeLessonData.id}
         onCtaClick={handleHeroCtaClick}
       />
       <LearningGridContainer
-        cards={mappedCards as any}
+        cards={mappedCards}
         onCardClick={handleCardClick}
       />
       <BottomNavigationContainer
