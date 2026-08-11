@@ -1,0 +1,127 @@
+"use client";
+
+import React, { useState } from "react";
+import { Search, ChevronLeft, ChevronRight, MoreVertical } from "@/components/admin/icons";
+
+export interface ColumnDef<T> {
+  header: string;
+  accessor: keyof T | ((row: T) => React.ReactNode);
+  cell?: (row: T) => React.ReactNode;
+}
+
+interface ReusableTableProps<T> {
+  title: string;
+  subtitle?: string;
+  data: T[];
+  columns: ColumnDef<T>[];
+  searchPlaceholder?: string;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
+}
+
+export default function ReusableTable<T extends { id: string }>({
+  title,
+  subtitle,
+  data,
+  columns,
+  searchPlaceholder = "Search records...",
+  primaryActionLabel,
+  onPrimaryAction,
+}: ReusableTableProps<T>) {
+  const [search, setSearch] = useState("");
+
+  const filteredData = data.filter((row) =>
+    Object.values(row).some((val) =>
+      String(val).toLowerCase().includes(search.toLowerCase())
+    )
+  );
+
+  return (
+    <div className="admin-card">
+      {/* Table Header Controls */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
+        <div>
+          <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
+          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 outline-none focus:border-orange-500"
+            />
+          </div>
+
+          {primaryActionLabel && (
+            <button onClick={onPrimaryAction} className="admin-btn-primary text-xs py-2 px-3 shrink-0">
+              + {primaryActionLabel}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Table Element */}
+      <div className="table-responsive">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              {columns.map((col, idx) => (
+                <th key={idx}>{col.header}</th>
+              ))}
+              <th className="w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length + 1} className="text-center py-8 text-slate-400 text-xs font-semibold">
+                  No records match your search query.
+                </td>
+              </tr>
+            ) : (
+              filteredData.map((row) => (
+                <tr key={row.id}>
+                  {columns.map((col, idx) => (
+                    <td key={idx}>
+                      {col.cell
+                        ? col.cell(row)
+                        : typeof col.accessor === "function"
+                        ? col.accessor(row)
+                        : (row[col.accessor] as React.ReactNode)}
+                    </td>
+                  ))}
+                  <td>
+                    <button className="text-slate-400 hover:text-slate-600 p-1">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Table Pagination Controls */}
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
+        <span>
+          Showing 1 to {filteredData.length} of {data.length} entries
+        </span>
+        <div className="flex items-center gap-2">
+          <button className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="px-2 font-bold text-slate-900">1</span>
+          <button className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

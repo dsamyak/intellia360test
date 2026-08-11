@@ -76,4 +76,14 @@
   --transition-fast:   150ms ease;
   --transition-normal: 250ms ease;
   --transition-bounce: 400ms cubic-bezier(.34,1.56,.64,1);
+  --transition-spring: 500ms cubic-bezier(.175,.885,.32,1.275);
+
+  /* ── Glow shadows (chatbot / hero accents) ──────────────────────────────── */
+  --shadow-glow-primary: 0 0 20px rgba(249,115,22,.35), 0 0 60px rgba(249,115,22,.10);
+  --shadow-glow-purple:  0 0 20px rgba(124,58,237,.35), 0 0 60px rgba(124,58,237,.10);
+  --shadow-glow-orange:  0 0 20px rgba(249,115,22,.35), 0 0 60px rgba(249,115,22,.10);
+
+  /* ── Chatbot header gradient tokens ────────────────────────────────────── */
+  --color-chatbot-header-start: #1e1b4b;
+  --color-chatbot-header-end:   #7c3aed;
 }
