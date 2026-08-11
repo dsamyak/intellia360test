@@ -1,32 +1,30 @@
 [
   {
-    "id": "prompt_1",
-    "label": "Explain Again",
+    "id": "explain",
+    "label": "Explain Concept",
+    "promptText": "Can you explain this lesson in simple terms?",
     "icon": "💡",
-    "promptText": "Can you explain today's lesson again in simpler terms?"
+    "color": "yellow"
   },
   {
-    "id": "prompt_2",
-    "label": "Give Me Another Example",
-    "icon": "📗",
-    "promptText": "Show me another step-by-step math example."
+    "id": "example",
+    "label": "Give an Example",
+    "promptText": "Can you give me a real-world example of this concept?",
+    "icon": "📝",
+    "color": "blue"
   },
   {
-    "id": "prompt_3",
-    "label": "Quiz Me",
-    "icon": "❓",
-    "promptText": "Give me a quick practice question on this topic."
+    "id": "quiz",
+    "label": "Practice Question",
+    "promptText": "Give me a quick practice question to test my understanding!",
+    "icon": "🎯",
+    "color": "green"
   },
   {
-    "id": "prompt_4",
-    "label": "Homework Help",
-    "icon": "✏️",
-    "promptText": "I need help understanding a homework question."
-  },
-  {
-    "id": "prompt_5",
-    "label": "Explain with Animation",
-    "icon": "🎬",
-    "promptText": "Can you visualize this concept for me?"
+    "id": "hint",
+    "label": "Help & Hints",
+    "promptText": "I'm stuck on this topic. Can you give me a hint?",
+    "icon": "🙋‍♂️",
+    "color": "purple"
   }
 ]
