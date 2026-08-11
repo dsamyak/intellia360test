@@ -1,107 +1,131 @@
-# Intellia360 API — Phase 1 (Auth)
+# Intellia360
 
-Backend deliverable for Arnav's Week 1 scope: JWT auth, register/login, hardcoded
-role guards, basic API docs. Built with NestJS + TypeORM + PostgreSQL per the
-Intellia360 TRD, scoped down using the "easy alternative" column (no refresh
-tokens yet, roles hardcoded via an enum, Swagger included instead of a
-separate doc).
+AI-powered adaptive learning platform for primary school students.
 
-No frontend exists yet — CORS is left open by default and the API is
-versionless/stateless behind a single `/api` prefix, so it can be pointed at
-from any frontend later without changes here.
+**Stack:** Next.js 16 · Prisma 6 · MongoDB · TypeScript · Zod · Resend
 
-## Requirements
+---
+
+## Prerequisites
 
 - Node.js 18+
-- PostgreSQL (a `docker-compose.yml` is included if you don't have one running)
+- A MongoDB connection string (MongoDB Atlas free tier, or local via Docker — see below)
 
-## Setup
+---
+
+## Local setup
 
 ```bash
+# 1. Install dependencies
 npm install
-cp .env.example .env      # then fill in JWT_SECRET at minimum
-docker compose up -d      # starts local Postgres (skip if you have your own)
-npm run start:dev
+
+# 2. Configure environment
+cp .env.example .env.local
+# Fill in the required values (see Environment variables below)
+
+# 3. Generate Prisma client and push schema to MongoDB
+npx prisma generate
+npx prisma db push
+
+# 4. (Optional) Seed the database
+npm run seed
+
+# 5. Start the development server
+npm run dev
 ```
 
-The API listens on `http://localhost:3000/api` by default.
-Interactive Swagger docs: `http://localhost:3000/api/docs`.
+App runs at **http://localhost:3000**.
 
-`synchronize: true` is enabled outside production, so tables are created
-automatically on first boot — no manual migration step needed for Week 1.
+---
 
-## Endpoints
+## Environment variables
 
-| Method | Path                | Auth           | Description                              |
-|--------|---------------------|----------------|-------------------------------------------|
-| GET    | `/api/health`        | none           | Liveness check                            |
-| POST   | `/api/auth/register`| none           | Create an account (defaults to `student`) |
-| POST   | `/api/auth/login`   | none           | Log in, returns a JWT access token        |
-| GET    | `/api/auth/profile` | Bearer token   | Returns the current authenticated user    |
-| GET    | `/api/auth/admin-only` | Bearer token, role=`admin` | Example role-guarded route |
+Copy `.env.example` to `.env.local` and fill in:
 
-### Register
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | MongoDB connection string |
+| `AUTH_JWT_SECRET` | ✅ | Secret used to sign session JWTs (min 32 chars) |
+| `AUTH_JWT_EXPIRES_IN` | — | JWT expiry (default: `7d`) |
+| `RESEND_API_KEY` | ✅ | API key for transactional email via Resend |
+| `NEXT_PUBLIC_APP_URL` | — | Full URL of the app (used in reset-password emails) |
 
-```
-POST /api/auth/register
-{
-  "email": "student@example.com",
-  "password": "StrongPass123",
-  "fullName": "Aditi Sharma",
-  "role": "student"          // optional — admin | student | parent | teacher | school | coach
-}
+---
+
+## Local MongoDB with Docker
+
+A `docker-compose.yml` is included. Start a local MongoDB 7 container with:
+
+```bash
+docker compose up -d
 ```
 
-### Login
+Then set:
 
 ```
-POST /api/auth/login
-{
-  "email": "student@example.com",
-  "password": "StrongPass123"
-}
+DATABASE_URL="mongodb://root:example@localhost:27017/intellia360?authSource=admin"
 ```
 
-Both return:
+---
 
-```json
-{
-  "accessToken": "<jwt>",
-  "user": { "id": "...", "email": "...", "role": "student", "fullName": "..." }
-}
-```
+## npm scripts
 
-Send the token back as `Authorization: Bearer <jwt>` on protected routes.
+| Script | What it does |
+|---|---|
+| `npm run dev` | Start Next.js in development mode |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run seed` | Seed the database via `prisma/seed.ts` |
+| `npm run prisma:generate` | Regenerate Prisma client |
+| `npm run prisma:push` | Push schema changes to MongoDB (dev) |
+| `npm run prisma:migrate` | Run Prisma migrations |
 
-## Roles
+---
 
-Hardcoded in `src/common/enums/role.enum.ts` per the TRD's role list:
-`admin`, `student`, `parent`, `teacher`, `school`, `coach`. New routes can
-restrict access with:
-
-```ts
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN, Role.TEACHER)
-```
-
-## What's deliberately out of scope this week
-
-- Refresh tokens (single 7-day access token for now — see the note in
-  `auth.service.ts` for how to extend this later)
-- Password reset flow
-- DB-driven permissions (roles are a fixed enum, not a table)
-
-## Project layout
+## Project structure
 
 ```
 src/
-  auth/            # register, login, JWT strategy, guards, decorators
-  users/           # User entity, UsersService (hashing, lookups)
-  common/enums/     # shared Role enum
-  app.module.ts     # TypeORM + module wiring
-  main.ts           # bootstrap, global validation, CORS, Swagger
+  app/
+    (auth)/          # Login, register, forgot/reset password pages
+    api/auth/        # Next.js Route Handlers — auth API (login, register, reset, etc.)
+    student/         # Student-facing pages (dashboard, courses, leaderboard, …)
+    teacher/         # Teacher-facing pages (dashboard, classes, analytics, …)
+  components/        # Shared React components
+  context/           # React context providers (StudentContext)
+  data/              # Static curriculum JSON per grade
+  lib/
+    auth/            # JWT helpers, bcrypt hashing, email, Zod validation schemas
+    db.ts            # Prisma client singleton
+  types/             # Shared TypeScript types
+  proxy.ts           # Next.js middleware — auth guards & role-based redirects
+
+prisma/
+  schema.prisma      # MongoDB data models (User, StudentProfile, progress, etc.)
+  seed.ts            # Database seed script
 ```
 
-This mirrors the module layout in the TRD (`auth/`, `users/`, ...) so later
-modules (courses, gamification, payments, etc.) can be added as siblings
-without restructuring anything here.
+---
+
+## Roles
+
+Defined in `prisma/schema.prisma` as the `Role` enum:
+
+| Role | Access |
+|---|---|
+| `STUDENT` | Student dashboard and learning pages |
+| `PARENT` | Student dashboard (read-only view for parents) |
+| `TEACHER` | Teacher dashboard, classes, analytics, assignments |
+| `SCHOOL` | Same as TEACHER |
+| `ADMIN` | All routes |
+
+---
+
+## Authentication
+
+- Passwords hashed with **bcryptjs** (cost factor 12)
+- Session cookies: `httpOnly`, `sameSite=lax`, `secure` in production
+- JWT signed with `AUTH_JWT_SECRET`; verified in middleware via `jose`
+- Password-reset tokens are single-use, expire in 1 hour, and are invalidated when a new one is requested
+- Anti-enumeration: all auth responses that could reveal account existence return identical messages
