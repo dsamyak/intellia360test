@@ -36,7 +36,7 @@ export interface AdventureSlide {
   subtitle: string;
   ctaText: string;
   visualizerKey: "place-value" | "addition-grouping" | "comparing-numbers" | "numbers-to-1000";
-  visualizerData: Record<string, any>;
+  visualizerData: Record<string, unknown>;
 }
 
 export interface ActionCardItem {
@@ -156,13 +156,17 @@ export interface GradeActionCard {
 
 export interface DashboardHeroSlide {
   tag: string;
-  lessonId: string;
+  lessonId?: string;
   title: string;
   subtitle: string;
   ctaText: string;
   ctaUrl: string;
-  visualizerKey: VisualizerKey;
-  visualizerData: Record<string, any>;
+  visualizerKey: string;
+  visualizerData: Record<string, unknown>;
+  /** Activity tracking fields used by the student dashboard */
+  activityType?: string;
+  xpReward?: number;
+  gemsReward?: number;
 }
 
 export interface DashboardConfig {
@@ -187,7 +191,7 @@ export interface LessonMetadata {
   completed: boolean;
   locked: boolean;
   heroVisualizer: VisualizerKey;
-  heroVisualizerData: Record<string, any>;
+  heroVisualizerData: Record<string, unknown>;
   modules: {
     eduNotes: LessonModuleConfig;
     architectureModule: LessonModuleConfig;

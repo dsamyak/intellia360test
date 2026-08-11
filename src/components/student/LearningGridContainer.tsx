@@ -17,31 +17,27 @@ export default function LearningGridContainer({ cards, onCardClick }: LearningGr
     <section className="learning-grid-container">
       {cards.map((card) => {
         const isExternal = card.targetUrl?.startsWith("http");
-        const Wrapper = isExternal ? "a" : Link;
-        const props = isExternal 
-          ? { href: card.targetUrl, target: "_blank", rel: "noopener noreferrer" } 
-          : { href: card.enabled ? card.targetUrl : "#" };
 
-        const handleClick = (e: React.MouseEvent) => {
+        const handleClick = (_e: React.MouseEvent) => {
           if (onCardClick) {
             onCardClick(card);
           }
         };
 
-        return (
-          <Wrapper
-            key={card.id}
-            {...props as any}
-            onClick={handleClick}
-            className={`action-card card-color-${card.buttonColor} ${card.isCompleted ? "completed-activity" : ""}`}
-            style={{
-              textDecoration: "none",
-              opacity: card.enabled ? 1 : 0.5,
-              pointerEvents: card.enabled ? "auto" : "none",
-              position: "relative",
-            }}
-            aria-disabled={!card.enabled}
-          >
+        const sharedProps = {
+          onClick: handleClick,
+          className: `action-card card-color-${card.buttonColor} ${card.isCompleted ? "completed-activity" : ""}`,
+          style: {
+            textDecoration: "none" as const,
+            opacity: card.enabled ? 1 : 0.5,
+            pointerEvents: (card.enabled ? "auto" : "none") as React.CSSProperties["pointerEvents"],
+            position: "relative" as const,
+          },
+          "aria-disabled": !card.enabled,
+        };
+
+        const inner = (
+          <>
             <div className="card-header-group">
               <span className="card-icon-placeholder">{card.isCompleted ? "✅" : card.icon}</span>
               <div className="card-titles">
@@ -60,7 +56,21 @@ export default function LearningGridContainer({ cards, onCardClick }: LearningGr
             <div className="card-footer-action">
               <button className="card-circle-arrow-btn">{card.isCompleted ? "✓" : "→"}</button>
             </div>
-          </Wrapper>
+          </>
+        );
+
+        if (isExternal) {
+          return (
+            <a key={card.id} href={card.targetUrl} target="_blank" rel="noopener noreferrer" {...sharedProps}>
+              {inner}
+            </a>
+          );
+        }
+
+        return (
+          <Link key={card.id} href={card.enabled ? card.targetUrl : "#"} {...sharedProps}>
+            {inner}
+          </Link>
         );
       })}
     </section>

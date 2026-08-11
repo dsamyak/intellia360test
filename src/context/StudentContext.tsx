@@ -2,6 +2,21 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+interface HeroSlide {
+  tag?: string;
+  subtitle?: string;
+  visualizerKey?: string;
+  visualizerData?: Record<string, unknown>;
+}
+
+interface ActionCards {
+  architecture?: string;
+  video?: string;
+  edunotes?: string;
+  practice?: string;
+  [key: string]: string | undefined;
+}
+
 interface CurriculumTopic {
   id: string;
   title: string;
@@ -12,8 +27,8 @@ interface CurriculumTopic {
   difficulty?: string;
   xpReward?: number;
   gemsReward?: number;
-  heroSlide?: any;
-  actionCards?: any;
+  heroSlide?: HeroSlide;
+  actionCards?: ActionCards;
   aiContext?: string;
 }
 
@@ -102,10 +117,10 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         setCurriculum(data.default || data);
         
         // If we don't have an active lesson, or if the current active lesson doesn't exist in the new curriculum, reset it
-        const allTopics = (data.default || data).chapters.flatMap((c: any) => c.topics);
+        const allTopics = (data.default || data).chapters.flatMap((c: CurriculumChapter) => c.topics);
         if (allTopics.length > 0) {
            setActiveLessonIdState((prev) => {
-               if (!prev || !allTopics.find((t: any) => t.id === prev)) {
+               if (!prev || !allTopics.find((t: CurriculumTopic) => t.id === prev)) {
                    return allTopics[0].id;
                }
                return prev;
