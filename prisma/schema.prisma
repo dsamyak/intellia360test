@@ -205,6 +205,27 @@ model AssignmentSubmission {
   @@map("assignment_submissions")
 }
 
+// ─── Rate Limit Record ────────────────────────────────────────────────────────
+// Tracks recent request counts per (key, action) to enforce server-side
+// rate limits that survive across serverless function instances (no in-memory).
+//
+// key    = SHA-256(ip) or SHA-256(email) — never store raw PII in this table.
+// action = e.g. "login", "resend_verification", "forgot_password"
+
+model RateLimitRecord {
+  id        String   @id @default(uuid()) @map("_id")
+  key       String                          // hashed identifier
+  action    String                          // action name
+  count     Int      @default(1)
+  windowStart DateTime                      // start of the current window
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, action])
+  @@index([key])
+  @@index([windowStart])
+  @@map("rate_limit_records")
+}
+
 // ─── Email Verification Token ─────────────────────────────────────────────────
 // tokenHash stores SHA-256(raw_token) — the raw token is sent by email only.
 // On verify we hash the submitted token and compare, never storing it plaintext.

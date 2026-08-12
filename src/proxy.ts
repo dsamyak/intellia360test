@@ -48,7 +48,8 @@ function matches(pathname: string, prefixes: string[]): boolean {
 
 function dashboardFor(role: Role): string {
   if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
-  if (role === "ADMIN"   || role === "EDITOR") return "/editor/dashboard";
+  if (role === "EDITOR")                       return "/editor/dashboard";
+  if (role === "ADMIN")                        return "/admin/dashboard";
   return "/student/dashboard";
 }
 

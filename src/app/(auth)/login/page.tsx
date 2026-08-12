@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { UserRole } from "@/types/auth";
+import type { AuthUser, UserRole } from "@/types/auth";
 
 // ─── Role options ────────────────────────────────────────────────────────────
 const ROLES: { value: UserRole; label: string; icon: string }[] = [
@@ -81,8 +82,31 @@ function AppleIcon() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize(config: { client_id: string; callback: (r: { credential: string }) => void }): void;
+          renderButton(el: HTMLElement, opts: object): void;
+          prompt(): void;
+        };
+      };
+    };
+  }
+}
+
+function getDashboardPath(role: UserRole): string {
+  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
+  if (role === "EDITOR")                       return "/editor/dashboard";
+  if (role === "ADMIN")                        return "/admin/dashboard";
+  return "/student/dashboard";
+}
+
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const [role,           setRole]           = useState<UserRole>("STUDENT");
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -92,6 +116,73 @@ export default function LoginPage() {
   const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState("");
   const [unverified,     setUnverified]     = useState(false);
+  const [googleLoading,  setGoogleLoading]  = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  // ── Load Google Identity Services ─────────────────────────────────────────
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
+    setGoogleLoading(true);
+    setError("");
+    try {
+      const res  = await fetch("/api/auth/google", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ credential: response.credential }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const user = json.data as AuthUser;
+        router.push(getDashboardPath(user.role));
+      } else {
+        setError(json.message ?? "Google sign-in failed.");
+      }
+    } catch {
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (!googleClientId) return;
+
+    const scriptId = "google-gsi";
+    if (document.getElementById(scriptId)) {
+      // Script already loaded — just initialise
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback:  handleGoogleCredential,
+        });
+        if (googleBtnRef.current) {
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline", size: "large", text: "signin_with", width: 280,
+          });
+        }
+      }
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id   = scriptId;
+    script.src  = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => {
+      if (!window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback:  handleGoogleCredential,
+      });
+      if (googleBtnRef.current) {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline", size: "large", text: "signin_with", width: 280,
+        });
+      }
+    };
+    document.body.appendChild(script);
+  }, [googleClientId, handleGoogleCredential]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -266,7 +357,28 @@ export default function LoginPage() {
             {/* Social */}
             <div className="auth-divider"><span>or continue with</span></div>
             <div className="auth-social-row">
-              <button type="button" className="auth-social-btn"><GoogleIcon /> Google</button>
+              {/* Real Google Identity Services button (renders when NEXT_PUBLIC_GOOGLE_CLIENT_ID is set) */}
+              {googleClientId ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div ref={googleBtnRef} style={{ minHeight: 44 }} />
+                  {googleLoading && (
+                    <p style={{ textAlign: "center", fontSize: "0.82rem", color: "var(--color-text-muted)" }}>
+                      Signing in with Google…
+                    </p>
+                  )}
+                </div>
+              ) : (
+                // Placeholder shown when env var not set (dev without Google)
+                <button
+                  type="button"
+                  className="auth-social-btn"
+                  style={{ gridColumn: "1/-1", opacity: 0.5, cursor: "not-allowed" }}
+                  disabled
+                  title="Set NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable"
+                >
+                  <GoogleIcon /> Google (not configured)
+                </button>
+              )}
               <button type="button" className="auth-social-btn"><MicrosoftIcon /> Microsoft</button>
               <button type="button" className="auth-social-btn"><AppleIcon /> Apple</button>
             </div>

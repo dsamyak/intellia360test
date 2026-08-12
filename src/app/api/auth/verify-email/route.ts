@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
     if (record.user.emailVerified) {
       // Already verified — just log them in
       const user: AuthUser = {
-        id:        record.user.id,
-        name:      record.user.name,
-        email:     record.user.email,
-        role:      record.user.role,
-        createdAt: record.user.createdAt.toISOString(),
-        updatedAt: record.user.updatedAt.toISOString(),
+        id:            record.user.id,
+        name:          record.user.name,
+        email:         record.user.email,
+        role:          record.user.role,
+        emailVerified: record.user.emailVerified,
+        createdAt:     record.user.createdAt.toISOString(),
+        updatedAt:     record.user.updatedAt.toISOString(),
       };
       const token = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
       await setSessionCookie(token);
@@ -101,12 +102,13 @@ export async function POST(request: NextRequest) {
 
     // ── Issue session (auto-login after verification) ───────────────────────
     const user: AuthUser = {
-      id:        updatedUser.id,
-      name:      updatedUser.name,
-      email:     updatedUser.email,
-      role:      updatedUser.role,
-      createdAt: updatedUser.createdAt.toISOString(),
-      updatedAt: updatedUser.updatedAt.toISOString(),
+      id:            updatedUser.id,
+      name:          updatedUser.name,
+      email:         updatedUser.email,
+      role:          updatedUser.role,
+      emailVerified: updatedUser.emailVerified,
+      createdAt:     updatedUser.createdAt.toISOString(),
+      updatedAt:     updatedUser.updatedAt.toISOString(),
     };
 
     const jwtToken = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });

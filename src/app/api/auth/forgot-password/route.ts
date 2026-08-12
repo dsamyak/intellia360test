@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { ForgotPasswordSchema } from "@/lib/auth/validation";
 import { sendPasswordResetEmail } from "@/lib/auth/email";
 import { generateRawToken, hashToken, RESET_TOKEN_TTL_MS } from "@/lib/auth/token";
+import { checkRateLimit, rateLimitHeaders, getClientIp } from "@/lib/auth/rate-limit";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
-// Generic — never reveals whether the email exists (anti-enumeration).
+// Generic response — anti-enumeration: always identical regardless of
+// whether the email exists, is verified, or has a pending reset.
 function genericResponse() {
   return NextResponse.json<AuthResponse>(
     {
@@ -18,6 +20,24 @@ function genericResponse() {
 }
 
 export async function POST(request: NextRequest) {
+  // ── Rate limit: 3 requests per hour per IP ─────────────────────────────────
+  const ip = getClientIp(request);
+  const ipLimit = await checkRateLimit({
+    identifier:  ip,
+    action:      "forgot_password",
+    maxAttempts: 3,
+    windowMs:    60 * 60 * 1000, // 1 hour
+  });
+
+  if (ipLimit.limited) {
+    // Return the generic response with rate-limit headers — don't reveal
+    // to the caller that they've been rate-limited.
+    return NextResponse.json<AuthResponse>(
+      { success: true, message: "If an account with that email exists, you will receive a password reset link shortly." },
+      { status: 200, headers: rateLimitHeaders(ipLimit.retryAfter) }
+    );
+  }
+
   try {
     const body   = await request.json();
     const result = ForgotPasswordSchema.safeParse(body);
@@ -35,6 +55,16 @@ export async function POST(request: NextRequest) {
 
     const { email } = result.data;
 
+    // Per-email rate limit: 2 per hour
+    const emailLimit = await checkRateLimit({
+      identifier:  email,
+      action:      "forgot_password_email",
+      maxAttempts: 2,
+      windowMs:    60 * 60 * 1000,
+    });
+
+    if (emailLimit.limited) return genericResponse(); // silent — anti-enumeration
+
     const user = await db.user.findUnique({
       where:  { email },
       select: { id: true, name: true, email: true },
@@ -42,13 +72,12 @@ export async function POST(request: NextRequest) {
 
     if (!user) return genericResponse();
 
-    // Invalidate all existing unused reset tokens
+    // Invalidate all existing unused reset tokens for this user
     await db.passwordResetToken.updateMany({
       where: { userId: user.id, used: false },
       data:  { used: true },
     });
 
-    // Generate new hashed token
     const rawToken  = generateRawToken();
     const tokenHash = hashToken(rawToken);
 
@@ -61,17 +90,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fire-and-forget — email failure must not block the response
+    // Fire-and-forget — email failure must not block or reveal anything
     sendPasswordResetEmail(user.email, user.name, rawToken).catch((err) => {
-      console.error("[auth/forgot-password] email send failed:", err);
+      console.error("[auth/forgot-password] email failed:", err);
     });
 
     return genericResponse();
   } catch (error) {
     console.error("[auth/forgot-password]", error);
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return genericResponse(); // never reveal errors to caller
   }
 }
