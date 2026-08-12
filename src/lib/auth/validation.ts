@@ -20,6 +20,7 @@ export const RegisterSchema = z
     password: passwordSchema,
     confirmPassword: z.string(),
     role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL"]),
+    grade: z.string().optional(),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

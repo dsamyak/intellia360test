@@ -47,6 +47,8 @@ interface Curriculum {
 }
 
 interface StudentContextType {
+  studentName: string;
+  studentEmail: string;
   currentGrade: string;
   setCurrentGrade: (grade: string) => void;
   curriculum: Curriculum | null;
@@ -72,6 +74,8 @@ interface StudentContextType {
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
 export const StudentProvider = ({ children }: { children: ReactNode }) => {
+  const [studentName, setStudentName] = useState<string>("Student Profile");
+  const [studentEmail, setStudentEmail] = useState<string>("");
   const [currentGrade, setCurrentGradeState] = useState<string>("grade1");
   const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
   
@@ -134,7 +138,47 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     loadCurriculum();
   }, [currentGrade]);
 
-  // Load from localStorage on mount
+  // Fetch authenticated student profile & backend progress on mount / session start
+  useEffect(() => {
+    async function syncStudentData() {
+      try {
+        const res = await fetch("/api/student/me");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const profile = json.data;
+            if (profile.name) setStudentName(profile.name);
+            if (profile.email) setStudentEmail(profile.email);
+            if (profile.grade) {
+              setCurrentGradeState(profile.grade);
+            }
+            if (typeof profile.xpPoints === "number") setXpPoints(profile.xpPoints);
+            if (typeof profile.learningGems === "number") setLearningGems(profile.learningGems);
+            if (typeof profile.streakDays === "number") setStreakDays(profile.streakDays);
+
+            // Fetch progress for this grade
+            const progRes = await fetch(`/api/student/progress?grade=${profile.grade}`);
+            if (progRes.ok) {
+              const progJson = await progRes.json();
+              if (progJson.success && progJson.data) {
+                if (Array.isArray(progJson.data.completedLessons)) {
+                  setCompletedLessons(progJson.data.completedLessons);
+                }
+                if (Array.isArray(progJson.data.completedActivities)) {
+                  setCompletedActivities(progJson.data.completedActivities);
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync student data from API", err);
+      }
+    }
+    syncStudentData();
+  }, []);
+
+  // Load from localStorage on mount (as fallback/cache)
   useEffect(() => {
     try {
       const storedData = localStorage.getItem("studentProgress");
@@ -189,6 +233,11 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
 
   const setCurrentGrade = (grade: string) => {
     setCurrentGradeState(grade);
+    fetch("/api/student/grade", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ grade }),
+    }).catch((err) => console.error("Failed to update student grade on backend", err));
   };
 
   const setActiveLessonId = (id: string) => {
@@ -243,6 +292,19 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         );
       }
 
+      // Sync to backend API
+      fetch("/api/student/activities/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessonId,
+          activityType,
+          grade: currentGrade,
+          xpReward,
+          gemsReward,
+        }),
+      }).catch((err) => console.error("Failed to post completed activity", err));
+
       return updated;
     });
   };
@@ -283,6 +345,8 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
   return (
     <StudentContext.Provider
       value={{
+        studentName,
+        studentEmail,
         currentGrade,
         setCurrentGrade,
         curriculum,

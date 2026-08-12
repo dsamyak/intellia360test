@@ -46,6 +46,7 @@ export interface RegisterInput {
   password: string;
   confirmPassword: string;
   role: UserRole;
+  grade?: string;
   agreeToTerms: boolean;
 }
 

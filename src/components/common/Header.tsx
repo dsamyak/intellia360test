@@ -14,14 +14,16 @@ import { useStudentContext } from "@/context/StudentContext";
 
 export default function Header() {
   const profile = studentProfileData;
-  const { xpPoints, learningGems, streakDays, currentGrade, setCurrentGrade } = useStudentContext();
+  const { xpPoints, learningGems, streakDays, currentGrade, setCurrentGrade, studentName } = useStudentContext();
+
+  const displayName = studentName && studentName !== "Student Profile" ? studentName : profile.name;
 
   return (
     <header className="header-container">
       <div className="header-left">
         <Logo />
         <div className="header-user-summary">
-          <ProfileMenu avatarUrl={profile.avatar} studentName={profile.name} />
+          <ProfileMenu avatarUrl={profile.avatar} studentName={displayName} />
           <div className="header-grade-level">
             <GradeSelector currentGrade={currentGrade} onChangeGrade={setCurrentGrade} />
             <LevelProgress
@@ -35,10 +37,13 @@ export default function Header() {
 
       <div className="header-right">
         <StreakBadge streakDays={streakDays} />
-        <XPBadge xpPoints={xpPoints} />
         <GemsBadge learningGems={learningGems} />
+        <XPBadge xpPoints={xpPoints} />
         <NotificationButton />
-        <ProfileMenu avatarUrl={profile.avatar} studentName={profile.name} />
+        <ProfileMenu
+          avatarUrl={profile.avatar}
+          studentName={displayName}
+        />
       </div>
     </header>
   );

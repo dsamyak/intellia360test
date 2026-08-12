@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, role } = result.data;
+    const { name, email, password, role, grade } = result.data;
 
     // ── Check for duplicate email ───────────────────────────────────────────
     const existing = await db.user.findUnique({ where: { email } });
@@ -50,10 +50,11 @@ export async function POST(request: NextRequest) {
       if (role === "TEACHER" || role === "SCHOOL") {
         await tx.teacherProfile.create({ data: { userId: newUser.id } });
       } else {
+        const studentGrade = grade || "grade1";
         await tx.studentProfile.create({
           data: {
             userId: newUser.id,
-            grade: "grade1",
+            grade: studentGrade,
             xpPoints: 0,
             learningGems: 0,
             streakDays: 1,

@@ -103,7 +103,7 @@ export default function StudentDashboardPage() {
     // Dot 3 — Practice Challenge
     {
       tag: "Practice Challenge",
-      title: `Practice: ${activeLessonData.title}`,
+      title: "Practice Challenge",
       subtitle: `Put your knowledge to the test! ✦ Interactive questions ✦ Instant feedback ✦ Accuracy improvement ✦ Confidence building`,
       ctaText: isPracticeCompleted ? "Practice Again ✓ (Completed)" : "Start Practice (+30 XP) 🏆",
       ctaUrl: practiceUrl,
