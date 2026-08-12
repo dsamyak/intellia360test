@@ -25,13 +25,15 @@ export async function POST(request: NextRequest) {
 
     const { emailOrUsername, password, rememberMe } = result.data;
 
-    // ── Look up user by email ───────────────────────────────────────────────
+    // ── Look up user ────────────────────────────────────────────────────────
     const dbUser = await db.user.findUnique({
       where: { email: emailOrUsername },
     });
 
-    // Timing-safe: always run bcrypt even when user not found
-    const DUMMY_HASH = "$2a$12$placeholder.hash.to.prevent.timing.attacks.xxxxxxxxxxxxxx";
+    // ── Timing-safe password check ──────────────────────────────────────────
+    // Always run bcrypt even when user is not found to prevent timing oracle.
+    const DUMMY_HASH =
+      "$2a$12$dummyhashingtopreventimingoracle.xxxxxxxxxxxxxxxxxxxxxxxxxx";
     const passwordMatch = dbUser
       ? await verifyPassword(password, dbUser.password)
       : await verifyPassword(password, DUMMY_HASH).then(() => false);
@@ -43,17 +45,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Build response user (never expose password hash) ────────────────────
+    // ── Email verification gate ─────────────────────────────────────────────
+    if (!dbUser.emailVerified) {
+      return NextResponse.json<AuthResponse>(
+        {
+          success: false,
+          message:
+            "Please verify your email address before logging in. " +
+            "Check your inbox for the verification link.",
+          errors: { email: ["unverified"] },
+        },
+        { status: 403 }
+      );
+    }
+
+    // ── Build response user ─────────────────────────────────────────────────
     const user: AuthUser = {
-      id: dbUser.id,
-      name: dbUser.name,
-      email: dbUser.email,
-      role: dbUser.role,
+      id:        dbUser.id,
+      name:      dbUser.name,
+      email:     dbUser.email,
+      role:      dbUser.role,
       createdAt: dbUser.createdAt.toISOString(),
       updatedAt: dbUser.updatedAt.toISOString(),
     };
 
-    const token = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const token = signToken({
+      sub:   user.id,
+      email: user.email,
+      role:  user.role,
+      name:  user.name,
+    });
     await setSessionCookie(token, rememberMe);
 
     return NextResponse.json<AuthResponse<AuthUser>>(

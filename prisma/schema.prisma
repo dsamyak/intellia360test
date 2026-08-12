@@ -30,13 +30,14 @@ enum AssignmentStatus {
 // ─── User ─────────────────────────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(uuid()) @map("_id")
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(STUDENT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid()) @map("_id")
+  email         String   @unique
+  name          String
+  password      String
+  role          Role     @default(STUDENT)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   studentProfile      StudentProfile?
   teacherProfile      TeacherProfile?
@@ -47,6 +48,7 @@ model User {
   quizAttempts        QuizAttempt[]
   submissions         AssignmentSubmission[]
   resetTokens         PasswordResetToken[]
+  verifyTokens        EmailVerificationToken[]
 
   @@index([role])
   @@map("users")
@@ -203,11 +205,30 @@ model AssignmentSubmission {
   @@map("assignment_submissions")
 }
 
+// ─── Email Verification Token ─────────────────────────────────────────────────
+// tokenHash stores SHA-256(raw_token) — the raw token is sent by email only.
+// On verify we hash the submitted token and compare, never storing it plaintext.
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @map("_id")
+  tokenHash String   @unique          // SHA-256 of the raw token
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
 // ─── Password Reset Token (Next.js auth layer) ────────────────────────────────
+// tokenHash stores SHA-256(raw_token) — same pattern as email verification.
 
 model PasswordResetToken {
   id        String   @id @default(uuid()) @map("_id")
-  token     String   @unique
+  tokenHash String   @unique          // SHA-256 of the raw token
   userId    String
   expiresAt DateTime
   used      Boolean  @default(false)

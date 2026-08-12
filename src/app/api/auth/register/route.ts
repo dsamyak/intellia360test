@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { RegisterSchema } from "@/lib/auth/validation";
 import { hashPassword } from "@/lib/auth/hash";
-import { signToken } from "@/lib/auth/jwt";
-import { setSessionCookie } from "@/lib/auth/session";
+import { sendVerificationEmail } from "@/lib/auth/email";
+import { generateRawToken, hashToken, VERIFY_TOKEN_TTL_MS } from "@/lib/auth/token";
 import { db } from "@/lib/db";
-import type { AuthResponse, AuthUser } from "@/types/auth";
+import type { AuthResponse } from "@/types/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
 
     const { name, email, password, role } = result.data;
 
-    // ── Check for duplicate email ───────────────────────────────────────────
+    // ── Duplicate-email check ───────────────────────────────────────────────
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
+      // Anti-enumeration: same message whether the account is verified or not
       return NextResponse.json<AuthResponse>(
         {
           success: false,
@@ -38,56 +39,79 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Hash password and create user + profile in a transaction ────────────
+    // ── Hash password ───────────────────────────────────────────────────────
     const hashedPassword = await hashPassword(password);
 
-    const dbUser = await db.$transaction(async (tx) => {
+    // ── Generate verification token ─────────────────────────────────────────
+    // Only the SHA-256 hash of the raw token is persisted.
+    const rawToken   = generateRawToken();
+    const tokenHash  = hashToken(rawToken);
+    const expiresAt  = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
+
+    // ── Create user + profile + verification token in one transaction ───────
+    await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
-        data: { name, email, password: hashedPassword, role },
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role,
+          emailVerified: false,        // must verify before login
+        },
       });
 
-      // Auto-create the appropriate profile
+      // Role-scoped profile
       if (role === "TEACHER" || role === "SCHOOL") {
         await tx.teacherProfile.create({ data: { userId: newUser.id } });
       } else if (role === "ADMIN" || role === "EDITOR") {
-        // Admin and Editor don't need a student/teacher profile
+        // No profile required
       } else {
+        // STUDENT / PARENT
         await tx.studentProfile.create({
           data: {
-            userId: newUser.id,
-            grade: "grade1",
-            xpPoints: 0,
-            learningGems: 0,
-            streakDays: 1,
+            userId:        newUser.id,
+            grade:         "grade1",
+            xpPoints:      0,
+            learningGems:  0,
+            streakDays:    1,
             lastActiveDate: new Date(),
           },
         });
       }
 
-      return newUser;
+      // Verification token (hashed)
+      await tx.emailVerificationToken.create({
+        data: {
+          tokenHash,
+          userId:    newUser.id,
+          expiresAt,
+          used:      false,
+        },
+      });
     });
 
-    // ── Issue JWT ───────────────────────────────────────────────────────────
-    const user: AuthUser = {
-      id: dbUser.id,
-      name: dbUser.name,
-      email: dbUser.email,
-      role: dbUser.role,
-      createdAt: dbUser.createdAt.toISOString(),
-      updatedAt: dbUser.updatedAt.toISOString(),
-    };
+    // ── Send verification email (fire-and-forget style but still await) ─────
+    // We do NOT issue a session cookie here — the user must verify first.
+    try {
+      await sendVerificationEmail(email, name, rawToken);
+    } catch (emailErr) {
+      // Log but don't fail the registration — the user can request a resend.
+      console.error("[auth/register] verification email failed:", emailErr);
+    }
 
-    const token = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
-    await setSessionCookie(token);
-
-    return NextResponse.json<AuthResponse<AuthUser>>(
-      { success: true, message: "Account created successfully", data: user },
+    return NextResponse.json<AuthResponse>(
+      {
+        success: true,
+        message:
+          "Account created! We've sent a verification link to your email address. " +
+          "Please check your inbox (and spam folder) and click the link to activate your account.",
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("[auth/register]", error);
     return NextResponse.json<AuthResponse>(
-      { success: false, message: "An unexpected error occurred" },
+      { success: false, message: "An unexpected error occurred. Please try again." },
       { status: 500 }
     );
   }

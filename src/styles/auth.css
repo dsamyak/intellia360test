@@ -296,9 +296,29 @@
   font-size: 14px; color: #166534;
 }
 
+/* ── Success / info banners ──────────────────────────────────────────────── */
+.auth-success-banner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: #166534;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
 .auth-error-banner {
-  background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: 10px; padding: 12px 16px;
-  font-size: 13.5px; color: #dc2626;
-  display: flex; align-items: center; gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

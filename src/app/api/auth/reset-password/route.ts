@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ResetPasswordSchema } from "@/lib/auth/validation";
 import { hashPassword } from "@/lib/auth/hash";
+import { hashToken } from "@/lib/auth/token";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
+    const body   = await request.json();
     const result = ResetPasswordSchema.safeParse(body);
+
     if (!result.success) {
       return NextResponse.json<AuthResponse>(
         {
@@ -20,11 +21,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { token, password } = result.data;
+    const { token: rawToken, password } = result.data;
+    const tokenHash = hashToken(rawToken);
 
-    // ── Look up token ───────────────────────────────────────────────────────
+    // ── Look up by hash ─────────────────────────────────────────────────────
     const resetToken = await db.passwordResetToken.findUnique({
-      where: { token },
+      where:   { tokenHash },
       include: { user: { select: { id: true } } },
     });
 
@@ -38,16 +40,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Update password and mark token as used in a transaction ────────────
+    // ── Hash new password + mark token used atomically ──────────────────────
     const hashed = await hashPassword(password);
     await db.$transaction([
       db.user.update({
         where: { id: resetToken.userId },
-        data: { password: hashed },
+        data:  { password: hashed },
       }),
       db.passwordResetToken.update({
         where: { id: resetToken.id },
-        data: { used: true },
+        data:  { used: true },
       }),
     ]);
 
