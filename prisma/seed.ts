@@ -28,6 +28,7 @@ async function main() {
       name: 'Sarah Jenkins',
       password: passwordHash,
       role: Role.TEACHER,
+      emailVerified: true,
       teacherProfile: {
         create: {
           avatar: '/avatars/teacher1.png',
@@ -101,6 +102,7 @@ async function main() {
         name: sData.name,
         password: passwordHash,
         role: Role.STUDENT,
+        emailVerified: true,
         studentProfile: {
           create: {
             avatar: sData.avatar,

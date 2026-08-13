@@ -4,16 +4,18 @@ export type UserRole =
   | "STUDENT"
   | "PARENT"
   | "TEACHER"
-  | "SCHOOL";
+  | "SCHOOL"
+  | "EDITOR";
 
 // ─── Core User Model ──────────────────────────────────────────────────────────
 export interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  createdAt: string;
-  updatedAt: string;
+  id:            string;
+  name:          string;
+  email:         string;
+  role:          UserRole;
+  emailVerified: boolean;
+  createdAt:     string;
+  updatedAt:     string;
 }
 
 // ─── Session stored in JWT payload ────────────────────────────────────────────
@@ -75,9 +77,9 @@ export interface AuthResponse<T = undefined> {
 }
 
 export interface PasswordResetToken {
-  id: string;
-  userId: string;
-  token: string;
+  id:        string;
+  userId:    string;
+  tokenHash: string;   // SHA-256 of the raw token — never the raw token itself
   expiresAt: Date;
-  used: boolean;
+  used:      boolean;
 }

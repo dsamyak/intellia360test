@@ -25,12 +25,13 @@ export async function GET() {
     }
 
     const user: AuthUser = {
-      id: dbUser.id,
-      name: dbUser.name,
-      email: dbUser.email,
-      role: dbUser.role,
-      createdAt: dbUser.createdAt.toISOString(),
-      updatedAt: dbUser.updatedAt.toISOString(),
+      id:            dbUser.id,
+      name:          dbUser.name,
+      email:         dbUser.email,
+      role:          dbUser.role,
+      emailVerified: dbUser.emailVerified,
+      createdAt:     dbUser.createdAt.toISOString(),
+      updatedAt:     dbUser.updatedAt.toISOString(),
     };
 
     return NextResponse.json<AuthResponse<AuthUser>>(
