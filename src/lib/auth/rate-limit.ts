@@ -49,7 +49,6 @@ export async function checkRateLimit(opts: RateLimitOptions): Promise<RateLimitR
   const { identifier, action, maxAttempts, windowMs } = opts;
   const key       = hashKey(identifier);
   const now       = Date.now();
-  const windowEnd = new Date(now + windowMs);
 
   try {
     // Upsert: atomically increment count, reset window if expired.
