@@ -19,7 +19,8 @@ export const RegisterSchema = z
     email: z.string().email("Enter a valid email address"),
     password: passwordSchema,
     confirmPassword: z.string(),
-    role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"]),
+role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"]),
+grade: z.string().optional(),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

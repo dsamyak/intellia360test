@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, role } = result.data;
+    const { name, email, password, role, grade } = result.data;
 
     // ── Duplicate-email check ───────────────────────────────────────────────
     const existing = await db.user.findUnique({ where: { email } });
@@ -66,18 +66,19 @@ export async function POST(request: NextRequest) {
       } else if (role === "ADMIN" || role === "EDITOR") {
         // No profile required
       } else {
-        // STUDENT / PARENT
-        await tx.studentProfile.create({
-          data: {
-            userId:        newUser.id,
-            grade:         "grade1",
-            xpPoints:      0,
-            learningGems:  0,
-            streakDays:    1,
-            lastActiveDate: new Date(),
-          },
-        });
-      }
+// STUDENT / PARENT
+const studentGrade = grade || "grade1";
+
+await tx.studentProfile.create({
+  data: {
+    userId: newUser.id,
+    grade: studentGrade,
+    xpPoints: 0,
+    learningGems: 0,
+    streakDays: 1,
+    lastActiveDate: new Date(),
+  },
+});      }
 
       // Verification token (hashed)
       await tx.emailVerificationToken.create({

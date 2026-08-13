@@ -153,10 +153,95 @@ export default function StudentDashboardPage() {
   const completedCount = [isArchCompleted, isPracticeCompleted, isEdunotesCompleted, isVideoCompleted].filter(Boolean).length;
   const completionPct  = Math.round((completedCount / 4) * 100);
 
-  const totalTopics = curriculum
-    ? curriculum.chapters.reduce((a, c) => a + c.topics.length, 0)
-    : 0;
+// ──────────────────────────────────────────────────────────────
+// 1. Dynamic Hero Slider — 4 Slides
+// ──────────────────────────────────────────────────────────────
+const heroSlides = [
+  // Dot 1 — Today's Adventure (Lesson Overview)
+  {
+    tag: activeLessonData.heroSlide?.tag || "Today's Adventure",
+    title: activeLessonData.title,
+    subtitle:
+      activeLessonData.heroSlide?.subtitle ||
+      `Dive into ${activeLessonData.title}! Discover core concepts through interactive visuals and step-by-step guided learning designed just for you.`,
+    ctaText: "Start Learning →",
+    ctaUrl: architectureUrl,
+    visualizerKey:
+      activeLessonData.heroSlide?.visualizerKey || activeLessonData.id,
+    visualizerData:
+      activeLessonData.heroSlide?.visualizerData || { number: 123 },
+    activityType: "architecture",
+    xpReward: xpAwardForArch,
+    gemsReward: gemsAwardForArch,
+  },
 
+  // Dot 2 — Story & Interactive Simulation
+  {
+    tag: "Story & Interactive Simulation",
+    title: `Story & Simulation`,
+    subtitle: `✦ Understand the concept visually ✦ Learn through real-life examples ✦ Improve logical thinking ✦ Interactive exploration ✦ Better concept retention`,
+    ctaText: isArchCompleted
+      ? "Launch Simulation ✓ (Completed)"
+      : `Launch Story & Simulation`,
+    ctaUrl: architectureUrl,
+    visualizerKey: "symmetry",
+    visualizerData:
+      activeLessonData.heroSlide?.visualizerData || { number: 246 },
+    activityType: "architecture",
+    xpReward: xpAwardForArch,
+    gemsReward: gemsAwardForArch,
+  },
+
+  // Dot 3 — Practice Challenge
+  {
+    tag: "Practice Challenge",
+    title: "Practice Challenge",
+    subtitle: `Put your knowledge to the test! ✦ Interactive questions ✦ Instant feedback ✦ Accuracy improvement ✦ Confidence building`,
+    ctaText: isPracticeCompleted
+      ? "Practice Again ✓ (Completed)"
+      : "Start Practice (+30 XP) 🏆",
+    ctaUrl: practiceUrl,
+    visualizerKey: "fraction",
+    visualizerData: { number: 456 },
+    activityType: "practice",
+    xpReward: 30,
+    gemsReward: 0,
+  },
+
+  // Dot 4 — Reflection & Achievement
+  {
+    tag: "Reflection & Achievement",
+    title: `Reflection & Achievement`,
+    subtitle: `Lesson: ${isLessonCompleted ? "Completed ✓" : "In Progress"} | Earned XP: ${xpPoints} | Gems: ${learningGems} | Completion: ${completionPercentage}% | Activities Done: ${completedCount}/4`,
+    ctaText: isReflectionCompleted
+      ? "Review Reflection ✓ (Completed)"
+      : "Review Reflection (+20 XP) 📖",
+    ctaUrl: edunotesUrl,
+    visualizerKey: "time",
+    visualizerData: { number: 789 },
+    activityType: "reflection",
+    xpReward: 20,
+    gemsReward: 0,
+  },
+];
+
+const handleHeroCtaClick = (
+  slide: HeroSlideWithActivity,
+  _slideIndex?: number
+) => {
+  if (slide.activityType) {
+    completeActivity(
+      activeLessonData.id,
+      slide.activityType,
+      slide.xpReward || 0,
+      slide.gemsReward || 0
+    );
+  }
+};
+
+const totalTopics = curriculum
+  ? curriculum.chapters.reduce((a, c) => a + c.topics.length, 0)
+  : 0;
   // ── action cards for learning grid ─────────────────────────────────────────
   const mappedCards = [
     {
