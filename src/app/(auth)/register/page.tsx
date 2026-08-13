@@ -122,6 +122,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [registeredEmail, setRegisteredEmail] = useState("");
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -133,12 +135,63 @@ export default function RegisterPage() {
         name, email, password,
         confirmPassword, role, agreeToTerms,
       });
-      if (!result.success) setError(result.message);
+      if (result.success) {
+        setRegisteredEmail(email);   // switch to confirmation screen
+      } else {
+        setError(result.message);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
+  }
+
+  // ── Email-sent confirmation screen ─────────────────────────────────────────
+  if (registeredEmail) {
+    return (
+      <div className="auth-shell">
+        <nav className="auth-nav">
+          <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
+            <span className="auth-logo-text">
+              intellia<span className="three">3</span><span className="six">6</span>0
+            </span>
+          </Link>
+        </nav>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 24px" }}>
+          <div style={{ background: "#fff", borderRadius: 24, padding: "48px 44px", maxWidth: 480, width: "100%", boxShadow: "0 8px 40px rgba(30,27,75,.10)", textAlign: "center" }}>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(249,115,22,.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", margin: "0 auto 24px", border: "2px solid rgba(249,115,22,.20)" }}>
+              📬
+            </div>
+            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e1b4b", margin: "0 0 10px" }}>
+              Check your inbox!
+            </h1>
+            <p style={{ fontSize: "0.93rem", color: "#4b5563", lineHeight: 1.65, margin: "0 0 10px" }}>
+              We&apos;ve sent a verification link to
+            </p>
+            <p style={{ fontSize: "1rem", fontWeight: 700, color: "#f97316", margin: "0 0 20px" }}>
+              {registeredEmail}
+            </p>
+            <p style={{ fontSize: "0.88rem", color: "#6b7280", lineHeight: 1.65, margin: "0 0 28px" }}>
+              Click the link in that email to activate your account.
+              The link expires after <strong>24 hours</strong>.
+              Check your spam folder if you don&apos;t see it.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <Link href="/resend-verification" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 24px", background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", borderRadius: 12, textDecoration: "none", fontWeight: 700, fontSize: ".9rem" }}>
+                Resend verification email
+              </Link>
+              <Link href="/login" style={{ fontSize: "0.88rem", color: "#7c3aed", fontWeight: 600, textAlign: "center" }}>
+                ← Back to login
+              </Link>
+            </div>
+          </div>
+        </div>
+        <footer className="auth-page-footer">
+          <span>© 2026 Intellia360. All rights reserved.</span>
+        </footer>
+      </div>
+    );
   }
 
   return (

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { UserRole } from "@/types/auth";
-import type { Metadata } from "next";
+import type { AuthUser, UserRole } from "@/types/auth";
 
-// ── Role Options ──────────────────────────────────────────────────────────────
+// ─── Role options ────────────────────────────────────────────────────────────
 const ROLES: { value: UserRole; label: string; icon: string }[] = [
   { value: "STUDENT", label: "Student", icon: "🎓" },
   { value: "TEACHER", label: "Teacher", icon: "👩‍🏫" },
@@ -16,7 +16,7 @@ const ROLES: { value: UserRole; label: string; icon: string }[] = [
   { value: "ADMIN",   label: "Admin",   icon: "🛡️" },
 ];
 
-// ── SVG Icons ────────────────────────────────────────────────────────────────
+// ─── Icons ───────────────────────────────────────────────────────────────────
 function MailIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -25,7 +25,6 @@ function MailIcon() {
     </svg>
   );
 }
-
 function LockIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -34,12 +33,10 @@ function LockIcon() {
     </svg>
   );
 }
-
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-      <circle cx="12" cy="12" r="3"/>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
     </svg>
   ) : (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,7 +46,6 @@ function EyeIcon({ open }: { open: boolean }) {
     </svg>
   );
 }
-
 function ArrowIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -57,8 +53,6 @@ function ArrowIcon() {
     </svg>
   );
 }
-
-// ── Google / Microsoft / Apple SVGs ──────────────────────────────────────────
 function GoogleIcon() {
   return (
     <svg className="social-icon" viewBox="0 0 48 48">
@@ -69,7 +63,6 @@ function GoogleIcon() {
     </svg>
   );
 }
-
 function MicrosoftIcon() {
   return (
     <svg className="social-icon" viewBox="0 0 21 21">
@@ -80,7 +73,6 @@ function MicrosoftIcon() {
     </svg>
   );
 }
-
 function AppleIcon() {
   return (
     <svg className="social-icon" viewBox="0 0 814 1000" fill="#000">
@@ -89,24 +81,120 @@ function AppleIcon() {
   );
 }
 
-export default function LoginPage() {
-  const { login } = useAuth();
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
-  const [role, setRole] = useState<UserRole>("STUDENT");
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize(config: { client_id: string; callback: (r: { credential: string }) => void }): void;
+          renderButton(el: HTMLElement, opts: object): void;
+          prompt(): void;
+        };
+      };
+    };
+  }
+}
+
+function getDashboardPath(role: UserRole): string {
+  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
+  if (role === "EDITOR")                       return "/editor/dashboard";
+  if (role === "ADMIN")                        return "/admin/dashboard";
+  return "/student/dashboard";
+}
+
+export default function LoginPage() {
+  const { login, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const [role,           setRole]           = useState<UserRole>("STUDENT");
   const [emailOrUsername, setEmailOrUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [password,       setPassword]       = useState("");
+  const [showPassword,   setShowPassword]   = useState(false);
+  const [rememberMe,     setRememberMe]     = useState(false);
+  const [loading,        setLoading]        = useState(false);
+  const [error,          setError]          = useState("");
+  const [unverified,     setUnverified]     = useState(false);
+  const [googleLoading,  setGoogleLoading]  = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+
+  // ── Load Google Identity Services ─────────────────────────────────────────
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
+    setGoogleLoading(true);
+    setError("");
+    try {
+      const res  = await fetch("/api/auth/google", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ credential: response.credential }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const user = json.data as AuthUser;
+        router.push(getDashboardPath(user.role));
+      } else {
+        setError(json.message ?? "Google sign-in failed.");
+      }
+    } catch {
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    if (!googleClientId) return;
+
+    const scriptId = "google-gsi";
+    if (document.getElementById(scriptId)) {
+      // Script already loaded — just initialise
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback:  handleGoogleCredential,
+        });
+        if (googleBtnRef.current) {
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline", size: "large", text: "signin_with", width: 280,
+          });
+        }
+      }
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id   = scriptId;
+    script.src  = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => {
+      if (!window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback:  handleGoogleCredential,
+      });
+      if (googleBtnRef.current) {
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline", size: "large", text: "signin_with", width: 280,
+        });
+      }
+    };
+    document.body.appendChild(script);
+  }, [googleClientId, handleGoogleCredential]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setUnverified(false);
     setLoading(true);
     try {
       const result = await login({ emailOrUsername, password, rememberMe });
-      if (!result.success) setError(result.message);
+      if (!result.success) {
+        if (result.unverified) setUnverified(true);
+        setError(result.message);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -116,24 +204,30 @@ export default function LoginPage() {
 
   return (
     <div className="auth-shell">
-      {/* ── Nav ── */}
+      {/* Nav */}
       <nav className="auth-nav">
         <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
           <span className="auth-logo-text">
             intellia<span className="three">3</span><span className="six">6</span>0
           </span>
         </Link>
+        <div className="auth-nav-action">
+          <span>New here?</span>
+          <Link href="/register" className="auth-nav-link">
+            Create account <ArrowIcon />
+          </Link>
+        </div>
       </nav>
 
-      {/* ── Body ── */}
+      {/* Body */}
       <div className="auth-body">
-        {/* Left — Form Card */}
+        {/* Left — form */}
         <div className="auth-card">
           <h1 className="auth-card-title">Welcome to Intellia360</h1>
           <p className="auth-card-subtitle">AI-Powered Adaptive Learning Platform</p>
           <p className="auth-card-tagline">Login to continue your learning journey</p>
 
-          {/* Role Selector */}
+          {/* Role selector */}
           <span className="auth-role-label">I am a</span>
           <div className="auth-role-grid" role="group" aria-label="Select your role">
             {ROLES.map((r) => (
@@ -153,24 +247,57 @@ export default function LoginPage() {
 
           {/* Form */}
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            {error && (
-              <div className="auth-error-banner" role="alert">
-                ⚠️ {error}
+
+            {/* Generic error */}
+            {error && !unverified && (
+              <div className="auth-error-banner" role="alert">⚠️ {error}</div>
+            )}
+
+            {/* Unverified-email banner */}
+            {unverified && (
+              <div
+                style={{
+                  background: "rgba(245,158,11,.10)",
+                  border: "1.5px solid rgba(245,158,11,.35)",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+                role="alert"
+              >
+                <p style={{ margin: 0, fontSize: "0.88rem", fontWeight: 600, color: "#92400e" }}>
+                  📧 Email not verified
+                </p>
+                <p style={{ margin: 0, fontSize: "0.83rem", color: "#78350f", lineHeight: 1.5 }}>
+                  Please check your inbox and click the verification link before logging in.
+                </p>
+                <Link
+                  href={`/resend-verification?email=${encodeURIComponent(emailOrUsername)}`}
+                  style={{
+                    alignSelf: "flex-start",
+                    fontSize: "0.83rem",
+                    fontWeight: 700,
+                    color: "#f97316",
+                    textDecoration: "none",
+                  }}
+                >
+                  Resend verification email →
+                </Link>
               </div>
             )}
 
-            {/* Email / Username */}
+            {/* Email */}
             <div className="auth-field">
-              <label className="auth-field-label" htmlFor="login-email">
-                Email / Username
-              </label>
+              <label className="auth-field-label" htmlFor="login-email">Email</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon"><MailIcon /></span>
                 <input
                   id="login-email"
                   type="text"
                   className="auth-input"
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email"
                   value={emailOrUsername}
                   onChange={(e) => setEmailOrUsername(e.target.value)}
                   autoComplete="username"
@@ -181,9 +308,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="auth-field">
-              <label className="auth-field-label" htmlFor="login-password">
-                Password
-              </label>
+              <label className="auth-field-label" htmlFor="login-password">Password</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon"><LockIcon /></span>
                 <input
@@ -207,7 +332,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember me + Forgot */}
+            {/* Remember + Forgot */}
             <div className="auth-check-row">
               <label className="auth-checkbox-wrap">
                 <input
@@ -224,12 +349,7 @@ export default function LoginPage() {
             </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              id="login-submit"
-              className="auth-submit-btn"
-              disabled={loading}
-            >
+            <button type="submit" id="login-submit" className="auth-submit-btn" disabled={loading}>
               {loading ? "Logging in…" : "Login"}
               {!loading && <ArrowIcon />}
             </button>
@@ -237,25 +357,39 @@ export default function LoginPage() {
             {/* Social */}
             <div className="auth-divider"><span>or continue with</span></div>
             <div className="auth-social-row">
-              <button type="button" className="auth-social-btn" id="login-google">
-                <GoogleIcon /> Google
-              </button>
-              <button type="button" className="auth-social-btn" id="login-microsoft">
-                <MicrosoftIcon /> Microsoft
-              </button>
-              <button type="button" className="auth-social-btn" id="login-apple">
-                <AppleIcon /> Apple
-              </button>
+              {/* Real Google Identity Services button (renders when NEXT_PUBLIC_GOOGLE_CLIENT_ID is set) */}
+              {googleClientId ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div ref={googleBtnRef} style={{ minHeight: 44 }} />
+                  {googleLoading && (
+                    <p style={{ textAlign: "center", fontSize: "0.82rem", color: "var(--color-text-muted)" }}>
+                      Signing in with Google…
+                    </p>
+                  )}
+                </div>
+              ) : (
+                // Placeholder shown when env var not set (dev without Google)
+                <button
+                  type="button"
+                  className="auth-social-btn"
+                  style={{ gridColumn: "1/-1", opacity: 0.5, cursor: "not-allowed" }}
+                  disabled
+                  title="Set NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable"
+                >
+                  <GoogleIcon /> Google (not configured)
+                </button>
+              )}
+              <button type="button" className="auth-social-btn"><MicrosoftIcon /> Microsoft</button>
+              <button type="button" className="auth-social-btn"><AppleIcon /> Apple</button>
             </div>
 
             <p className="auth-footer-switch">
-              Don&apos;t have an account?{" "}
-              <Link href="/register">Sign Up</Link>
+              Don&apos;t have an account? <Link href="/register">Sign Up</Link>
             </p>
           </form>
         </div>
 
-        {/* Right — Panel */}
+        {/* Right — panel */}
         <div className="auth-panel">
           <h2 className="auth-panel-headline">
             <span className="word-learn">Learn.</span>{" "}
@@ -267,28 +401,12 @@ export default function LoginPage() {
             Intellia360 is designed for students, teachers, parents and administrators
             to create a better learning experience together.
           </p>
-
-          {/* Feature Cards */}
           <div className="auth-feature-grid">
-            <div className="auth-feature-card">
-              <span className="feat-icon">📘</span>
-              Personalized Learning
-            </div>
-            <div className="auth-feature-card">
-              <span className="feat-icon">🤖</span>
-              AI-Powered Insights
-            </div>
-            <div className="auth-feature-card">
-              <span className="feat-icon">📊</span>
-              Real-time Progress
-            </div>
-            <div className="auth-feature-card">
-              <span className="feat-icon">🛡️</span>
-              Safe &amp; Secure
-            </div>
+            <div className="auth-feature-card"><span className="feat-icon">📘</span>Personalized Learning</div>
+            <div className="auth-feature-card"><span className="feat-icon">🤖</span>AI-Powered Insights</div>
+            <div className="auth-feature-card"><span className="feat-icon">📊</span>Real-time Progress</div>
+            <div className="auth-feature-card"><span className="feat-icon">🛡️</span>Safe &amp; Secure</div>
           </div>
-
-          {/* Trust badges */}
           <div className="auth-trust-row">
             <div className="auth-trust-badge">
               <span className="trust-icon">🔒</span>
@@ -302,9 +420,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer className="auth-page-footer">
-        <span>© 2025 Intellia360. All rights reserved.</span>
+        <span>© 2026 Intellia360. All rights reserved.</span>
         <Link href="/privacy">Privacy Policy</Link>
         <Link href="/terms">Terms of Service</Link>
         <Link href="/support">Support</Link>
