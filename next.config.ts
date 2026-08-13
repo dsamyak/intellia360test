@@ -15,7 +15,6 @@ const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
   // Force HTTPS in production (1 year, include subdomains)
-  // Set only in production to avoid breaking local http://localhost dev flow.
   ...(process.env.NODE_ENV === "production"
     ? [
         {
@@ -25,19 +24,15 @@ const securityHeaders = [
       ]
     : []),
   // Content Security Policy
-  // Adjust 'script-src' and 'connect-src' as you add third-party integrations.
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // Next.js inline scripts (nonces preferred in prod, unsafe-inline for now)
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      // API calls and WebSocket HMR
       "connect-src 'self' https://accounts.google.com https://*.resend.com",
-      // Google OAuth popup / iframe
       "frame-src https://accounts.google.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -52,7 +47,6 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
 
-  // Apply security headers to every page and API route
   async headers() {
     return [
       {
@@ -62,15 +56,22 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Redirect HTTP → HTTPS in production at the Next.js layer
-  // (Vercel / your CDN should handle this too, belt-and-suspenders)
+  // Redirect HTTP → HTTPS in production.
+  // Uses a backtick template literal so the env var actually interpolates.
   async redirects() {
     if (process.env.NODE_ENV !== "production") return [];
+
+    const appHost = (process.env.NEXT_PUBLIC_APP_URL ?? "")
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "");
+
+    if (!appHost) return [];
+
     return [
       {
         source:      "/:path*",
         has:         [{ type: "header", key: "x-forwarded-proto", value: "http" }],
-        destination: "https://${process.env.NEXT_PUBLIC_APP_URL?.replace('https://','')}/:path*",
+        destination: `https://${appHost}/:path*`,
         permanent:   true,
       },
     ];

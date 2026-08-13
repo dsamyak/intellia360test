@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         createdAt:     record.user.createdAt.toISOString(),
         updatedAt:     record.user.updatedAt.toISOString(),
       };
-      const token = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+      const token = await signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
       await setSessionCookie(token);
       return NextResponse.json<AuthResponse<AuthUser>>(
         { success: true, message: "Email already verified. You are now logged in.", data: user },
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       updatedAt:     updatedUser.updatedAt.toISOString(),
     };
 
-    const jwtToken = signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    const jwtToken = await signToken({ sub: user.id, email: user.email, role: user.role, name: user.name });
     await setSessionCookie(jwtToken);
 
     return NextResponse.json<AuthResponse<AuthUser>>(

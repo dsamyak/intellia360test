@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       updatedAt:     dbUser.updatedAt.toISOString(),
     };
 
-    const token = signToken({
+    const token = await signToken({
       sub:   user.id,
       email: user.email,
       role:  user.role,
