@@ -43,12 +43,12 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
+  name:          string;
+  email:         string;
+  password:      string;
   confirmPassword: string;
-  role: UserRole;
-  agreeToTerms: boolean;
+  requestedRole?: string;   // intent only — server always creates STUDENT
+  agreeToTerms:  boolean;
 }
 
 export interface ForgotPasswordInput {

@@ -15,11 +15,16 @@ export const LoginSchema = z.object({
 
 export const RegisterSchema = z
   .object({
-    name: z.string().min(2, "Full name must be at least 2 characters"),
+    name:  z.string().min(2, "Full name must be at least 2 characters"),
     email: z.string().email("Enter a valid email address"),
     password: passwordSchema,
     confirmPassword: z.string(),
-    role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"]),
+    // Role submitted here is treated as intent only — the server always
+    // creates the account as STUDENT. ADMIN is not a valid intent choice.
+    requestedRole: z
+      .enum(["STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"])
+      .optional()
+      .default("STUDENT"),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

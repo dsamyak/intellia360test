@@ -3,16 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import type { UserRole } from "@/types/auth";
 
-// ── Role Options ──────────────────────────────────────────────────────────────
-const ROLES: { value: UserRole; label: string; icon: string; sub: string }[] = [
-  { value: "STUDENT", label: "Student", icon: "🎓",  sub: "Learn & Grow"      },
-  { value: "TEACHER", label: "Teacher", icon: "👩‍🏫", sub: "Teach & Inspire"   },
-  { value: "PARENT",  label: "Parent",  icon: "👨‍👧", sub: "Support & Track"   },
-  { value: "SCHOOL",  label: "School",  icon: "🏫",  sub: "Manage & Monitor"  },
-  { value: "EDITOR",  label: "Editor",  icon: "✏️",  sub: "Create Content"    },
-  { value: "ADMIN",   label: "Admin",   icon: "🛡️",  sub: "Full Access"       },
+// ── Intent options (what the user plans to use Intellia360 as) ───────────────
+// ADMIN is intentionally excluded — admin role can only be granted by an
+// existing admin after registration.
+type RequestedRole = "STUDENT" | "PARENT" | "TEACHER" | "SCHOOL" | "EDITOR";
+
+const INTENT_OPTIONS: { value: RequestedRole; label: string; icon: string; sub: string }[] = [
+  { value: "STUDENT", label: "Student", icon: "🎓",  sub: "I want to learn"         },
+  { value: "TEACHER", label: "Teacher", icon: "👩‍🏫", sub: "I want to teach"         },
+  { value: "PARENT",  label: "Parent",  icon: "👨‍👧", sub: "I want to track progress" },
+  { value: "SCHOOL",  label: "School",  icon: "🏫",  sub: "I manage a school"        },
+  { value: "EDITOR",  label: "Editor",  icon: "✏️",  sub: "I want to create content" },
 ];
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -111,7 +113,7 @@ function AppleIcon() {
 export default function RegisterPage() {
   const { register } = useAuth();
 
-  const [role, setRole] = useState<UserRole>("STUDENT");
+  const [requestedRole, setRequestedRole] = useState<RequestedRole>("STUDENT");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -133,10 +135,10 @@ export default function RegisterPage() {
     try {
       const result = await register({
         name, email, password,
-        confirmPassword, role, agreeToTerms,
+        confirmPassword, requestedRole, agreeToTerms,
       });
       if (result.success) {
-        setRegisteredEmail(email);   // switch to confirmation screen
+        setRegisteredEmail(email);
       } else {
         setError(result.message);
       }
@@ -218,16 +220,27 @@ export default function RegisterPage() {
           <h1 className="auth-card-title">Create Your Intellia360 Account</h1>
           <p className="auth-card-tagline">Join our learning community and start your journey today!</p>
 
-          {/* Role Selector */}
-          <span className="auth-role-label" style={{ marginTop: "8px" }}>I am a</span>
-          <div className="auth-role-grid" role="group" aria-label="Select your role">
-            {ROLES.map((r) => (
+          {/* Intent Selector */}
+          <span className="auth-role-label" style={{ marginTop: "8px" }}>
+            I plan to use Intellia360 as
+          </span>
+          {/* Base-plan notice */}
+          <div style={{
+            background: "rgba(124,58,237,.07)", border: "1px solid rgba(124,58,237,.20)",
+            borderRadius: 10, padding: "10px 14px", marginBottom: 16,
+            fontSize: "0.8rem", color: "#6d28d9", lineHeight: 1.55,
+          }}>
+            ℹ️ All accounts start on the <strong>Student plan</strong>. An administrator will
+            upgrade your role after verifying your account.
+          </div>
+          <div className="auth-role-grid" role="group" aria-label="Select your intended use">
+            {INTENT_OPTIONS.map((r) => (
               <button
                 key={r.value}
                 type="button"
-                className={`auth-role-btn${role === r.value ? " active" : ""}`}
-                onClick={() => setRole(r.value)}
-                aria-pressed={role === r.value}
+                className={`auth-role-btn${requestedRole === r.value ? " active" : ""}`}
+                onClick={() => setRequestedRole(r.value)}
+                aria-pressed={requestedRole === r.value}
                 id={`reg-role-${r.value}`}
               >
                 <span className="role-icon">{r.icon}</span>
