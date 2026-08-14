@@ -212,8 +212,8 @@ const heroSlides = [
   {
     tag: "Reflection & Achievement",
     title: `Reflection & Achievement`,
-    subtitle: `Lesson: ${isLessonCompleted ? "Completed ✓" : "In Progress"} | Earned XP: ${xpPoints} | Gems: ${learningGems} | Completion: ${completionPercentage}% | Activities Done: ${completedCount}/4`,
-    ctaText: isReflectionCompleted
+    subtitle: `Lesson: ${isLessonCompleted ? "Completed ✓" : "In Progress"} | Earned XP: ${xpPoints} | Gems: ${learningGems} | Completion: ${completionPct}% | Activities Done: ${completedCount}/4`,
+    ctaText: isEdunotesCompleted
       ? "Review Reflection ✓ (Completed)"
       : "Review Reflection (+20 XP) 📖",
     ctaUrl: edunotesUrl,
