@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useStudentContext } from "@/context/StudentContext";
 import LearningGridContainer from "@/components/student/LearningGridContainer";
@@ -171,8 +171,8 @@ const heroSlides = [
     visualizerData:
       activeLessonData.heroSlide?.visualizerData || { number: 123 },
     activityType: "architecture",
-    xpReward: xpAwardForArch,
-    gemsReward: gemsAwardForArch,
+    xpReward: xpAward,
+    gemsReward: gemAward,
   },
 
   // Dot 2 — Story & Interactive Simulation
@@ -188,8 +188,8 @@ const heroSlides = [
     visualizerData:
       activeLessonData.heroSlide?.visualizerData || { number: 246 },
     activityType: "architecture",
-    xpReward: xpAwardForArch,
-    gemsReward: gemsAwardForArch,
+    xpReward: xpAward,
+    gemsReward: gemAward,
   },
 
   // Dot 3 — Practice Challenge
