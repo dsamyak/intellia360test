@@ -19,7 +19,7 @@ async function main() {
   await prisma.teacherProfile.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash('Password123!', 10);
+  const passwordHash = await bcrypt.hash('Password123!', 12);
 
   // ── 0. Create the platform super-admin ────────────────────────────────────
   // This is the ONLY user seeded with role=ADMIN.

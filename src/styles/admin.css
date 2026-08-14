@@ -3331,3 +3331,74 @@
 .admin-dashboard-notification-row {
   margin-top: 1rem;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE  (toggled by AdminNavbar via html.admin-dark class)
+   ══════════════════════════════════════════════════════════════ */
+
+html.admin-dark .admin-shell                { background: #0f1117; }
+html.admin-dark .admin-sidebar              { background: #13151c; border-color: #1e2130; }
+html.admin-dark .admin-sidebar-header       { border-color: #1e2130; }
+html.admin-dark .admin-nav-label            { color: #4b5563; }
+html.admin-dark .admin-nav-item             { color: #94a3b8; }
+html.admin-dark .admin-nav-item:hover       { background: #1e2130; color: #f1f5f9; }
+html.admin-dark .admin-nav-item.active      { background: rgba(249,115,22,.18); color: #f97316; }
+html.admin-dark .admin-navbar               { background: #13151c; border-color: #1e2130; box-shadow: none; }
+html.admin-dark .admin-navbar h1            { color: #f1f5f9; }
+html.admin-dark .admin-search-wrapper       { background: #1e2130; border-color: #2d3348; }
+html.admin-dark .admin-search-input         { background: transparent; color: #f1f5f9; }
+html.admin-dark .admin-search-input::placeholder { color: #4b5563; }
+html.admin-dark .admin-icon-btn             { background: #1e2130; color: #94a3b8; border-color: #2d3348; }
+html.admin-dark .admin-icon-btn:hover       { background: #2d3348; color: #f1f5f9; }
+html.admin-dark .admin-content-body         { background: #0f1117; }
+html.admin-dark .admin-main-wrapper         { background: #0f1117; }
+
+/* Cards */
+html.admin-dark .admin-card,
+html.admin-dark .admin-hero-card            { background: #13151c; border-color: #1e2130; }
+html.admin-dark .teacher-stat-card,
+html.admin-dark .student-stat-card,
+html.admin-dark .course-stat-card           { background: #13151c; border-color: #1e2130; }
+html.admin-dark .teacher-directory-card,
+html.admin-dark .student-directory-card,
+html.admin-dark .course-directory-card      { background: #13151c; border-color: #1e2130; }
+html.admin-dark .student-overview-card,
+html.admin-dark .course-overview-card       { background: #13151c; border-color: #1e2130; }
+
+/* Text */
+html.admin-dark .admin-page-title           { color: #f1f5f9; }
+html.admin-dark .admin-page-subtitle,
+html.admin-dark .admin-breadcrumb           { color: #64748b; }
+html.admin-dark .teacher-stat-content span,
+html.admin-dark .student-stat-content span,
+html.admin-dark .course-stat-content span   { color: #94a3b8; }
+html.admin-dark .teacher-stat-content strong,
+html.admin-dark .student-stat-content strong,
+html.admin-dark .course-stat-content strong { color: #f1f5f9; }
+html.admin-dark .teacher-stat-content small,
+html.admin-dark .student-stat-content small,
+html.admin-dark .course-stat-content small  { color: #64748b; }
+
+/* Table */
+html.admin-dark .reusable-table-wrapper     { background: #13151c; border-color: #1e2130; }
+html.admin-dark .reusable-table th          { background: #1e2130; color: #94a3b8; border-color: #2d3348; }
+html.admin-dark .reusable-table td          { border-color: #1e2130; color: #e2e8f0; }
+html.admin-dark .reusable-table tr:hover td { background: #1e2130; }
+html.admin-dark .table-search-input         { background: #1e2130; border-color: #2d3348; color: #f1f5f9; }
+html.admin-dark .table-search-input::placeholder { color: #4b5563; }
+
+/* Profile dropdown */
+html.admin-dark .admin-user-profile        { background: #1e2130; border-color: #2d3348; }
+html.admin-dark .admin-user-name           { color: #f1f5f9; }
+html.admin-dark .admin-user-role           { color: #64748b; }
+html.admin-dark .admin-profile-dropdown    { background: #13151c; border-color: #1e2130; box-shadow: 0 20px 40px rgba(0,0,0,.5); }
+html.admin-dark .admin-profile-divider     { background: #1e2130; }
+html.admin-dark .admin-profile-dropdown-item { color: #94a3b8; }
+html.admin-dark .admin-profile-dropdown-item:hover { background: #1e2130; color: #f1f5f9; }
+html.admin-dark .admin-profile-dropdown-name { color: #f1f5f9; }
+html.admin-dark .admin-profile-dropdown-role { color: #64748b; }
+
+/* Transition for smooth switching */
+html .admin-shell *,
+html .admin-navbar *,
+html .admin-sidebar * { transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
