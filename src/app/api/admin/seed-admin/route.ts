@@ -20,7 +20,7 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  const password = await hashPassword("Admin@Intellia360!");
+  const password = await hashPassword("Password123!");
 
   const admin = await db.user.create({
     data: {
@@ -36,7 +36,7 @@ export async function POST(_req: NextRequest) {
   return NextResponse.json(
     {
       success: true,
-      message: "✅ Admin created. Login with admin@intellia.dev / Admin@Intellia360! — then DELETE this file.",
+      message: "✅ Admin created. Login with admin@intellia.dev / Password123! — then DELETE this file.",
       data:    admin,
     },
     { status: 201 }

@@ -24,11 +24,11 @@ async function main() {
   // ── 0. Create the platform super-admin ────────────────────────────────────
   // This is the ONLY user seeded with role=ADMIN.
   // All other roles must be assigned by this admin via the admin panel.
-  await prisma.user.create({
+  const admin = await prisma.user.create({
     data: {
       email:         'admin@intellia.dev',
       name:          'Platform Admin',
-      password:      passwordHash,
+      password:      passwordHash,          // Password123! — same as all demo accounts
       role:          Role.ADMIN,
       emailVerified: true,
       // requestedRole intentionally omitted — admin is not a "requested" role
