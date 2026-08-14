@@ -25,6 +25,8 @@ export const RegisterSchema = z
       .enum(["STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"])
       .optional()
       .default("STUDENT"),
+    // Optional grade hint — used to pre-set the student profile grade
+    grade: z.string().optional(),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

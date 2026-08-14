@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, requestedRole } = result.data;
+    const { name, email, password, requestedRole, grade } = result.data;
 
     // ── Duplicate-email check ───────────────────────────────────────────────
     // One email → one account only. Re-registering with a different role
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       await tx.studentProfile.create({
         data: {
           userId:        newUser.id,
-          grade:         "grade1",
+          grade:         grade ?? "grade1",
           xpPoints:      0,
           learningGems:  0,
           streakDays:    1,

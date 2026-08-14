@@ -48,6 +48,7 @@ export interface RegisterInput {
   password:      string;
   confirmPassword: string;
   requestedRole?: string;   // intent only — server always creates STUDENT
+  grade?:        string;    // optional grade hint for student profile
   agreeToTerms:  boolean;
 }
 

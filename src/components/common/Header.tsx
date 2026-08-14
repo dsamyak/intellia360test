@@ -10,14 +10,12 @@ export default function Header() {
 
   const now = new Date();
   const dateLabel = now.toLocaleDateString("en-US", {
-    day: "2-digit",
+    day:   "2-digit",
     month: "short",
-    year: "numeric",
+    year:  "numeric",
   });
 
-  const gradeLabel = currentGrade
-    .replace("grade", "Grade ")
-    .trim();
+  const gradeLabel = currentGrade.replace("grade", "Grade ").trim();
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -40,7 +38,7 @@ export default function Header() {
           📅 {dateLabel} ▾
         </div>
 
-        {/* Dark mode placeholder */}
+        {/* Theme toggle placeholder */}
         <button className="header-icon-btn" aria-label="Toggle theme" title="Toggle theme">
           🌙
         </button>
@@ -54,13 +52,13 @@ export default function Header() {
         {/* Grade badge */}
         <div
           style={{
-            padding: "5px 12px",
-            background: "rgba(249,115,22,.10)",
-            border: "1px solid rgba(249,115,22,.30)",
+            padding:      "5px 12px",
+            background:   "rgba(249,115,22,.10)",
+            border:       "1px solid rgba(249,115,22,.30)",
             borderRadius: "var(--radius-pill)",
-            fontSize: "12px",
-            fontWeight: 600,
-            color: "#f97316",
+            fontSize:     "12px",
+            fontWeight:   600,
+            color:        "#f97316",
           }}
         >
           {gradeLabel}
