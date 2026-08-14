@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         success: false,
         message: `Too many login attempts. Please try again in ${ipLimit.retryAfter} seconds.`,
       },
-      { status: 429, headers: rateLimitHeaders(ipLimit.retryAfter) }
+      { status: 429, headers: rateLimitHeaders(ipLimit.retryAfter, 10) }
     );
   }
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: `Too many attempts for this account. Try again in ${emailLimit.retryAfter} seconds.`,
         },
-        { status: 429, headers: rateLimitHeaders(emailLimit.retryAfter) }
+        { status: 429, headers: rateLimitHeaders(emailLimit.retryAfter, 5) }
       );
     }
 

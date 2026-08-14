@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (ipLimit.limited) {
       return NextResponse.json<AuthResponse>(OK, {
         status: 200,
-        headers: rateLimitHeaders(ipLimit.retryAfter),
+        headers: rateLimitHeaders(ipLimit.retryAfter, 5),
       });
     }
 
