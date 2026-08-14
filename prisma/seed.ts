@@ -21,13 +21,29 @@ async function main() {
 
   const passwordHash = await bcrypt.hash('Password123!', 10);
 
+  // ── 0. Create the platform super-admin ────────────────────────────────────
+  // This is the ONLY user seeded with role=ADMIN.
+  // All other roles must be assigned by this admin via the admin panel.
+  const admin = await prisma.user.create({
+    data: {
+      email:         'admin@intellia.dev',
+      name:          'Platform Admin',
+      password:      passwordHash,          // Password123! — same as all demo accounts
+      role:          Role.ADMIN,
+      emailVerified: true,
+      // requestedRole intentionally omitted — admin is not a "requested" role
+    },
+  });
+  console.log('  ✓ Admin:   admin@intellia.dev  / Password123!');
+
   // 1. Create Demo Teacher
   const teacherUser = await prisma.user.create({
     data: {
-      email: 'teacher@intellia.dev',
-      name: 'Sarah Jenkins',
-      password: passwordHash,
-      role: Role.TEACHER,
+      email:         'teacher@intellia.dev',
+      name:          'Sarah Jenkins',
+      password:      passwordHash,
+      role:          Role.TEACHER,
+      requestedRole: Role.TEACHER,
       emailVerified: true,
       teacherProfile: {
         create: {
@@ -98,10 +114,11 @@ async function main() {
   for (const sData of studentDataList) {
     const studentUser = await prisma.user.create({
       data: {
-        email: sData.email,
-        name: sData.name,
-        password: passwordHash,
-        role: Role.STUDENT,
+        email:         sData.email,
+        name:          sData.name,
+        password:      passwordHash,
+        role:          Role.STUDENT,
+        requestedRole: Role.STUDENT,
         emailVerified: true,
         studentProfile: {
           create: {
@@ -212,8 +229,9 @@ async function main() {
   });
 
   console.log('✅ Database seeded successfully!');
-  console.log(`Teacher credentials: teacher@intellia.dev / Password123!`);
-  console.log(`Student credentials: alex@intellia.dev / Password123!`);
+  console.log('  ✓ Admin:   admin@intellia.dev    / Password123!');
+  console.log('  ✓ Teacher: teacher@intellia.dev  / Password123!');
+  console.log('  ✓ Students: alex, maya, ethan, sophia @intellia.dev / Password123!');
 }
 
 main()

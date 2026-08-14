@@ -5,61 +5,69 @@ import { useStudentContext } from "@/context/StudentContext";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
-export default function Header() {
-  const profile = studentProfileData;
-
-  const {
-    xpPoints,
-    learningGems,
-    streakDays,
-    currentGrade,
-    setCurrentGrade,
-    studentName,
-  } = useStudentContext();
-
+  const { currentGrade } = useStudentContext();
   const { user } = useAuth();
 
-  const displayName =
-    studentName && studentName !== "Student Profile"
-      ? studentName
-      : user?.name || profile.name;
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString("en-US", {
+    day:   "2-digit",
+    month: "short",
+    year:  "numeric",
+  });
+
+  const gradeLabel = currentGrade.replace("grade", "Grade ").trim();
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "S";
 
   return (
     <header className="header-container">
       <div className="header-left">
-        <Logo />
-
-        <div className="header-user-summary">
-          <ProfileMenu
-            avatarUrl={profile.avatar}
-            studentName={displayName}
-          />
-
-          <div className="header-grade-level">
-            <GradeSelector
-              currentGrade={currentGrade}
-              onChangeGrade={setCurrentGrade}
-            />
-
-            <LevelProgress
-              levelTitle={profile.levelTitle}
-              levelNumber={profile.level}
-              progressPercentage={profile.levelProgress}
-            />
-          </div>
+        <div className="header-breadcrumb">
+          <span className="header-breadcrumb-path">
+            {user?.name ?? "Student"} / Dashboard
+          </span>
+          <span className="header-breadcrumb-title">Dashboard</span>
         </div>
       </div>
 
       <div className="header-right">
-        <StreakBadge streakDays={streakDays} />
-        <GemsBadge learningGems={learningGems} />
-        <XPBadge xpPoints={xpPoints} />
-        <NotificationButton />
+        {/* Date pill */}
+        <div className="header-date-pill">
+          📅 {dateLabel} ▾
+        </div>
 
-        <ProfileMenu
-          avatarUrl={profile.avatar}
-          studentName={displayName}
-        />
+        {/* Theme toggle placeholder */}
+        <button className="header-icon-btn" aria-label="Toggle theme" title="Toggle theme">
+          🌙
+        </button>
+
+        {/* Notifications */}
+        <button className="header-icon-btn" aria-label="Notifications" title="Notifications">
+          🔔
+          <span className="header-notif-dot" />
+        </button>
+
+        {/* Grade badge */}
+        <div
+          style={{
+            padding:      "5px 12px",
+            background:   "rgba(249,115,22,.10)",
+            border:       "1px solid rgba(249,115,22,.30)",
+            borderRadius: "var(--radius-pill)",
+            fontSize:     "12px",
+            fontWeight:   600,
+            color:        "#f97316",
+          }}
+        >
+          {gradeLabel}
+        </div>
+
+        {/* Avatar */}
+        <div className="header-avatar" title={user?.name ?? "Profile"}>
+          {initials}
+        </div>
       </div>
     </header>
   );

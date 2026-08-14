@@ -6,15 +6,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { AuthUser, UserRole } from "@/types/auth";
 
-// ─── Role options ────────────────────────────────────────────────────────────
-const ROLES: { value: UserRole; label: string; icon: string }[] = [
-  { value: "STUDENT", label: "Student", icon: "🎓" },
-  { value: "TEACHER", label: "Teacher", icon: "👩‍🏫" },
-  { value: "PARENT",  label: "Parent",  icon: "👨‍👧" },
-  { value: "SCHOOL",  label: "School",  icon: "🏫" },
-  { value: "EDITOR",  label: "Editor",  icon: "✏️" },
-  { value: "ADMIN",   label: "Admin",   icon: "🛡️" },
-];
+// ─── Page ─────────────────────────────────────────────────────────────────────
+// Login is email + password only. Role is read from the DB; the UI
+// selector previously shown here was cosmetic and has been removed
+// to avoid confusing users about what role they will log in as.
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 function MailIcon() {
@@ -108,7 +103,6 @@ export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const [role,           setRole]           = useState<UserRole>("STUDENT");
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password,       setPassword]       = useState("");
   const [showPassword,   setShowPassword]   = useState(false);
@@ -226,24 +220,6 @@ export default function LoginPage() {
           <h1 className="auth-card-title">Welcome to Intellia360</h1>
           <p className="auth-card-subtitle">AI-Powered Adaptive Learning Platform</p>
           <p className="auth-card-tagline">Login to continue your learning journey</p>
-
-          {/* Role selector */}
-          <span className="auth-role-label">I am a</span>
-          <div className="auth-role-grid" role="group" aria-label="Select your role">
-            {ROLES.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                className={`auth-role-btn${role === r.value ? " active" : ""}`}
-                onClick={() => setRole(r.value)}
-                aria-pressed={role === r.value}
-                id={`role-${r.value}`}
-              >
-                <span className="role-icon">{r.icon}</span>
-                {r.label}
-              </button>
-            ))}
-          </div>
 
           {/* Form */}
           <form className="auth-form" onSubmit={handleSubmit} noValidate>

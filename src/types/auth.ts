@@ -43,13 +43,13 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
+  name:          string;
+  email:         string;
+  password:      string;
   confirmPassword: string;
-  role: UserRole;
-  grade?: string;
-  agreeToTerms: boolean;
+  requestedRole?: string;   // intent only — server always creates STUDENT
+  grade?:        string;    // optional grade hint for student profile
+  agreeToTerms:  boolean;
 }
 
 export interface ForgotPasswordInput {

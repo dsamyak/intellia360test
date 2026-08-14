@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(
-  process.env.AUTH_JWT_SECRET ??
-    "change-this-to-a-very-long-random-secret-key-at-least-64-chars"
-);
+const rawSecret = process.env.AUTH_JWT_SECRET;
+if (!rawSecret || rawSecret.trim().length < 32) {
+  throw new Error(
+    "[proxy] AUTH_JWT_SECRET is not set or too short. " +
+      "Generate one with: node -e \"console.log(require('crypto').randomBytes(64).toString('base64'))\""
+  );
+}
+const secret = new TextEncoder().encode(rawSecret);
 
 const SESSION_COOKIE = "intellia_session";
 

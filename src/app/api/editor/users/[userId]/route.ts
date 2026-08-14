@@ -12,7 +12,8 @@ type Params = { params: Promise<{ userId: string }> };
 
 const PatchSchema = z.object({
   name: z.string().min(2).optional(),
-  role: z.enum(["ADMIN","STUDENT","PARENT","TEACHER","SCHOOL","EDITOR"]).optional(),
+  // Role changes are NOT allowed here — only ADMIN can change roles via
+  // PATCH /api/admin/users/[userId]/role
 });
 
 export async function PATCH(req: NextRequest, { params }: Params) {
