@@ -1,18 +1,86 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import ReusableTable, {
-  ColumnDef,
-} from "@/components/admin/ReusableTable";
+import ReusableTable, { ColumnDef } from "@/components/admin/ReusableTable";
 import { mockCourses, CourseRow } from "@/data/admin/tables";
-import {
-  BookOpen,
-  Star,
-  Users,
-} from "@/components/admin/icons";
+import { BookOpen, Star, Users } from "@/components/admin/icons";
+
+/* ─── Create Course Modal ───────────────────────────────────────────────────── */
+function CreateCourseModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({ title: "", subject: "", grade: "grade1", description: "" });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const GRADES = ["grade1","grade2","grade3","grade4","grade5","grade6","grade7","grade8","grade9","grade10"];
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim()) { setError("Course title is required."); return; }
+    setSaving(true); setError("");
+    // In production: POST to /api/editor/courses or equivalent
+    await new Promise(r => setTimeout(r, 700));
+    setSaving(false); setSaved(true);
+  }
+
+  const f = (k: keyof typeof form, label: string, type = "text", placeholder = "") => (
+    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>{label}</label>
+      {type === "textarea" ? (
+        <textarea rows={3} style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", resize:"vertical", fontFamily:"inherit" }}
+          placeholder={placeholder} value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} />
+      ) : (
+        <input type={type} style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }}
+          placeholder={placeholder} value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} />
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:500, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        {!saved ? (
+          <>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Create New Course</h2>
+              <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+            </div>
+            {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+            <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {f("title",   "Course Title *",   "text",     "e.g. Introduction to Fractions")}
+              {f("subject", "Subject",          "text",     "e.g. Mathematics")}
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Grade Level</label>
+                <select value={form.grade} onChange={e => setForm(p => ({ ...p, grade: e.target.value }))}
+                  style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+                  {GRADES.map(g => <option key={g} value={g}>{g.replace("grade","Grade ")}</option>)}
+                </select>
+              </div>
+              {f("description", "Description (optional)", "textarea", "Brief course description…")}
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+                <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+                <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+                  {saving ? "Creating…" : "Create Course"}
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div style={{ textAlign:"center", padding:"20px 0" }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>📚</div>
+            <h2 style={{ fontSize:18, fontWeight:800, color:"#1e1b4b", marginBottom:8 }}>Course Created!</h2>
+            <p style={{ fontSize:13, color:"#64748b", marginBottom:20 }}><strong>{form.title}</strong> has been created as a draft. Go to the <strong>Editor</strong> to add lessons and content.</p>
+            <button onClick={onClose} style={{ padding:"10px 24px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontWeight:700, cursor:"pointer" }}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminCoursesPage() {
+  const [showCreateModal, setShowCreateModal] = useState(false);
   /* =========================================
      Dynamic Course Statistics
   ========================================= */
@@ -138,6 +206,7 @@ export default function AdminCoursesPage() {
 
   return (
     <AdminLayout>
+      {showCreateModal && <CreateCourseModal onClose={() => setShowCreateModal(false)} />}
       <div className="admin-courses-page">
 
         {/* =====================================
@@ -160,12 +229,7 @@ export default function AdminCoursesPage() {
             </p>
           </div>
 
-          <button
-            className="admin-primary-button"
-            onClick={() =>
-              console.log("Create New Course clicked")
-            }
-          >
+          <button className="admin-primary-button" onClick={() => setShowCreateModal(true)}>
             + Create New Course
           </button>
         </div>
@@ -366,9 +430,7 @@ export default function AdminCoursesPage() {
             columns={courseColumns}
             searchPlaceholder="Search courses by title, subject or grade..."
             primaryActionLabel="Create New Course"
-            onPrimaryAction={() =>
-              console.log("Create New Course clicked")
-            }
+            onPrimaryAction={() => setShowCreateModal(true)}
           />
         </div>
       </div>

@@ -22,9 +22,33 @@ export default function AdminNavbar({
   const pathname = usePathname();
   const router = useRouter();
 
-  const [isDark, setIsDark] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  // ── Dark mode: persist in localStorage, apply to <html> element ───────────
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      localStorage.getItem("adminTheme") === "dark" ||
+      document.documentElement.classList.contains("dark")
+    );
+  });
+
+  // Apply on first render
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("admin-dark");
+    } else {
+      document.documentElement.classList.remove("admin-dark");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("admin-dark", next);
+    localStorage.setItem("adminTheme", next ? "dark" : "light");
+  };
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -159,9 +183,10 @@ export default function AdminNavbar({
 
         {/* Theme */}
         <button
-          onClick={() => setIsDark(!isDark)}
+          onClick={toggleTheme}
           className="admin-icon-btn"
-          title="Toggle Theme"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label="Toggle Theme"
         >
           {isDark ? (
             <Sun className="w-4 h-4 text-amber-500" />
