@@ -49,13 +49,10 @@ export default function Header() {
       ═════════════════════════════════════════════ */}
 
       <div className="header-left">
-
         <Logo />
 
         <div className="header-user-summary">
-
           <div className="header-grade-level">
-
             <GradeSelector
               currentGrade={currentGrade}
               onChangeGrade={setCurrentGrade}
@@ -66,11 +63,8 @@ export default function Header() {
               levelNumber={profile.level}
               progressPercentage={profile.levelProgress}
             />
-
           </div>
-
         </div>
-
       </div>
 
       {/* ═════════════════════════════════════════════
@@ -84,7 +78,6 @@ export default function Header() {
       ═════════════════════════════════════════════ */}
 
       <div className="header-right">
-
         <StreakBadge
           streakDays={streakDays}
         />
@@ -103,7 +96,6 @@ export default function Header() {
           avatarUrl={profile.avatar}
           studentName={displayName}
         />
-
       </div>
 
     </header>

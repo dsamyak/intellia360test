@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // to the caller that they've been rate-limited.
     return NextResponse.json<AuthResponse>(
       { success: true, message: "If an account with that email exists, you will receive a password reset link shortly." },
-      { status: 200, headers: rateLimitHeaders(ipLimit.retryAfter) }
+      { status: 200, headers: rateLimitHeaders(ipLimit.retryAfter, 3) }
     );
   }
 

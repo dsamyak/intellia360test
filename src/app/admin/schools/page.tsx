@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, {
   ColumnDef,
@@ -12,7 +12,78 @@ import {
   Clock,
 } from "@/components/admin/icons";
 
+/* ─── Onboard School Modal ─────────────────────────────────────────────────── */
+function OnboardSchoolModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({ name: "", location: "", adminName: "", adminEmail: "", plan: "Basic" });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const PLANS = ["Basic", "Standard", "Premium", "Enterprise"];
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.adminEmail.trim()) { setError("School name and admin email are required."); return; }
+    setSaving(true); setError("");
+    // In production: POST to /api/admin/schools — for now we simulate success
+    await new Promise(r => setTimeout(r, 800));
+    setSaving(false); setSaved(true);
+  }
+
+  const f = (k: keyof typeof form, label: string, type = "text", placeholder = "") => (
+    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>{label}</label>
+      <input type={type} style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }}
+        placeholder={placeholder} value={form[k]}
+        onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} />
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:500, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        {!saved ? (
+          <>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Onboard New School</h2>
+              <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+            </div>
+            {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+            <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {f("name",       "School Name *",         "text",  "e.g. Greenwood High School")}
+              {f("location",   "Location",              "text",  "City, State")}
+              {f("adminName",  "School Admin Name",     "text",  "Full name")}
+              {f("adminEmail", "School Admin Email *",  "email", "admin@school.com")}
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Subscription Plan</label>
+                <select value={form.plan} onChange={e => setForm(p => ({ ...p, plan: e.target.value }))}
+                  style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+                  {PLANS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+                <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+                <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+                  {saving ? "Saving…" : "Onboard School"}
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div style={{ textAlign:"center", padding:"20px 0" }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🏫</div>
+            <h2 style={{ fontSize:18, fontWeight:800, color:"#1e1b4b", marginBottom:8 }}>School Onboarded!</h2>
+            <p style={{ fontSize:13, color:"#64748b", marginBottom:20 }}><strong>{form.name}</strong> has been added to the platform. The admin will receive setup instructions at <strong>{form.adminEmail}</strong>.</p>
+            <button onClick={onClose} style={{ padding:"10px 24px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontWeight:700, cursor:"pointer" }}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSchoolsPage() {
+  const [showOnboardModal, setShowOnboardModal] = useState(false);
   /* =========================================
      Dynamic School Statistics
   ========================================= */
@@ -145,6 +216,7 @@ export default function AdminSchoolsPage() {
 
   return (
     <AdminLayout>
+      {showOnboardModal && <OnboardSchoolModal onClose={() => setShowOnboardModal(false)} />}
       <div className="space-y-6">
 
         {/* =====================================
@@ -322,9 +394,7 @@ export default function AdminSchoolsPage() {
           columns={schoolColumns}
           searchPlaceholder="Search school by name, code or city..."
           primaryActionLabel="Onboard New School"
-          onPrimaryAction={() => {
-            console.log("Onboard New School clicked");
-          }}
+          onPrimaryAction={() => setShowOnboardModal(true)}
         />
 
       </div>

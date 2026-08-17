@@ -22,7 +22,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function getDashboardPath(role: UserRole): string {
   if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
-  if (role === "ADMIN"   || role === "EDITOR") return "/editor/dashboard";
+  if (role === "EDITOR")                       return "/editor/dashboard";
+  if (role === "ADMIN")                        return "/admin/dashboard";
+  // STUDENT, PARENT, and all unknown/base-plan roles land on the student dashboard
   return "/student/dashboard";
 }
 

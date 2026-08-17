@@ -98,11 +98,14 @@ export async function checkRateLimit(opts: RateLimitOptions): Promise<RateLimitR
 }
 
 /** Helper: build the standard 429 headers for rate-limited responses. */
-export function rateLimitHeaders(retryAfter: number): Record<string, string> {
+export function rateLimitHeaders(
+  retryAfter: number,
+  maxAttempts?: number
+): Record<string, string> {
   return {
-    "Retry-After":       String(retryAfter),
-    "X-RateLimit-Limit": "0",
-    "X-RateLimit-Reset": String(Math.floor(Date.now() / 1000) + retryAfter),
+    "Retry-After":        String(retryAfter),
+    "X-RateLimit-Limit":  maxAttempts != null ? String(maxAttempts) : "0",
+    "X-RateLimit-Reset":  String(Math.floor(Date.now() / 1000) + retryAfter),
   };
 }
 

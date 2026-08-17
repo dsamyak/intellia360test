@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   if (rl.limited) {
     return NextResponse.json<AuthResponse>(
       { success: false, message: "Too many requests. Please try again shortly." },
-      { status: 429, headers: rateLimitHeaders(rl.retryAfter) }
+      { status: 429, headers: rateLimitHeaders(rl.retryAfter, 20) }
     );
   }
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     updatedAt:     dbUser.updatedAt.toISOString(),
   };
 
-  const jwtToken = signToken({
+  const jwtToken = await signToken({
     sub:   user.id,
     email: user.email,
     role:  user.role,

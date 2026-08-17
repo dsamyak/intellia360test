@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useStudentContext } from "@/context/StudentContext";
 import HeroSectionContainer from "@/components/student/HeroSectionContainer";

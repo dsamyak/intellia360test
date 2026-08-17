@@ -1,18 +1,97 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import ReusableTable, {
-  ColumnDef,
-} from "@/components/admin/ReusableTable";
+import ReusableTable, { ColumnDef } from "@/components/admin/ReusableTable";
 import { mockStudents, StudentRow } from "@/data/admin/tables";
-import {
-  Users,
-  Award,
-  Zap,
-} from "@/components/admin/icons";
+import { Users, Award, Zap } from "@/components/admin/icons";
+
+/* ─── Add Student Modal ─────────────────────────────────────────────────────── */
+function AddStudentModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({ name: "", email: "", grade: "grade1", school: "" });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const GRADES = ["grade1","grade2","grade3","grade4","grade5","grade6","grade7","grade8","grade9","grade10"];
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim()) { setError("Name and email are required."); return; }
+    setSaving(true); setError("");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: "Student@Intellia360!",
+          confirmPassword: "Student@Intellia360!",
+          requestedRole: "STUDENT",
+          grade: form.grade,
+          agreeToTerms: true,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) { setSaved(true); }
+      else { setError(json.message ?? "Failed to add student."); }
+    } catch { setError("Network error. Please try again."); }
+    finally { setSaving(false); }
+  }
+
+  const f = (k: keyof typeof form, label: string, type = "text", placeholder = "") => (
+    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>{label}</label>
+      <input type={type} style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }}
+        placeholder={placeholder} value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} />
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:460, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        {!saved ? (
+          <>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Add Student</h2>
+              <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+            </div>
+            {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+            <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {f("name",   "Full Name *",   "text",  "e.g. Alex Rivera")}
+              {f("email",  "Email Address *","email", "student@school.com")}
+              {f("school", "School (optional)", "text", "Oakridge Elementary")}
+              <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Grade</label>
+                <select value={form.grade} onChange={e => setForm(p => ({ ...p, grade: e.target.value }))}
+                  style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+                  {GRADES.map(g => <option key={g} value={g}>{g.replace("grade","Grade ")}</option>)}
+                </select>
+              </div>
+              <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+                <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+                <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+                  {saving ? "Adding…" : "Add Student"}
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div style={{ textAlign:"center", padding:"20px 0" }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>🎓</div>
+            <h2 style={{ fontSize:18, fontWeight:800, color:"#1e1b4b", marginBottom:8 }}>Student Added!</h2>
+            <p style={{ fontSize:13, color:"#64748b", marginBottom:20 }}>Account created for <strong>{form.name}</strong>. A verification email has been sent to <strong>{form.email}</strong>. Temporary password: <code style={{background:"#f1f5f9",padding:"2px 6px",borderRadius:4}}>Student@Intellia360!</code></p>
+            <button onClick={onClose} style={{ padding:"10px 24px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontWeight:700, cursor:"pointer" }}>Done</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminStudentsPage() {
+  const [showAddModal, setShowAddModal] = useState(false);
   /* =========================================
      Dynamic Student Statistics
   ========================================= */
@@ -151,6 +230,7 @@ export default function AdminStudentsPage() {
 
   return (
     <AdminLayout>
+      {showAddModal && <AddStudentModal onClose={() => setShowAddModal(false)} />}
       <div className="admin-students-page">
 
         {/* =====================================
@@ -173,12 +253,7 @@ export default function AdminStudentsPage() {
             </p>
           </div>
 
-          <button
-            className="admin-primary-button"
-            onClick={() =>
-              console.log("Add Student clicked")
-            }
-          >
+          <button className="admin-primary-button" onClick={() => setShowAddModal(true)}>
             + Add Student
           </button>
         </div>
@@ -371,9 +446,7 @@ export default function AdminStudentsPage() {
             columns={studentColumns}
             searchPlaceholder="Search student by name, grade or school..."
             primaryActionLabel="Add Student"
-            onPrimaryAction={() =>
-              console.log("Add Student clicked")
-            }
+            onPrimaryAction={() => setShowAddModal(true)}
           />
         </div>
       </div>
