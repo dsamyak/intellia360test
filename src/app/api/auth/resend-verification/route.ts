@@ -82,10 +82,12 @@ export async function POST(request: NextRequest) {
       data: { tokenHash, userId: user.id, expiresAt, used: false },
     });
 
-    // Fire-and-forget
-    sendVerificationEmail(email, user.name, rawToken).catch((err) => {
-      console.error("[auth/resend-verification] email failed:", err);
-    });
+    try {
+      await sendVerificationEmail(email, user.name, rawToken);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to send verification email";
+      console.error("[auth/resend-verification] email failed:", errorMessage);
+    }
 
     return NextResponse.json<AuthResponse>(OK, { status: 200 });
   } catch (error) {

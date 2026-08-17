@@ -78,10 +78,11 @@ export async function POST(request: NextRequest) {
 
       // All new users start with a StudentProfile.
       // Admin can change the role later; the profile migration happens at that point.
+      const studentGrade = grade || "grade1";
       await tx.studentProfile.create({
         data: {
           userId:        newUser.id,
-          grade:         grade ?? "grade1",
+          grade:         studentGrade,
           xpPoints:      0,
           learningGems:  0,
           streakDays:    1,
@@ -94,10 +95,23 @@ export async function POST(request: NextRequest) {
       });
     });
 
+    // ── Send verification email ─────────────────────────────────────────────
+    // We do NOT issue a session cookie here — the user must verify first.
     try {
       await sendVerificationEmail(email, name, rawToken);
-    } catch (emailErr) {
-      console.error("[auth/register] verification email failed:", emailErr);
+    } catch (emailErr: unknown) {
+      const errorMessage =
+        emailErr instanceof Error ? emailErr.message : "Failed to send verification email";
+      console.error("[auth/register] verification email failed:", errorMessage);
+
+      return NextResponse.json<AuthResponse>(
+        {
+          success: false,
+          message: `Account created, but verification email failed to send: ${errorMessage}`,
+          errors: { email: [errorMessage] },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json<AuthResponse>(

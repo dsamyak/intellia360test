@@ -3,72 +3,101 @@
 import React from "react";
 import { useStudentContext } from "@/context/StudentContext";
 import { useAuth } from "@/context/AuthContext";
+import Logo from "./Logo";
+import GradeSelector from "./GradeSelector";
+import LevelProgress from "./LevelProgress";
+import StreakBadge from "./StreakBadge";
+import GemsBadge from "./GemsBadge";
+import XPBadge from "./XPBadge";
+import NotificationButton from "./NotificationButton";
+import ProfileMenu from "./ProfileMenu";
 
 export default function Header() {
-  const { currentGrade } = useStudentContext();
+  const {
+    xpPoints,
+    learningGems,
+    streakDays,
+    currentGrade,
+    setCurrentGrade,
+    studentName,
+  } = useStudentContext();
+
   const { user } = useAuth();
 
-  const now = new Date();
-  const dateLabel = now.toLocaleDateString("en-US", {
-    day:   "2-digit",
-    month: "short",
-    year:  "numeric",
-  });
+  const displayName =
+    studentName && studentName !== "Student Profile"
+      ? studentName
+      : user?.name || "Student Profile";
 
-  const gradeLabel = currentGrade.replace("grade", "Grade ").trim();
-
-  const initials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-    : "S";
+  /*
+   * Keep these as safe fallback values.
+   * Header should not crash if profile data is unavailable.
+   */
+  const profile = {
+    name: displayName,
+    avatar: "/assets/avatars/user-student-boy.png",
+    levelTitle: "Level",
+    level: 1,
+    levelProgress: 0,
+  };
 
   return (
     <header className="header-container">
+
+      {/* ═════════════════════════════════════════════
+          HEADER LEFT
+      ═════════════════════════════════════════════ */}
+
       <div className="header-left">
-        <div className="header-breadcrumb">
-          <span className="header-breadcrumb-path">
-            {user?.name ?? "Student"} / Dashboard
-          </span>
-          <span className="header-breadcrumb-title">Dashboard</span>
+        <Logo />
+
+        <div className="header-user-summary">
+          <div className="header-grade-level">
+            <GradeSelector
+              currentGrade={currentGrade}
+              onChangeGrade={setCurrentGrade}
+            />
+
+            <LevelProgress
+              levelTitle={profile.levelTitle}
+              levelNumber={profile.level}
+              progressPercentage={profile.levelProgress}
+            />
+          </div>
         </div>
       </div>
+
+      {/* ═════════════════════════════════════════════
+          HEADER RIGHT
+
+          🔥 Streak
+          💎 Gems
+          ⭐ XP
+          🔔 Notification
+          👤 Profile
+      ═════════════════════════════════════════════ */}
 
       <div className="header-right">
-        {/* Date pill */}
-        <div className="header-date-pill">
-          📅 {dateLabel} ▾
-        </div>
+        <StreakBadge
+          streakDays={streakDays}
+        />
 
-        {/* Theme toggle placeholder */}
-        <button className="header-icon-btn" aria-label="Toggle theme" title="Toggle theme">
-          🌙
-        </button>
+        <GemsBadge
+          learningGems={learningGems}
+        />
 
-        {/* Notifications */}
-        <button className="header-icon-btn" aria-label="Notifications" title="Notifications">
-          🔔
-          <span className="header-notif-dot" />
-        </button>
+        <XPBadge
+          xpPoints={xpPoints}
+        />
 
-        {/* Grade badge */}
-        <div
-          style={{
-            padding:      "5px 12px",
-            background:   "rgba(249,115,22,.10)",
-            border:       "1px solid rgba(249,115,22,.30)",
-            borderRadius: "var(--radius-pill)",
-            fontSize:     "12px",
-            fontWeight:   600,
-            color:        "#f97316",
-          }}
-        >
-          {gradeLabel}
-        </div>
+        <NotificationButton />
 
-        {/* Avatar */}
-        <div className="header-avatar" title={user?.name ?? "Profile"}>
-          {initials}
-        </div>
+        <ProfileMenu
+          avatarUrl={profile.avatar}
+          studentName={displayName}
+        />
       </div>
+
     </header>
   );
 }
