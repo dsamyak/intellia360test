@@ -66,19 +66,20 @@ export async function POST(request: NextRequest) {
       } else if (role === "ADMIN" || role === "EDITOR") {
         // No profile required
       } else {
-// STUDENT / PARENT
-const studentGrade = grade || "grade1";
+        // STUDENT / PARENT
+        const studentGrade = grade || "grade1";
 
-await tx.studentProfile.create({
-  data: {
-    userId: newUser.id,
-    grade: studentGrade,
-    xpPoints: 0,
-    learningGems: 0,
-    streakDays: 1,
-    lastActiveDate: new Date(),
-  },
-});      }
+        await tx.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            grade: studentGrade,
+            xpPoints: 0,
+            learningGems: 0,
+            streakDays: 1,
+            lastActiveDate: new Date(),
+          },
+        });
+      }
 
       // Verification token (hashed)
       await tx.emailVerificationToken.create({
@@ -91,13 +92,23 @@ await tx.studentProfile.create({
       });
     });
 
-    // ── Send verification email (fire-and-forget style but still await) ─────
+    // ── Send verification email ─────────────────────────────────────────────
     // We do NOT issue a session cookie here — the user must verify first.
     try {
       await sendVerificationEmail(email, name, rawToken);
-    } catch (emailErr) {
-      // Log but don't fail the registration — the user can request a resend.
-      console.error("[auth/register] verification email failed:", emailErr);
+    } catch (emailErr: unknown) {
+      const errorMessage =
+        emailErr instanceof Error ? emailErr.message : "Failed to send verification email";
+      console.error("[auth/register] verification email failed:", errorMessage);
+
+      return NextResponse.json<AuthResponse>(
+        {
+          success: false,
+          message: `Account created, but verification email failed to send: ${errorMessage}`,
+          errors: { email: [errorMessage] },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json<AuthResponse>(
