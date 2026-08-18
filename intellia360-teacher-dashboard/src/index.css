@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink: #0A2540;
+  --color-ink-soft: #1B3C5E;
+  --color-canvas: #F4F7FB;
+  --color-paper: #ffffff;
+  --color-line: #E2E8F0;
+
+  --color-violet: #216ACE;
+  --color-violet-deep: #13468b;
+  --color-violet-tint: #E8F2FF;
+
+  --color-amber: #F89F2D;
+  --color-amber-tint: #fff4e5;
+
+  --color-jade: #12b76a;
+  --color-jade-tint: #e3faf0;
+
+  --color-coral: #f04438;
+  --color-coral-tint: #fdeaea;
+
+  --color-sky: #0ea5ea;
+  --color-sky-tint: #e6f6ff;
+}
+
+.hover-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -5px rgba(10, 37, 64, 0.08), 0 4px 12px -2px rgba(33, 106, 206, 0.06);
+  border-color: rgba(33, 106, 206, 0.15);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-violet);
+  color: white;
+}
+
+/* Ledger / gradebook rule-line texture — the signature motif */
+.ledger-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    color-mix(in srgb, var(--color-line) 70%, transparent) 28px
+  );
+}
+
+.ledger-lines-violet {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    color-mix(in srgb, white 14%, transparent) 28px
+  );
+}
+
+/* Rubber-stamp badge, rotated like a teacher's grading stamp */
+.stamp {
+  transform: rotate(-6deg);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
