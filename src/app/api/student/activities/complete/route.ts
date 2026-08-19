@@ -117,6 +117,44 @@ export async function POST(request: NextRequest) {
           create: { userId: session.userId, lessonId, grade },
           update: {}, // no-op if already exists
         });
+
+        const formattedLessonName = lessonId
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+
+        await tx.notification.create({
+          data: {
+            userId: session.userId,
+            type: "lesson",
+            tabCategory: "learning",
+            icon: "📚",
+            iconBg: "rgba(59, 130, 246, 0.12)",
+            title: `Lesson Completed: ${formattedLessonName}`,
+            description: `Great progress! You completed the ${activityType} activity in ${formattedLessonName}.`,
+            categoryTag: "Lesson Completed",
+            actionUrl: "/student/dashboard",
+            actionText: "Continue Learning →",
+            isRead: false,
+          },
+        });
+      }
+
+      if (xpReward > 0 || gemsReward > 0) {
+        await tx.notification.create({
+          data: {
+            userId: session.userId,
+            type: "xp",
+            tabCategory: "achievements",
+            icon: "⭐",
+            iconBg: "rgba(245, 158, 11, 0.12)",
+            title: `XP & Gems Awarded: +${xpReward} XP${gemsReward > 0 ? ` and +${gemsReward} Gems` : ""}`,
+            description: `You earned rewards for completing ${activityType} activities. Keep it up!`,
+            categoryTag: "Rewards",
+            actionUrl: "/student/profile",
+            actionText: "View Balance →",
+            isRead: false,
+          },
+        });
       }
 
       return profile;

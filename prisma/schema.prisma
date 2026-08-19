@@ -50,6 +50,7 @@ model User {
   submissions         AssignmentSubmission[]
   resetTokens         PasswordResetToken[]
   verifyTokens        EmailVerificationToken[]
+  notifications       Notification[]
 
   @@index([role])
   @@map("users")
@@ -260,4 +261,28 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "achievement" | "lesson" | "quiz" | "streak" | "xp" | "announcement"
+  tabCategory String   // "achievements" | "learning" | "announcements"
+  icon        String   // e.g. "🎉", "📚", "🏆", "🔥", "⭐", "📢"
+  iconBg      String   // e.g. "rgba(245, 158, 11, 0.12)"
+  title       String
+  description String
+  categoryTag String   // e.g. "Achievement", "New Lesson", "Quiz Result", "Streak", "Rewards", "Announcement"
+  actionUrl   String?
+  actionText  String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@map("notifications")
 }

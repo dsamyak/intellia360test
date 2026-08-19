@@ -110,8 +110,6 @@ export default function HeroSectionContainer({
           {currentSlide.ctaUrl ? (
             <a
               href={currentSlide.ctaUrl}
-              target={currentSlide.ctaUrl.startsWith("http") ? "_blank" : "_self"}
-              rel="noopener noreferrer"
               className="btn-primary-hero"
               style={{ textDecoration: "none", display: "inline-flex" }}
               onClick={handleCtaClick}

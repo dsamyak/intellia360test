@@ -107,6 +107,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Header override for EduNotes PDF content API to allow same‑origin iframe embedding
+  if (pathname.startsWith("/api/student/edunotes/content")) {
+    const res = NextResponse.next();
+    res.headers.set("X-Frame-Options", "SAMEORIGIN");
+    return res;
+  }
+
   return NextResponse.next();
 }
 

@@ -52,6 +52,27 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const isPerfect = scorePercent === 100;
+    await db.notification.create({
+      data: {
+        userId: session.userId,
+        type: "quiz",
+        tabCategory: "learning",
+        icon: "🏆",
+        iconBg: "rgba(16, 185, 129, 0.12)",
+        title: isPerfect
+          ? "Quiz Completed: 100% Perfect Score!"
+          : `Quiz Completed: ${scorePercent}% Score!`,
+        description: isPerfect
+          ? `Outstanding! You scored 100% on the quiz challenge.`
+          : `You scored ${scorePercent}% on your quiz challenge. Keep up the practice!`,
+        categoryTag: "Quiz Result",
+        actionUrl: "/student/dashboard",
+        actionText: "Review Score →",
+        isRead: false,
+      },
+    });
+
     const data: QuizAttemptRecord = {
       id: attempt.id,
       lessonId: attempt.lessonId,
