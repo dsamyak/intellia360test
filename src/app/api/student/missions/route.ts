@@ -84,9 +84,16 @@ export async function PATCH(request: NextRequest) {
 
     const { missionId, progress } = result.data;
 
+    const existingMission = await db.missionProgress.findUnique({
+      where: {
+        userId_missionId: { userId: session.userId, missionId },
+      },
+    });
+
     const maxProgress = MISSION_MAX_PROGRESS[missionId] ?? DEFAULT_MAX_PROGRESS;
     const clampedProgress = Math.min(progress, maxProgress);
     const isCompleted = clampedProgress >= maxProgress;
+    const isNewlyCompleted = isCompleted && (!existingMission || !existingMission.isCompleted);
 
     const mission = await db.missionProgress.upsert({
       where: {
@@ -106,6 +113,30 @@ export async function PATCH(request: NextRequest) {
         ...(isCompleted ? { completedAt: new Date() } : {}),
       },
     });
+
+    if (isNewlyCompleted) {
+      const missionTitles: Record<string, string> = {
+        m_1: "Completed your first lesson",
+        m_2: "Completed 3 lessons adventure",
+        m_3: "Completed full chapter",
+      };
+
+      await db.notification.create({
+        data: {
+          userId: session.userId,
+          type: "achievement",
+          tabCategory: "achievements",
+          icon: "🎯",
+          iconBg: "rgba(245, 158, 11, 0.12)",
+          title: `Mission Completed: ${missionTitles[missionId] || "Daily Learning Quest"}!`,
+          description: "Congratulations on achieving your learning mission milestone.",
+          categoryTag: "Achievement",
+          actionUrl: "/student/dashboard",
+          actionText: "View Dashboard →",
+          isRead: false,
+        },
+      });
+    }
 
     const data: MissionRecord = {
       id: mission.id,

@@ -142,8 +142,11 @@ export default function StudentDashboardPage() {
   const actionCards = activeLessonData.actionCards ?? {};
   const architectureUrl = actionCards.architecture ?? activeLessonData.vercelLink ?? "#";
   const videoUrl = actionCards.video ?? "";
-  const edunotesUrl = actionCards.edunotes ?? "/student/lesson/edunotes";
+  const edunotesUrl = `/student/lesson/edunotes?lessonId=${encodeURIComponent(activeLessonData.id)}`;
   const practiceUrl = actionCards.practice ?? "/student/quiz/practice-1";
+
+  console.log("EduNotes card target:", edunotesUrl);
+  console.log("Active lesson:", activeLessonData.id);
 
   const isArchCompleted = isActivityCompleted(activeLessonData.id, "architecture");
   const isPracticeCompleted = isActivityCompleted(activeLessonData.id, "practice");

@@ -61,7 +61,7 @@ export default function LearningGridContainer({ cards, onCardClick }: LearningGr
 
         if (isExternal) {
           return (
-            <a key={card.id} href={card.targetUrl} target="_blank" rel="noopener noreferrer" {...sharedProps}>
+            <a key={card.id} href={card.targetUrl} {...sharedProps}>
               {inner}
             </a>
           );

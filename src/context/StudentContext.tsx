@@ -381,3 +381,6 @@ export const useStudentContext = () => {
   }
   return context;
 };
+
+export const useStudent = useStudentContext;
+
