@@ -50,6 +50,7 @@ model User {
   submissions         AssignmentSubmission[]
   resetTokens         PasswordResetToken[]
   verifyTokens        EmailVerificationToken[]
+  dailyQuizAttempts   DailyQuizAttempt[]
 
   @@index([role])
   @@map("users")
@@ -204,6 +205,29 @@ model AssignmentSubmission {
 
   @@unique([assignmentId, studentId])
   @@map("assignment_submissions")
+}
+
+// ─── Daily Quiz ───────────────────────────────────────────────────────────────
+// One attempt per user per UTC day. Stores per-question answers and rewards.
+
+model DailyQuizAttempt {
+  id            String   @id @default(uuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateKey       String                        // "YYYY-MM-DD" UTC — unique per user per day
+  grade         String
+  questions     Json                          // snapshot of questions served that day
+  answers       Json                          // { questionId: selectedOptionId }[]
+  score         Int                           // 0-5 (number correct)
+  xpAwarded     Int      @default(0)
+  gemsAwarded   Int      @default(0)
+  streakDay     Int                           // streakDays value at time of completion
+  completedAt   DateTime @default(now())
+
+  @@unique([userId, dateKey])
+  @@index([userId])
+  @@index([dateKey])
+  @@map("daily_quiz_attempts")
 }
 
 // ─── Rate Limit Record ────────────────────────────────────────────────────────
