@@ -5,6 +5,7 @@ import HeroSectionContainer from "@/components/student/HeroSectionContainer";
 import type { DashboardHeroSlide } from "@/types/student";
 import LearningGridContainer from "@/components/student/LearningGridContainer";
 import BottomNavigationContainer from "@/components/student/BottomNavigationContainer";
+import DailyStreakWidget from "@/components/student/DailyStreakWidget";
 
 // ─── Tiny inline helpers (no extra deps) ────────────────────────────────────
 
@@ -477,6 +478,9 @@ export default function StudentDashboardPage() {
 
       {/* ── Bottom Row ──────────────────────────────────────────────────────── */}
       <div className="db-bottom-row">
+
+        {/* Daily streak widget */}
+        <DailyStreakWidget />
 
         {/* Top chapters */}
         <div className="db-panel">

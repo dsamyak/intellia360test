@@ -50,6 +50,7 @@ model User {
   submissions         AssignmentSubmission[]
   resetTokens         PasswordResetToken[]
   verifyTokens        EmailVerificationToken[]
+  dailyQuizAttempts   DailyQuizAttempt[]
   notifications       Notification[]
 
   @@index([role])
@@ -207,6 +208,53 @@ model AssignmentSubmission {
   @@map("assignment_submissions")
 }
 
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id          String   @id @default(uuid()) @map("_id")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "achievement" | "lesson" | "quiz" | "streak" | "xp" | "announcement"
+  tabCategory String   // "achievements" | "learning" | "announcements"
+  icon        String
+  iconBg      String
+  title       String
+  description String
+  categoryTag String
+  actionUrl   String?
+  actionText  String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─── Daily Quiz ───────────────────────────────────────────────────────────────
+// One attempt per user per UTC day. Stores per-question answers and rewards.
+
+model DailyQuizAttempt {
+  id            String   @id @default(uuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateKey       String                        // "YYYY-MM-DD" UTC — unique per user per day
+  grade         String
+  questions     Json                          // snapshot of questions served that day
+  answers       Json                          // { questionId: selectedOptionId }[]
+  score         Int                           // 0-5 (number correct)
+  xpAwarded     Int      @default(0)
+  gemsAwarded   Int      @default(0)
+  streakDay     Int                           // streakDays value at time of completion
+  completedAt   DateTime @default(now())
+
+  @@unique([userId, dateKey])
+  @@index([userId])
+  @@index([dateKey])
+  @@map("daily_quiz_attempts")
+}
+
 // ─── Rate Limit Record ────────────────────────────────────────────────────────
 // Tracks recent request counts per (key, action) to enforce server-side
 // rate limits that survive across serverless function instances (no in-memory).
@@ -261,28 +309,4 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
-}
-
-// ─── Notifications ────────────────────────────────────────────────────────────
-
-model Notification {
-  id          String   @id @default(uuid()) @map("_id")
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // "achievement" | "lesson" | "quiz" | "streak" | "xp" | "announcement"
-  tabCategory String   // "achievements" | "learning" | "announcements"
-  icon        String   // e.g. "🎉", "📚", "🏆", "🔥", "⭐", "📢"
-  iconBg      String   // e.g. "rgba(245, 158, 11, 0.12)"
-  title       String
-  description String
-  categoryTag String   // e.g. "Achievement", "New Lesson", "Quiz Result", "Streak", "Rewards", "Announcement"
-  actionUrl   String?
-  actionText  String?
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([userId])
-  @@index([userId, isRead])
-  @@map("notifications")
 }
