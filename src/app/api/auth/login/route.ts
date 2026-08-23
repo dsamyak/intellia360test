@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
   // This runs before any DB user lookup so it can't be bypassed.
   const ip = getClientIp(request);
   const ipLimit = await checkRateLimit({
-    identifier:  ip,
-    action:      "login",
+    identifier: ip,
+    action: "login",
     maxAttempts: 10,
-    windowMs:    15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000, // 15 minutes
   });
 
   if (ipLimit.limited) {
@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
     // ── 3. Per-email rate limit (secondary, account-level) ─────────────────
     // 5 failed attempts per 15-minute window per email address.
     const emailLimit = await checkRateLimit({
-      identifier:  emailOrUsername,
-      action:      "login_email",
+      identifier: emailOrUsername,
+      action: "login_email",
       maxAttempts: 5,
-      windowMs:    15 * 60 * 1000,
+      windowMs: 15 * 60 * 1000,
     });
 
     if (emailLimit.limited) {
@@ -112,20 +112,20 @@ export async function POST(request: NextRequest) {
 
     // ── 7. Issue session ───────────────────────────────────────────────────
     const user: AuthUser = {
-      id:            dbUser.id,
-      name:          dbUser.name,
-      email:         dbUser.email,
-      role:          dbUser.role,
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      role: dbUser.role,
       emailVerified: dbUser.emailVerified,
-      createdAt:     dbUser.createdAt.toISOString(),
-      updatedAt:     dbUser.updatedAt.toISOString(),
+      createdAt: dbUser.createdAt.toISOString(),
+      updatedAt: dbUser.updatedAt.toISOString(),
     };
 
     const token = await signToken({
-      sub:   user.id,
+      sub: user.id,
       email: user.email,
-      role:  user.role,
-      name:  user.name,
+      role: user.role,
+      name: user.name,
     });
     await setSessionCookie(token, rememberMe);
 

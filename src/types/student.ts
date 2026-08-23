@@ -5,13 +5,16 @@ export interface StudentProfile {
   grade: string;
   level: number;
   levelTitle: string;
-  levelProgress: number; // 0 to 100
+  levelProgress: number;
   streakDays: number;
   xpPoints: number;
   learningGems: number;
 }
 
-export type TopicStatus = "completed" | "active" | "locked";
+export type TopicStatus =
+  | "completed"
+  | "active"
+  | "locked";
 
 export interface CurriculumTopic {
   id: string;
@@ -35,7 +38,11 @@ export interface AdventureSlide {
   title: string;
   subtitle: string;
   ctaText: string;
-  visualizerKey: "place-value" | "addition-grouping" | "comparing-numbers" | "numbers-to-1000";
+  visualizerKey:
+  | "place-value"
+  | "addition-grouping"
+  | "comparing-numbers"
+  | "numbers-to-1000";
   visualizerData: Record<string, unknown>;
 }
 
@@ -46,7 +53,11 @@ export interface ActionCardItem {
   description: string;
   badgeText?: string;
   icon: string;
-  buttonColor: "purple" | "blue" | "orange" | "accent";
+  buttonColor:
+  | "purple"
+  | "blue"
+  | "orange"
+  | "accent";
   targetUrl: string;
 }
 
@@ -109,22 +120,52 @@ export interface StudentBadge {
   isUnlocked: boolean;
 }
 
-// ─── Grade-scoped data types (Sprint 1 – dynamic data layer) ───
+// ─── Grade-scoped data types ───────────────────────────────────────────────
 
 export type VisualizerKey =
   | "place-value"
   | "addition-grouping"
   | "comparing-numbers"
-  | "numbers-to-1000";
+  | "numbers-to-1000"
+  | "counting-numbers-up-to-100"
+  | string;
+
+// ─── Curriculum Topic ─────────────────────────────────────────────────────
 
 export interface CurriculumTopicGrade {
+  /**
+   * Actual curriculum JSON uses `id`.
+   */
   id: string;
-  lessonId: string;
+
+  /**
+   * Optional compatibility field.
+   * Some lesson metadata may use lessonId.
+   */
+  lessonId?: string;
+
   title: string;
-  status: TopicStatus;
-  icon: string | null;
-  questionsCount: number | null;
+
+  status: TopicStatus | string;
+
+  icon?: string | null;
+
+  questionsCount?: number | null;
+
+  // Additional fields present in grade curriculum JSON
+  vercelLink?: string;
+  estimatedTime?: string;
+  estimatedMinutes?: number;
+  difficulty?: string;
+  xpReward?: number;
+  gemsReward?: number;
+
+  // Optional lesson configuration fields
+  heroVisualizer?: VisualizerKey;
+  heroVisualizerData?: Record<string, unknown>;
 }
+
+// ─── Curriculum Chapter ──────────────────────────────────────────────────
 
 export interface CurriculumChapterGrade {
   id: string;
@@ -134,14 +175,31 @@ export interface CurriculumChapterGrade {
   topics: CurriculumTopicGrade[];
 }
 
+// ─── Grade Curriculum ─────────────────────────────────────────────────────
+
 export interface GradeCurriculum {
-  gradeId: string;
-  gradeLabel: string;
-  subject: string;
-  activeLessonId: string;
-  activeChapterId: string;
+  /**
+   * These fields are optional because the existing
+   * curriculum JSON does not always contain them.
+   */
+  gradeId?: string;
+  gradeLabel?: string;
+  subject?: string;
+  activeLessonId?: string;
+  activeChapterId?: string;
+
+  /**
+   * Some curriculum JSON files use activeTopic
+   * instead of activeLessonId.
+   */
+  activeTopic?: CurriculumTopicGrade | null;
+
+  standaloneTopics?: CurriculumTopicGrade[];
+
   chapters: CurriculumChapterGrade[];
 }
+
+// ─── Dashboard Action Cards ───────────────────────────────────────────────
 
 export interface GradeActionCard {
   id: string;
@@ -149,10 +207,24 @@ export interface GradeActionCard {
   subtitle: string;
   description: string;
   icon: string;
-  buttonColor: "purple" | "blue" | "orange" | "accent";
+  buttonColor:
+  | "purple"
+  | "blue"
+  | "orange"
+  | "accent";
   targetUrl: string;
   enabled: boolean;
+
+  /**
+   * Optional fields used by the dashboard
+   * for modal / iframe based activities.
+   */
+  openInModal?: boolean;
+  viewerType?: "iframe" | "link" | "internal";
+  allowFullscreen?: boolean;
 }
+
+// ─── Dashboard Hero ──────────────────────────────────────────────────────
 
 export interface DashboardHeroSlide {
   tag: string;
@@ -163,11 +235,13 @@ export interface DashboardHeroSlide {
   ctaUrl: string;
   visualizerKey: string;
   visualizerData: Record<string, unknown>;
-  /** Activity tracking fields used by the student dashboard */
+
   activityType?: string;
   xpReward?: number;
   gemsReward?: number;
 }
+
+// ─── Dashboard ────────────────────────────────────────────────────────────
 
 export interface DashboardConfig {
   gradeId: string;
@@ -175,29 +249,46 @@ export interface DashboardConfig {
   actionCards: GradeActionCard[];
 }
 
+// ─── Lesson Modules ───────────────────────────────────────────────────────
+
 export interface LessonModuleConfig {
   enabled: boolean;
   url: string;
 }
 
+// ─── Lesson Metadata ──────────────────────────────────────────────────────
+
 export interface LessonMetadata {
   id: string;
   title: string;
   description: string;
+
   chapterId: string;
   chapterTitle: string;
+
   grade: string;
+
   estimatedMinutes: number;
   completed: boolean;
   locked: boolean;
+
   heroVisualizer: VisualizerKey;
   heroVisualizerData: Record<string, unknown>;
+
   modules: {
     eduNotes: LessonModuleConfig;
     architectureModule: LessonModuleConfig;
     videoLesson: LessonModuleConfig;
     practiceModule: LessonModuleConfig;
   };
-  previousLesson: { id: string; title: string } | null;
-  nextLesson: { id: string; title: string } | null;
+
+  previousLesson: {
+    id: string;
+    title: string;
+  } | null;
+
+  nextLesson: {
+    id: string;
+    title: string;
+  } | null;
 }

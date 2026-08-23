@@ -4,7 +4,7 @@ import path from "path";
 // ── Security headers applied to every response ────────────────────────────────
 const securityHeaders = [
   // Prevent clickjacking
-  { key: "X-Frame-Options",        value: "DENY" },
+  { key: "X-Frame-Options",        value: "SAMEORIGIN" },
   // Prevent MIME-type sniffing
   { key: "X-Content-Type-Options", value: "nosniff" },
   // Referrer privacy
@@ -33,7 +33,7 @@ const securityHeaders = [
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
       "connect-src 'self' https://accounts.google.com https://*.resend.com",
-      "frame-src https://accounts.google.com",
+      "frame-src 'self' https://accounts.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -49,6 +49,16 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
+      // Allow same-origin iframe embedding for the EduNotes content API
+      {
+        source: "/api/student/edunotes/content",
+        headers: [
+          ...securityHeaders.filter(
+            (h) => h.key !== "X-Frame-Options"
+          ),
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
       {
         source: "/(.*)",
         headers: securityHeaders,

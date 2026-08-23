@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await hashPassword(password);
-    const rawToken  = generateRawToken();
+    const rawToken = generateRawToken();
     const tokenHash = hashToken(rawToken);
     const expiresAt = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
 
@@ -69,34 +69,45 @@ export async function POST(request: NextRequest) {
         data: {
           name,
           email,
-          password:      hashedPassword,
-          role:          "STUDENT",           // ← always base plan
+          password: hashedPassword,
+          role: "STUDENT",           // ← always base plan
           requestedRole: requestedRole ?? "STUDENT",
           emailVerified: false,
         },
       });
 
-      // All new users start with a StudentProfile.
-      // Admin can change the role later; the profile migration happens at that point.
-      await tx.studentProfile.create({
-        data: {
-          userId:        newUser.id,
-          grade:         grade ?? "grade1",
-          xpPoints:      0,
-          learningGems:  0,
-          streakDays:    1,
-          lastActiveDate: new Date(),
-        },
-      });
+      // Role-scoped profile
+      if (requestedRole === "TEACHER" || requestedRole === "SCHOOL") {
+        await tx.teacherProfile.create({ data: { userId: newUser.id } });
+      } else if (requestedRole === "EDITOR") {
+        // No profile required
+      } else {
+        // STUDENT / PARENT
+        const studentGrade = grade || "grade1";
+
+        await tx.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            grade: studentGrade,
+            xpPoints: 0,
+            learningGems: 0,
+            streakDays: 1,
+            lastActiveDate: new Date(),
+          },
+        });
+      }
 
       await tx.emailVerificationToken.create({
         data: { tokenHash, userId: newUser.id, expiresAt, used: false },
       });
     });
 
+    // ── Send verification email (fire-and-forget style but still await) ─────
+    // We do NOT issue a session cookie here — the user must verify first.
     try {
       await sendVerificationEmail(email, name, rawToken);
     } catch (emailErr) {
+      // Log but don't fail the registration — the user can request a resend.
       console.error("[auth/register] verification email failed:", emailErr);
     }
 

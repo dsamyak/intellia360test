@@ -1,6 +1,8 @@
 "use client";
 
 import { useStudentContext } from "@/context/StudentContext";
+import HeroSectionContainer from "@/components/student/HeroSectionContainer";
+import type { DashboardHeroSlide } from "@/types/student";
 import LearningGridContainer from "@/components/student/LearningGridContainer";
 import BottomNavigationContainer from "@/components/student/BottomNavigationContainer";
 import DailyStreakWidget from "@/components/student/DailyStreakWidget";
@@ -140,23 +142,112 @@ export default function StudentDashboardPage() {
 
   const actionCards = activeLessonData.actionCards ?? {};
   const architectureUrl = actionCards.architecture ?? activeLessonData.vercelLink ?? "#";
-  const videoUrl        = actionCards.video        ?? "";
-  const edunotesUrl     = actionCards.edunotes      ?? "/student/lesson/edunotes";
-  const practiceUrl     = actionCards.practice      ?? "/student/quiz/practice-1";
+  const videoUrl = actionCards.video ?? "";
+  const edunotesUrl = `/student/lesson/edunotes?lessonId=${encodeURIComponent(activeLessonData.id)}`;
+  const practiceUrl = actionCards.practice ?? "/student/quiz/practice-1";
 
-  const isArchCompleted      = isActivityCompleted(activeLessonData.id, "architecture");
-  const isPracticeCompleted  = isActivityCompleted(activeLessonData.id, "practice");
-  const isEdunotesCompleted  = isActivityCompleted(activeLessonData.id, "edunotes");
-  const isVideoCompleted     = isActivityCompleted(activeLessonData.id, "video");
-  const isLessonCompleted    = completedLessons.includes(activeLessonData.id);
-  const xpAward  = activeLessonData.xpReward   ?? 50;
-  const gemAward = activeLessonData.gemsReward  ?? 5;
+  console.log("EduNotes card target:", edunotesUrl);
+  console.log("Active lesson:", activeLessonData.id);
+
+  const isArchCompleted = isActivityCompleted(activeLessonData.id, "architecture");
+  const isPracticeCompleted = isActivityCompleted(activeLessonData.id, "practice");
+  const isEdunotesCompleted = isActivityCompleted(activeLessonData.id, "edunotes");
+  const isVideoCompleted = isActivityCompleted(activeLessonData.id, "video");
+  const isLessonCompleted = completedLessons.includes(activeLessonData.id);
+  const xpAward = activeLessonData.xpReward ?? 50;
+  const gemAward = activeLessonData.gemsReward ?? 5;
   const completedCount = [isArchCompleted, isPracticeCompleted, isEdunotesCompleted, isVideoCompleted].filter(Boolean).length;
-  const completionPct  = Math.round((completedCount / 4) * 100);
+  const completionPct = Math.round((completedCount / 4) * 100);
+
+  // ──────────────────────────────────────────────────────────────
+  // 1. Dynamic Hero Slider — 4 Slides
+  // ──────────────────────────────────────────────────────────────
+  const heroSlides = [
+    // Dot 1 — Today's Adventure (Lesson Overview)
+    {
+      tag: activeLessonData.heroSlide?.tag || "Today's Adventure",
+      title: activeLessonData.title,
+      subtitle:
+        activeLessonData.heroSlide?.subtitle ||
+        `Dive into ${activeLessonData.title}! Discover core concepts through interactive visuals and step-by-step guided learning designed just for you.`,
+      ctaText: "Start Learning →",
+      ctaUrl: architectureUrl,
+      visualizerKey:
+        activeLessonData.heroSlide?.visualizerKey || activeLessonData.id,
+      visualizerData:
+        activeLessonData.heroSlide?.visualizerData || { number: 123 },
+      activityType: "architecture",
+      xpReward: xpAward,
+      gemsReward: gemAward,
+    },
+
+    // Dot 2 — Story & Interactive Simulation
+    {
+      tag: "Story & Interactive Simulation",
+      title: `Story & Simulation`,
+      subtitle: `✦ Understand the concept visually ✦ Learn through real-life examples ✦ Improve logical thinking ✦ Interactive exploration ✦ Better concept retention`,
+      ctaText: isArchCompleted
+        ? "Launch Simulation ✓ (Completed)"
+        : `Launch Story & Simulation`,
+      ctaUrl: architectureUrl,
+      visualizerKey: "symmetry",
+      visualizerData:
+        activeLessonData.heroSlide?.visualizerData || { number: 246 },
+      activityType: "architecture",
+      xpReward: xpAward,
+      gemsReward: gemAward,
+    },
+
+    // Dot 3 — Practice Challenge
+    {
+      tag: "Practice Challenge",
+      title: "Practice Challenge",
+      subtitle: `Put your knowledge to the test! ✦ Interactive questions ✦ Instant feedback ✦ Accuracy improvement ✦ Confidence building`,
+      ctaText: isPracticeCompleted
+        ? "Practice Again ✓ (Completed)"
+        : "Start Practice (+30 XP) 🏆",
+      ctaUrl: practiceUrl,
+      visualizerKey: "fraction",
+      visualizerData: { number: 456 },
+      activityType: "practice",
+      xpReward: 30,
+      gemsReward: 0,
+    },
+
+    // Dot 4 — Reflection & Achievement
+    {
+      tag: "Reflection & Achievement",
+      title: `Reflection & Achievement`,
+      subtitle: `Lesson: ${isLessonCompleted ? "Completed ✓" : "In Progress"} | Earned XP: ${xpPoints} | Gems: ${learningGems} | Completion: ${completionPct}% | Activities Done: ${completedCount}/4`,
+      ctaText: isEdunotesCompleted
+        ? "Review Reflection ✓ (Completed)"
+        : "Review Reflection (+20 XP) 📖",
+      ctaUrl: edunotesUrl,
+      visualizerKey: "time",
+      visualizerData: { number: 789 },
+      activityType: "reflection",
+      xpReward: 20,
+      gemsReward: 0,
+    },
+  ];
+
+  const handleHeroCtaClick = (
+    slide: DashboardHeroSlide,
+    _slideIndex?: number
+  ) => {
+    if (slide.activityType) {
+      completeActivity(
+        activeLessonData.id,
+        slide.activityType,
+        slide.xpReward || 0,
+        slide.gemsReward || 0
+      );
+    }
+  };
 
   const totalTopics = curriculum
-  ? curriculum.chapters.reduce((a, c) => a + c.topics.length, 0)
-  : 0;
+    ? curriculum.chapters.reduce((a, c) => a + c.topics.length, 0)
+    : 0;
   // ── action cards for learning grid ─────────────────────────────────────────
   const mappedCards = [
     {
@@ -214,15 +305,15 @@ export default function StudentDashboardPage() {
     Math.round(base * 3.5), Math.round(base * 3.4), Math.round(base * 3.7),
     Math.round(base * 3.6),
   ];
-  const maxBar  = Math.max(...chartBars);
+  const maxBar = Math.max(...chartBars);
   const peakIdx = chartBars.indexOf(maxBar);
 
   // ── donut distribution ──────────────────────────────────────────────────────
   const donutSegments = [
-    { label: "Completed", pct: completionPct || 5,               count: completedLessons.length,          color: "#f97316" },
+    { label: "Completed", pct: completionPct || 5, count: completedLessons.length, color: "#f97316" },
     { label: "In Progress", pct: Math.max(20, 100 - completionPct - 15), count: Math.max(1, totalTopics - completedLessons.length - 2), color: "#7c3aed" },
-    { label: "Locked",    pct: Math.min(15, 100 - completionPct),count: Math.max(2, totalTopics - completedLessons.length), color: "#e5e7eb" },
-    { label: "Skipped",   pct: 5,                                count: 0,                                color: "#fb923c" },
+    { label: "Locked", pct: Math.min(15, 100 - completionPct), count: Math.max(2, totalTopics - completedLessons.length), color: "#e5e7eb" },
+    { label: "Skipped", pct: 5, count: 0, color: "#fb923c" },
   ];
   // normalise so they sum to 100
   const sumPct = donutSegments.reduce((a, s) => a + s.pct, 0);
@@ -230,19 +321,19 @@ export default function StudentDashboardPage() {
 
   // ── health items ────────────────────────────────────────────────────────────
   const healthItems = [
-    { label: "Lessons Completed",  status: "Operational", ms: completedLessons.length + " done",   color: "#10b981" },
-    { label: "XP Earned",          status: "Operational", ms: xpPoints + " XP",                    color: "#10b981" },
-    { label: "Learning Gems",      status: "Operational", ms: learningGems + " 💎",                 color: "#10b981" },
-    { label: "Day Streak",         status: "Operational", ms: streakDays + " days",                 color: "#10b981" },
-    { label: "Current Lesson",     status: "Active",      ms: activeLessonData.title.slice(0, 18),  color: "#f97316" },
-    { label: "AI Tutor",           status: "Operational", ms: "Ready",                             color: "#10b981" },
+    { label: "Lessons Completed", status: "Operational", ms: completedLessons.length + " done", color: "#10b981" },
+    { label: "XP Earned", status: "Operational", ms: xpPoints + " XP", color: "#10b981" },
+    { label: "Learning Gems", status: "Operational", ms: learningGems + " 💎", color: "#10b981" },
+    { label: "Day Streak", status: "Operational", ms: streakDays + " days", color: "#10b981" },
+    { label: "Current Lesson", status: "Active", ms: activeLessonData.title.slice(0, 18), color: "#f97316" },
+    { label: "AI Tutor", status: "Operational", ms: "Ready", color: "#10b981" },
   ];
 
   // ── top performing topics (by chapter) ─────────────────────────────────────
   const topChapters = (curriculum?.chapters ?? []).slice(0, 4).map((ch, i) => ({
     rank: i + 1,
     name: ch.title,
-    sub:  `${ch.topicsCount} topics`,
+    sub: `${ch.topicsCount} topics`,
     value: `${ch.topics.filter((t) => completedLessons.includes(t.id)).length} done`,
     emoji: ["🥇", "🥈", "🥉", "4️⃣"][i],
   }));
@@ -258,123 +349,54 @@ export default function StudentDashboardPage() {
 
   // ── quick actions ───────────────────────────────────────────────────────────
   const quickActions = [
-    { icon: "📖", label: "EduNotes",   color: "#7c3aed", bg: "rgba(124,58,237,.12)", href: edunotesUrl },
+    { icon: "📖", label: "EduNotes", color: "#7c3aed", bg: "rgba(124,58,237,.12)", href: edunotesUrl },
     { icon: "🧊", label: "Start Lesson", color: "#f97316", bg: "rgba(249,115,22,.12)", href: architectureUrl },
-    { icon: "▶",  label: "Watch Video", color: "#3b82f6", bg: "rgba(59,130,246,.12)", href: videoUrl || "#" },
-    { icon: "🏆", label: "Practice",   color: "#10b981", bg: "rgba(16,185,129,.12)", href: practiceUrl },
-    { icon: "🎖", label: "Badges",     color: "#f59e0b", bg: "rgba(245,158,11,.12)", href: "/student/rewards" },
-    { icon: "📊", label: "Progress",   color: "#ec4899", bg: "rgba(236,72,153,.12)", href: "/student/leaderboard" },
-    { icon: "📝", label: "Worksheets", color: "#06b6d4", bg: "rgba(6,182,212,.12)",  href: "/student/worksheets" },
-    { icon: "👤", label: "Profile",    color: "#64748b", bg: "rgba(100,116,139,.12)",href: "/student/profile" },
+    { icon: "▶", label: "Watch Video", color: "#3b82f6", bg: "rgba(59,130,246,.12)", href: videoUrl || "#" },
+    { icon: "🏆", label: "Practice", color: "#10b981", bg: "rgba(16,185,129,.12)", href: practiceUrl },
+    { icon: "🎖", label: "Badges", color: "#f59e0b", bg: "rgba(245,158,11,.12)", href: "/student/rewards" },
+    { icon: "📊", label: "Progress", color: "#ec4899", bg: "rgba(236,72,153,.12)", href: "/student/leaderboard" },
+    { icon: "📝", label: "Worksheets", color: "#06b6d4", bg: "rgba(6,182,212,.12)", href: "/student/worksheets" },
+    { icon: "👤", label: "Profile", color: "#64748b", bg: "rgba(100,116,139,.12)", href: "/student/profile" },
   ];
 
-  const xAxisLabels = ["1 May","6 May","11 May","16 May","21 May","26 May","31 May"];
+  const xAxisLabels = ["1 May", "6 May", "11 May", "16 May", "21 May", "26 May", "31 May"];
 
   return (
     <div className="student-dashboard-page">
 
-      {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
-      <div className="db-hero">
-        <div className="db-hero-bg" />
-
-        <div className="db-hero-content">
-          <div>
-            <div className="db-hero-tag">⭐ Today&apos;s Learning</div>
-            <h1 className="db-hero-title">
-              Learn. Explore. Grow.<br />
-              <span>{activeLessonData.title}</span>
-            </h1>
-            <p className="db-hero-subtitle">
-              Track your progress, complete lessons, and earn XP &amp; gems while mastering{" "}
-              {activeLessonData.title}. You&apos;re on a {streakDays}-day streak!
-            </p>
-          </div>
-
-          <div>
-            <div className="db-hero-actions">
-              <a className="btn-hero-primary" href={architectureUrl}>
-                Start Learning →
-              </a>
-              <a className="btn-hero-secondary" href={practiceUrl}>
-                Practice Now
-              </a>
-            </div>
-            <div className="db-hero-pills">
-              <div className="db-hero-pill">
-                <div className="db-hero-pill-icon">📡</div>
-                <span>Real-time Progress</span>
-              </div>
-              <div className="db-hero-pill">
-                <div className="db-hero-pill-icon">🛡</div>
-                <span>Secure &amp; Reliable</span>
-              </div>
-              <div className="db-hero-pill">
-                <div className="db-hero-pill-icon">🎯</div>
-                <span>All-In-One Learning</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right quick-stat cards */}
-        <div className="db-hero-stats">
-          <div className="db-hero-health-card">
-            <div className="db-hero-health-label">
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#34d399", display: "inline-block" }} />
-              Completion Health
-            </div>
-            <div className="db-hero-health-pct">{completionPct || 0}%</div>
-            <div className="db-hero-health-status">● Active</div>
-          </div>
-          <div className="db-hero-mini-stats">
-            <div className="db-hero-mini-card">
-              <div className="db-hero-mini-icon">⭐</div>
-              <div className="db-hero-mini-value">{xpPoints}</div>
-              <div className="db-hero-mini-label">XP</div>
-              <div className="db-hero-mini-change">↑ Today</div>
-            </div>
-            <div className="db-hero-mini-card">
-              <div className="db-hero-mini-icon">💎</div>
-              <div className="db-hero-mini-value">{learningGems}</div>
-              <div className="db-hero-mini-label">Gems</div>
-              <div className="db-hero-mini-change">↑ New</div>
-            </div>
-            <div className="db-hero-mini-card">
-              <div className="db-hero-mini-icon">🔥</div>
-              <div className="db-hero-mini-value">{streakDays}</div>
-              <div className="db-hero-mini-label">Streak</div>
-              <div className="db-hero-mini-change">↑ Days</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ── Hero Banner / 4-Slide Hero Section ─────────────────────────────── */}
+      <HeroSectionContainer
+        slides={heroSlides}
+        activeLessonId={activeLessonData.id}
+        onCtaClick={handleHeroCtaClick}
+      />
 
       {/* ── Stat Cards Row ──────────────────────────────────────────────────── */}
       <div className="db-stat-row">
-        <StatCard icon="📚" label="Lessons Done"   value={String(completedLessons.length)}
+        <StatCard icon="📚" label="Lessons Done" value={String(completedLessons.length)}
           change="vs last week" changeDir="up" vs="Total Topics"
           barColor="#f97316"
-          bars={[2,3,2,4,3,5,4,6,5,7,6,8,completedLessons.length || 1]} />
-        <StatCard icon="⭐" label="XP Points"      value={xpPoints.toLocaleString()}
+          bars={[2, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, completedLessons.length || 1]} />
+        <StatCard icon="⭐" label="XP Points" value={xpPoints.toLocaleString()}
           change="earning" changeDir="up" vs="This session"
           barColor="#7c3aed"
-          bars={[10,20,15,30,25,40,35,50,45,60,55,70,xpPoints || 1]} />
-        <StatCard icon="💎" label="Learning Gems"  value={String(learningGems)}
+          bars={[10, 20, 15, 30, 25, 40, 35, 50, 45, 60, 55, 70, xpPoints || 1]} />
+        <StatCard icon="💎" label="Learning Gems" value={String(learningGems)}
           change="collected" changeDir="up" vs="All time"
           barColor="#3b82f6"
-          bars={[1,2,1,3,2,4,3,5,4,6,5,7,learningGems || 1]} />
-        <StatCard icon="🔥" label="Day Streak"     value={`${streakDays} days`}
+          bars={[1, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7, learningGems || 1]} />
+        <StatCard icon="🔥" label="Day Streak" value={`${streakDays} days`}
           change="consecutive" changeDir="up" vs="Keep it going!"
           barColor="#f59e0b"
-          bars={[1,1,2,2,3,3,4,4,5,5,6,6,streakDays || 1]} />
+          bars={[1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, streakDays || 1]} />
         <StatCard icon="📖" label="Activities Done" value={`${completedCount}/4`}
           change={`${completionPct}%`} changeDir="up" vs="This lesson"
           barColor="#10b981"
-          bars={[0,0,1,1,2,2,3,3,completedCount || 0]} />
-        <StatCard icon="🗂" label="Total Topics"    value={String(totalTopics)}
+          bars={[0, 0, 1, 1, 2, 2, 3, 3, completedCount || 0]} />
+        <StatCard icon="🗂" label="Total Topics" value={String(totalTopics)}
           change="curriculum" changeDir="up" vs="Available"
           barColor="#ec4899"
-          bars={[2,4,6,8,10,12,14,16,totalTopics || 1]} />
+          bars={[2, 4, 6, 8, 10, 12, 14, 16, totalTopics || 1]} />
       </div>
 
       {/* ── Middle Row: chart + donut + health ──────────────────────────────── */}
@@ -476,7 +498,7 @@ export default function StudentDashboardPage() {
               ) : (
                 topChapters.map((ch, i) => (
                   <div key={ch.name} className="db-top-list-item">
-                    <div className={`db-top-list-rank ${["gold","silver","bronze",""][i] || ""}`}>
+                    <div className={`db-top-list-rank ${["gold", "silver", "bronze", ""][i] || ""}`}>
                       {ch.emoji}
                     </div>
                     <div className="db-top-list-avatar">{ch.name[0]}</div>

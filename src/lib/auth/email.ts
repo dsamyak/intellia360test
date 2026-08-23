@@ -107,7 +107,10 @@ export async function sendVerificationEmail(
     html: emailLayout("Verify your email — Intellia360", body),
   });
 
-  if (error) throw new Error(`Resend error: ${error.message}`);
+  if (error) {
+    console.error("[Resend API Error]:", error);
+    throw new Error(error.message || "Failed to send verification email via Resend");
+  }
 }
 
 // ─── Password Reset ───────────────────────────────────────────────────────────
@@ -150,5 +153,8 @@ export async function sendPasswordResetEmail(
     html: emailLayout("Password Reset — Intellia360", body),
   });
 
-  if (error) throw new Error(`Resend error: ${error.message}`);
+  if (error) {
+    console.error("[Resend API Error]:", error);
+    throw new Error(error.message || "Failed to send password reset email via Resend");
+  }
 }

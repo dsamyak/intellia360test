@@ -3,7 +3,7 @@ import { requireStudentSession } from "@/lib/student/require-student-session";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
-const DEFAULT_LIMIT = 20;
+const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
 export interface LeaderboardEntry {
@@ -14,16 +14,26 @@ export interface LeaderboardEntry {
   grade: string;
   xpPoints: number;
   learningGems: number;
+  streakDays: number;
   isCurrentUser: boolean;
+}
+
+export interface CurrentUserStats {
+  rank: number | null;
+  xpPoints: number;
+  streakDays: number;
+  learningGems: number;
+  grade: string;
 }
 
 export interface LeaderboardResponse {
   entries: LeaderboardEntry[];
   total: number;
   currentUserRank: number | null;
+  currentUserStats: CurrentUserStats | null;
 }
 
-// GET /api/student/leaderboard?grade=grade1&limit=20
+// GET /api/student/leaderboard?grade=grade1&limit=50
 export async function GET(request: NextRequest) {
   try {
     const { session, errorResponse } = await requireStudentSession();
@@ -36,27 +46,37 @@ export async function GET(request: NextRequest) {
       ? DEFAULT_LIMIT
       : Math.min(Math.max(1, limitParam), MAX_LIMIT);
 
-    // Fetch all profiles for ranking (grade-filtered if requested), then slice
-    // to avoid a separate COUNT query. For larger datasets this would use
-    // cursor-based pagination, but the student count here is school-scale.
+    // Fetch all student profiles for ranking from real database
     const profiles = await db.studentProfile.findMany({
-      where: grade ? { grade } : undefined,
+      where: {
+        ...(grade ? { grade } : {}),
+        user: { role: "STUDENT" },
+      },
       include: {
-        user: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, role: true } },
       },
       orderBy: [
         { xpPoints: "desc" },
-        { learningGems: "desc" }, // tiebreaker
+        { learningGems: "desc" }, // real secondary tiebreaker
       ],
     });
 
     const total = profiles.length;
 
-    // Find the current user's global rank before slicing
-    const currentUserRankIndex = profiles.findIndex(
-      (p) => p.userId === session.userId
-    );
+    // Find the current user's rank from real database records
+    const currentUserProfile = profiles.find((p) => p.userId === session.userId);
+    const currentUserRankIndex = profiles.findIndex((p) => p.userId === session.userId);
     const currentUserRank = currentUserRankIndex >= 0 ? currentUserRankIndex + 1 : null;
+
+    const currentUserStats: CurrentUserStats | null = currentUserProfile
+      ? {
+          rank: currentUserRank,
+          xpPoints: currentUserProfile.xpPoints,
+          streakDays: currentUserProfile.streakDays,
+          learningGems: currentUserProfile.learningGems,
+          grade: currentUserProfile.grade,
+        }
+      : null;
 
     const entries: LeaderboardEntry[] = profiles
       .slice(0, limit)
@@ -68,6 +88,7 @@ export async function GET(request: NextRequest) {
         grade: p.grade,
         xpPoints: p.xpPoints,
         learningGems: p.learningGems,
+        streakDays: p.streakDays,
         isCurrentUser: p.userId === session.userId,
       }));
 
@@ -75,7 +96,12 @@ export async function GET(request: NextRequest) {
       {
         success: true,
         message: "OK",
-        data: { entries, total, currentUserRank },
+        data: {
+          entries,
+          total,
+          currentUserRank,
+          currentUserStats,
+        },
       },
       { status: 200 }
     );
@@ -87,3 +113,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
