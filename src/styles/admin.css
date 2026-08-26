@@ -3336,69 +3336,696 @@
    DARK MODE  (toggled by AdminNavbar via html.admin-dark class)
    ══════════════════════════════════════════════════════════════ */
 
-html.admin-dark .admin-shell                { background: #0f1117; }
-html.admin-dark .admin-sidebar              { background: #13151c; border-color: #1e2130; }
-html.admin-dark .admin-sidebar-header       { border-color: #1e2130; }
-html.admin-dark .admin-nav-label            { color: #4b5563; }
-html.admin-dark .admin-nav-item             { color: #94a3b8; }
-html.admin-dark .admin-nav-item:hover       { background: #1e2130; color: #f1f5f9; }
-html.admin-dark .admin-nav-item.active      { background: rgba(249,115,22,.18); color: #f97316; }
-html.admin-dark .admin-navbar               { background: #13151c; border-color: #1e2130; box-shadow: none; }
-html.admin-dark .admin-navbar h1            { color: #f1f5f9; }
-html.admin-dark .admin-search-wrapper       { background: #1e2130; border-color: #2d3348; }
-html.admin-dark .admin-search-input         { background: transparent; color: #f1f5f9; }
-html.admin-dark .admin-search-input::placeholder { color: #4b5563; }
-html.admin-dark .admin-icon-btn             { background: #1e2130; color: #94a3b8; border-color: #2d3348; }
-html.admin-dark .admin-icon-btn:hover       { background: #2d3348; color: #f1f5f9; }
-html.admin-dark .admin-content-body         { background: #0f1117; }
-html.admin-dark .admin-main-wrapper         { background: #0f1117; }
+html.admin-dark .admin-shell {
+  background: #0f1117;
+}
+
+html.admin-dark .admin-sidebar {
+  background: #13151c;
+  border-color: #1e2130;
+}
+
+html.admin-dark .admin-sidebar-header {
+  border-color: #1e2130;
+}
+
+html.admin-dark .admin-nav-label {
+  color: #4b5563;
+}
+
+html.admin-dark .admin-nav-item {
+  color: #94a3b8;
+}
+
+html.admin-dark .admin-nav-item:hover {
+  background: #1e2130;
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-nav-item.active {
+  background: rgba(249, 115, 22, .18);
+  color: #f97316;
+}
+
+html.admin-dark .admin-navbar {
+  background: #13151c;
+  border-color: #1e2130;
+  box-shadow: none;
+}
+
+html.admin-dark .admin-navbar h1 {
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-search-wrapper {
+  background: #1e2130;
+  border-color: #2d3348;
+}
+
+html.admin-dark .admin-search-input {
+  background: transparent;
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-search-input::placeholder {
+  color: #4b5563;
+}
+
+html.admin-dark .admin-icon-btn {
+  background: #1e2130;
+  color: #94a3b8;
+  border-color: #2d3348;
+}
+
+html.admin-dark .admin-icon-btn:hover {
+  background: #2d3348;
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-content-body {
+  background: #0f1117;
+}
+
+html.admin-dark .admin-main-wrapper {
+  background: #0f1117;
+}
 
 /* Cards */
 html.admin-dark .admin-card,
-html.admin-dark .admin-hero-card            { background: #13151c; border-color: #1e2130; }
+html.admin-dark .admin-hero-card {
+  background: #13151c;
+  border-color: #1e2130;
+}
+
 html.admin-dark .teacher-stat-card,
 html.admin-dark .student-stat-card,
-html.admin-dark .course-stat-card           { background: #13151c; border-color: #1e2130; }
+html.admin-dark .course-stat-card {
+  background: #13151c;
+  border-color: #1e2130;
+}
+
 html.admin-dark .teacher-directory-card,
 html.admin-dark .student-directory-card,
-html.admin-dark .course-directory-card      { background: #13151c; border-color: #1e2130; }
+html.admin-dark .course-directory-card {
+  background: #13151c;
+  border-color: #1e2130;
+}
+
 html.admin-dark .student-overview-card,
-html.admin-dark .course-overview-card       { background: #13151c; border-color: #1e2130; }
+html.admin-dark .course-overview-card {
+  background: #13151c;
+  border-color: #1e2130;
+}
 
 /* Text */
-html.admin-dark .admin-page-title           { color: #f1f5f9; }
+html.admin-dark .admin-page-title {
+  color: #f1f5f9;
+}
+
 html.admin-dark .admin-page-subtitle,
-html.admin-dark .admin-breadcrumb           { color: #64748b; }
+html.admin-dark .admin-breadcrumb {
+  color: #64748b;
+}
+
 html.admin-dark .teacher-stat-content span,
 html.admin-dark .student-stat-content span,
-html.admin-dark .course-stat-content span   { color: #94a3b8; }
+html.admin-dark .course-stat-content span {
+  color: #94a3b8;
+}
+
 html.admin-dark .teacher-stat-content strong,
 html.admin-dark .student-stat-content strong,
-html.admin-dark .course-stat-content strong { color: #f1f5f9; }
+html.admin-dark .course-stat-content strong {
+  color: #f1f5f9;
+}
+
 html.admin-dark .teacher-stat-content small,
 html.admin-dark .student-stat-content small,
-html.admin-dark .course-stat-content small  { color: #64748b; }
+html.admin-dark .course-stat-content small {
+  color: #64748b;
+}
 
 /* Table */
-html.admin-dark .reusable-table-wrapper     { background: #13151c; border-color: #1e2130; }
-html.admin-dark .reusable-table th          { background: #1e2130; color: #94a3b8; border-color: #2d3348; }
-html.admin-dark .reusable-table td          { border-color: #1e2130; color: #e2e8f0; }
-html.admin-dark .reusable-table tr:hover td { background: #1e2130; }
-html.admin-dark .table-search-input         { background: #1e2130; border-color: #2d3348; color: #f1f5f9; }
-html.admin-dark .table-search-input::placeholder { color: #4b5563; }
+html.admin-dark .reusable-table-wrapper {
+  background: #13151c;
+  border-color: #1e2130;
+}
+
+html.admin-dark .reusable-table th {
+  background: #1e2130;
+  color: #94a3b8;
+  border-color: #2d3348;
+}
+
+html.admin-dark .reusable-table td {
+  border-color: #1e2130;
+  color: #e2e8f0;
+}
+
+html.admin-dark .reusable-table tr:hover td {
+  background: #1e2130;
+}
+
+html.admin-dark .table-search-input {
+  background: #1e2130;
+  border-color: #2d3348;
+  color: #f1f5f9;
+}
+
+html.admin-dark .table-search-input::placeholder {
+  color: #4b5563;
+}
 
 /* Profile dropdown */
-html.admin-dark .admin-user-profile        { background: #1e2130; border-color: #2d3348; }
-html.admin-dark .admin-user-name           { color: #f1f5f9; }
-html.admin-dark .admin-user-role           { color: #64748b; }
-html.admin-dark .admin-profile-dropdown    { background: #13151c; border-color: #1e2130; box-shadow: 0 20px 40px rgba(0,0,0,.5); }
-html.admin-dark .admin-profile-divider     { background: #1e2130; }
-html.admin-dark .admin-profile-dropdown-item { color: #94a3b8; }
-html.admin-dark .admin-profile-dropdown-item:hover { background: #1e2130; color: #f1f5f9; }
-html.admin-dark .admin-profile-dropdown-name { color: #f1f5f9; }
-html.admin-dark .admin-profile-dropdown-role { color: #64748b; }
+html.admin-dark .admin-user-profile {
+  background: #1e2130;
+  border-color: #2d3348;
+}
+
+html.admin-dark .admin-user-name {
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-user-role {
+  color: #64748b;
+}
+
+html.admin-dark .admin-profile-dropdown {
+  background: #13151c;
+  border-color: #1e2130;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, .5);
+}
+
+html.admin-dark .admin-profile-divider {
+  background: #1e2130;
+}
+
+html.admin-dark .admin-profile-dropdown-item {
+  color: #94a3b8;
+}
+
+html.admin-dark .admin-profile-dropdown-item:hover {
+  background: #1e2130;
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-profile-dropdown-name {
+  color: #f1f5f9;
+}
+
+html.admin-dark .admin-profile-dropdown-role {
+  color: #64748b;
+}
 
 /* Transition for smooth switching */
 html .admin-shell *,
 html .admin-navbar *,
-html .admin-sidebar * { transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+html .admin-sidebar * {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* =========================================================
+   FINAL RESPONSIVE PATCH
+   Desktop (>=1025px) remains unchanged.
+   These overrides only improve tablet/mobile behavior.
+   ========================================================= */
+
+/* Prevent accidental viewport overflow without changing desktop layout. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+/* Keep flex/grid children from forcing horizontal overflow. */
+.admin-shell,
+.admin-main-wrapper,
+.admin-content-body,
+.admin-dashboard-page,
+.admin-dashboard-section,
+.admin-card,
+.admin-hero-banner,
+.admin-hero-inner,
+.admin-grid-2col,
+.admin-grid-3col,
+.admin-grid-4col,
+.admin-stats-grid,
+.student-stats-grid,
+.student-overview-grid,
+.course-stats-grid,
+.course-overview-grid {
+  min-width: 0;
+}
+
+/* =========================================================
+   TABLET — 1024px and below
+   ========================================================= */
+@media (max-width: 1024px) {
+  .admin-content-body {
+    padding: 1rem;
+  }
+
+  .admin-dashboard-page,
+  .admin-students-page,
+  .admin-courses-page {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .admin-navbar {
+    padding: 0 1rem;
+  }
+
+  .admin-search-wrapper {
+    width: min(280px, 32vw);
+  }
+
+  .admin-hero-banner {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-hero-inner {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-hero-content {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-hero-visual,
+  .admin-hero-visual-new {
+    max-width: 100%;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-grid-2col,
+  .admin-grid-3col,
+  .admin-grid-4col {
+    min-width: 0;
+  }
+
+  .admin-card,
+  .student-overview-card,
+  .course-overview-card,
+  .student-directory-card,
+  .course-directory-card {
+    min-width: 0;
+  }
+
+  .admin-table,
+  .reusable-table {
+    min-width: 640px;
+  }
+
+  .reusable-table-wrapper,
+  .admin-table-wrapper,
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* =========================================================
+   MOBILE — 768px and below
+   ========================================================= */
+@media (max-width: 768px) {
+  .admin-shell {
+    min-height: 100dvh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .admin-main-wrapper {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .admin-content-body {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.9rem;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .admin-dashboard-page,
+  .admin-students-page,
+  .admin-courses-page {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .admin-navbar {
+    width: 100%;
+    min-width: 0;
+    height: 54px;
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .admin-navbar>* {
+    min-width: 0;
+  }
+
+  .admin-search-wrapper {
+    display: none;
+  }
+
+  .admin-nav-actions {
+    margin-left: auto;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .admin-user-profile {
+    max-width: 42px;
+    padding: 4px;
+  }
+
+  .admin-user-profile>*:not(:first-child) {
+    display: none;
+  }
+
+  .admin-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-page-title {
+    font-size: clamp(24px, 7vw, 32px);
+    overflow-wrap: anywhere;
+  }
+
+  .admin-page-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .admin-page-status {
+    align-self: flex-start;
+  }
+
+  .admin-dashboard-section .admin-section-heading,
+  .admin-section-heading.compact {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .admin-dashboard-kpi-grid,
+  .admin-stats-grid,
+  .student-stats-grid,
+  .course-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .admin-dashboard-analytics-grid,
+  .admin-dashboard-activity-grid,
+  .admin-grid-2col,
+  .admin-grid-3col,
+  .admin-grid-4col,
+  .student-overview-grid,
+  .course-overview-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .admin-dashboard-analytics-card.growth-card {
+    grid-column: auto;
+  }
+
+  .admin-card,
+  .student-overview-card,
+  .course-overview-card,
+  .student-directory-card,
+  .course-directory-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .admin-hero-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    text-align: left;
+  }
+
+  .admin-hero-content {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .admin-hero-title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-hero-desc,
+  .admin-hero-description {
+    max-width: 100%;
+    font-size: 0.82rem;
+  }
+
+  .admin-hero-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-hero-primary-btn,
+  .admin-hero-secondary-btn {
+    max-width: 100%;
+  }
+
+  .admin-hero-visual,
+  .admin-hero-visual-new {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  .admin-hero-dashboard-card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .stat-card,
+  .student-stat-card,
+  .course-stat-card {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .student-stat-content,
+  .course-stat-content {
+    min-width: 0;
+  }
+
+  .student-stat-content strong,
+  .course-stat-content>strong,
+  .student-stat-content span,
+  .course-stat-content>span,
+  .student-stat-content small,
+  .course-stat-content>small {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-table,
+  .reusable-table {
+    min-width: 620px;
+  }
+
+  .reusable-table-wrapper,
+  .admin-table-wrapper,
+  .table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .admin-profile-dropdown {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE — 480px and below
+   ========================================================= */
+@media (max-width: 480px) {
+  .admin-content-body {
+    padding: 0.75rem;
+  }
+
+  .admin-navbar {
+    padding: 0 0.65rem;
+  }
+
+  .admin-dashboard-kpi-grid,
+  .admin-stats-grid,
+  .student-stats-grid,
+  .course-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .stat-card,
+  .student-stat-card,
+  .course-stat-card {
+    min-height: 96px;
+    padding: 0.9rem;
+  }
+
+  .admin-card {
+    padding: 0.85rem;
+  }
+
+  .admin-card-header {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-card-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-hero-banner {
+    border-radius: 16px;
+    padding: 1rem;
+  }
+
+  .admin-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary,
+  .admin-hero-primary-btn,
+  .admin-hero-secondary-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-profile-dropdown {
+    right: -2px;
+    width: min(210px, calc(100vw - 20px));
+  }
+
+  .student-stat-icon,
+  .course-stat-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .student-overview-header,
+  .course-overview-header {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+/* =========================================================
+   EXTRA SMALL PHONES — 360px and below
+   ========================================================= */
+@media (max-width: 360px) {
+  .admin-content-body {
+    padding: 0.6rem;
+  }
+
+  .admin-navbar {
+    padding: 0 0.5rem;
+  }
+
+  .admin-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .admin-hero-title {
+    font-size: 1.4rem;
+  }
+
+  .admin-hero-desc,
+  .admin-hero-description {
+    font-size: 0.78rem;
+  }
+
+  .admin-card,
+  .student-stat-card,
+  .course-stat-card {
+    padding: 0.75rem;
+  }
+}
+
+/* =========================================================
+   SAFE MEDIA / CONTENT RULES
+   ========================================================= */
+@media (max-width: 768px) {
+
+  .admin-content-body iframe,
+  .admin-content-body video,
+  .admin-content-body canvas,
+  .admin-content-body img {
+    max-width: 100%;
+  }
+
+  .admin-content-body iframe {
+    width: 100%;
+  }
+
+  .admin-content-body pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .admin-content-body code {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-content-body input,
+  .admin-content-body select,
+  .admin-content-body textarea {
+    width: 100%;
+    min-width: 0;
+  }
+}
