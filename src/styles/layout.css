@@ -6829,3 +6829,489 @@
     font-size: 7px;
   }
 }
+
+/* =========================================================
+   RESPONSIVE LAYOUT — MOBILE / TABLET ONLY
+   Desktop UI (1024px+) remains unchanged
+========================================================= */
+
+/* ---------- TABLET: 1024px → 769px ---------- */
+
+@media (max-width: 1023px) {
+
+  .student-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .student-sidebar-container {
+    width: 220px;
+    min-width: 220px;
+    padding: 12px;
+  }
+
+  .student-main-content {
+    min-width: 0;
+    width: 100%;
+    padding: 14px 18px;
+  }
+
+  .header-left {
+    gap: 20px;
+    min-width: 0;
+  }
+
+  .header-right {
+    gap: 10px;
+  }
+
+  .hero-section-container {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .hero-visualizer-slot {
+    max-width: 38%;
+  }
+
+  .math-visualizer-card {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   TABLET / MOBILE — 768px
+========================================================= */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .student-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+
+  .header-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .header-left {
+    min-width: 0;
+    max-width: 55%;
+    gap: 8px;
+  }
+
+  .header-right {
+    min-width: 0;
+    max-width: 45%;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .logo-brand,
+  .logo-wrapper {
+    flex-shrink: 0;
+  }
+
+  .grade-selector {
+    min-width: 0;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Student body */
+
+  .student-body {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Sidebar */
+
+  .student-sidebar-container {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    padding: 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Main */
+
+  .student-main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: calc(100% - 200px);
+    max-width: calc(100% - 200px);
+    padding: 12px 16px;
+    overflow-x: hidden;
+  }
+
+  /* Prevent long text from breaking layout */
+
+  .student-main-content h1,
+  .student-main-content h2,
+  .student-main-content h3,
+  .student-main-content h4,
+  .student-main-content p,
+  .student-main-content span {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  /* Images */
+
+  .student-main-content img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Videos / iframe */
+
+  .student-main-content video,
+  .student-main-content iframe {
+    max-width: 100%;
+  }
+
+  /* Grids */
+
+  .student-main-content [class*="grid"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Flex rows */
+
+  .student-main-content [class*="row"] {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Hero */
+
+  .hero-section-container {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .hero-banner-content {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .hero-title {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Visualizer */
+
+  .hero-visualizer-slot {
+    width: min(330px, 42vw);
+    max-width: 42%;
+  }
+
+  .math-visualizer-card {
+    width: 100%;
+    max-width: 315px;
+  }
+
+  /* Tables */
+
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-responsive table {
+    min-width: max-content;
+  }
+
+  /* Modal */
+
+  .modal {
+    width: 90vw;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+
+/* =========================================================
+   MOBILE — 600px
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .header-left {
+    max-width: 48%;
+  }
+
+  .header-right {
+    max-width: 52%;
+  }
+
+  .student-sidebar-container {
+    width: 170px;
+    min-width: 170px;
+    max-width: 170px;
+    padding: 10px;
+  }
+
+  .student-main-content {
+    width: calc(100% - 170px);
+    max-width: calc(100% - 170px);
+    padding: 10px 12px;
+  }
+
+  .hero-visualizer-slot {
+    display: none;
+  }
+
+  .hero-section-container {
+    padding: 24px 20px;
+  }
+
+  .hero-banner-content {
+    max-width: 100%;
+  }
+
+  .hero-mascot-cta {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .btn-primary-hero {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE — 480px
+========================================================= */
+
+@media (max-width: 480px) {
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .student-shell {
+    overflow-x: hidden;
+  }
+
+  /* Header */
+
+  .header-container {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .header-left {
+    gap: 5px;
+    max-width: 45%;
+  }
+
+  .header-right {
+    gap: 5px;
+    max-width: 55%;
+  }
+
+  .grade-selector {
+    max-width: 75px;
+    font-size: 0.65rem;
+  }
+
+  /* Sidebar */
+
+  .student-sidebar-container {
+    width: 145px;
+    min-width: 145px;
+    max-width: 145px;
+    padding: 8px;
+  }
+
+  .student-main-content {
+    width: calc(100% - 145px);
+    max-width: calc(100% - 145px);
+    padding: 8px;
+  }
+
+  /* Sidebar typography */
+
+  .topic-item,
+  .subtopic-item {
+    min-width: 0;
+  }
+
+  .topic-title,
+  .topic-questions-count,
+  .chapter-accordion-header {
+    overflow-wrap: anywhere;
+  }
+
+  /* Hero */
+
+  .hero-section-container {
+    width: 100%;
+    min-height: 390px;
+    padding: 20px 16px;
+  }
+
+  .hero-title {
+    font-size: 1.55rem;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .hero-motivation-float {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  /* Buttons */
+
+  .hero-mascot-cta {
+    width: 100%;
+  }
+
+  .btn-primary-hero {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 20px;
+  }
+
+  /* Visual cards */
+
+  .math-visualizer-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Tables */
+
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Modal */
+
+  .modal {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: 90vh;
+    padding: 16px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES — 360px
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .student-sidebar-container {
+    width: 125px;
+    min-width: 125px;
+    max-width: 125px;
+    padding: 7px;
+  }
+
+  .student-main-content {
+    width: calc(100% - 125px);
+    max-width: calc(100% - 125px);
+    padding: 7px;
+  }
+
+  .header-left {
+    max-width: 42%;
+  }
+
+  .header-right {
+    max-width: 58%;
+    gap: 3px;
+  }
+
+  .logo-wrapper {
+    width: 55px;
+  }
+
+  .grade-selector {
+    max-width: 60px;
+  }
+
+  .hero-section-container {
+    padding: 18px 12px;
+  }
+
+  .hero-title {
+    font-size: 1.35rem;
+  }
+}
+
+
+/* =========================================================
+   EXTRA SMALL — 320px
+========================================================= */
+
+@media (max-width: 320px) {
+
+  .student-sidebar-container {
+    width: 115px;
+    min-width: 115px;
+    max-width: 115px;
+  }
+
+  .student-main-content {
+    width: calc(100% - 115px);
+    max-width: calc(100% - 115px);
+    padding: 6px;
+  }
+
+  .header-left {
+    max-width: 40%;
+  }
+
+  .header-right {
+    max-width: 60%;
+  }
+
+  .logo-wrapper {
+    width: 50px;
+  }
+
+  .hero-title {
+    font-size: 1.25rem;
+  }
+}
