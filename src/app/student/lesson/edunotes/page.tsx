@@ -1,134 +1,214 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useStudent } from "@/context/StudentContext";
 
+/*
+ * react-pdf uses browser APIs such as DOMMatrix.
+ * Therefore EduNotesBookViewer must be loaded client-side only.
+ */
+const EduNotesBookViewer = dynamic(
+  () => import("@/components/student/EduNotesBookViewer"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="edunotes-state">
+        <div className="edunotes-loader">📚</div>
+
+        <h2>Opening your learning book...</h2>
+
+        <p>Preparing your EduNotes ✨</p>
+      </div>
+    ),
+  }
+);
+
 function EduNotesContent() {
   const searchParams = useSearchParams();
-  const lessonId = searchParams.get("lessonId");
+
+  const lessonIdParam = searchParams.get("lessonId");
   const gradeParam = searchParams.get("grade");
 
   const { currentGrade } = useStudent();
-  const effectiveGrade = gradeParam || currentGrade || "grade1";
+
+  const effectiveGrade =
+    gradeParam || currentGrade || "grade1";
 
   const [loading, setLoading] = useState(true);
   const [available, setAvailable] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!lessonId) {
+    if (!lessonIdParam) {
       setLoading(false);
       setAvailable(false);
       return;
     }
+
+    const lessonId = lessonIdParam;
+    let cancelled = false;
 
     async function checkEduNotes() {
       try {
         setLoading(true);
         setError(false);
 
-        const response = await fetch(
-          `/api/student/edunotes?lessonId=${encodeURIComponent(
-            lessonId!
-          )}&grade=${encodeURIComponent(effectiveGrade)}`
-        );
+        const url =
+          `/api/student/edunotes` +
+          `?lessonId=${encodeURIComponent(lessonId)}` +
+          `&grade=${encodeURIComponent(effectiveGrade)}`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (cancelled) return;
 
         if (response.ok) {
           setAvailable(true);
         } else if (response.status === 404) {
           setAvailable(false);
         } else {
+          console.error(
+            "EduNotes metadata error:",
+            response.status
+          );
+
+          setAvailable(false);
           setError(true);
         }
       } catch (err) {
-        console.error("EduNotes metadata error:", err);
+        if (cancelled) return;
+
+        console.error(
+          "EduNotes metadata error:",
+          err
+        );
+
+        setAvailable(false);
         setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     checkEduNotes();
-  }, [lessonId, effectiveGrade]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonIdParam, effectiveGrade]);
+
+  /* -----------------------------
+     Loading
+  ----------------------------- */
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
-        <h2>Loading EduNotes...</h2>
+      <div className="edunotes-state">
+        <div className="edunotes-loader">📚</div>
+
+        <h2>Opening your learning book...</h2>
+
+        <p>Getting your EduNotes ready ✨</p>
       </div>
     );
   }
+
+  /* -----------------------------
+     Missing lesson
+  ----------------------------- */
+
+  if (!lessonIdParam) {
+    return (
+      <div className="edunotes-state">
+        <div className="edunotes-state-icon">
+          📖
+        </div>
+
+        <h2>Lesson ID is missing</h2>
+
+        <p>
+          Please select a lesson to view
+          its EduNotes.
+        </p>
+      </div>
+    );
+  }
+
+  /* -----------------------------
+     API error
+  ----------------------------- */
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
+      <div className="edunotes-state">
+        <div className="edunotes-state-icon">
+          😕
+        </div>
+
         <h2>Unable to load EduNotes</h2>
-        <p>Please try again later.</p>
+
+        <p>
+          Something went wrong while
+          loading your learning book.
+        </p>
+
+        <button
+          type="button"
+          className="edunotes-retry-button"
+          onClick={() =>
+            window.location.reload()
+          }
+        >
+          🔄 Try Again
+        </button>
       </div>
     );
   }
 
-  if (!lessonId) {
-    return (
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
-        <h2>Lesson ID is missing</h2>
-        <p>Please select a lesson to view its EduNotes.</p>
-      </div>
-    );
-  }
+  /* -----------------------------
+     EduNotes unavailable
+  ----------------------------- */
 
   if (!available) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          textAlign: "center",
-        }}
-      >
+      <div className="edunotes-state">
+        <div className="edunotes-state-icon">
+          📚
+        </div>
+
         <h2>EduNotes not available</h2>
-        <p>Notes for this lesson are not available yet.</p>
+
+        <p>
+          Notes for this lesson are not
+          available yet.
+        </p>
       </div>
     );
   }
 
+  const lessonId = lessonIdParam;
+
+  /* -----------------------------
+     PDF URL
+  ----------------------------- */
+
   const pdfUrl =
-    `/api/student/edunotes/content?lessonId=${encodeURIComponent(
-      lessonId
-    )}&grade=${encodeURIComponent(effectiveGrade)}`;
+    `/api/student/edunotes/content` +
+    `?lessonId=${encodeURIComponent(lessonId)}` +
+    `&grade=${encodeURIComponent(effectiveGrade)}`;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "calc(100vh - 80px)",
-        overflow: "hidden",
-      }}
-    >
-      <iframe
-        src={pdfUrl}
-        title="EduNotes"
-        width="100%"
-        height="100%"
-        style={{
-          border: "none",
-        }}
-        allow="fullscreen"
+    <div className="edunotes-page-wrapper">
+      <EduNotesBookViewer
+        pdfUrl={pdfUrl}
+        lessonId={lessonId}
       />
     </div>
   );
@@ -138,13 +218,14 @@ export default function EduNotesPage() {
   return (
     <Suspense
       fallback={
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-          }}
-        >
+        <div className="edunotes-state">
+          <div className="edunotes-loader">
+            📚
+          </div>
+
           <h2>Loading EduNotes...</h2>
+
+          <p>Preparing your learning book ✨</p>
         </div>
       }
     >

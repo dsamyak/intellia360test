@@ -1,64 +1,133 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-// ── Security headers applied to every response ────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Security headers applied to every response
+// ─────────────────────────────────────────────────────────────
 const securityHeaders = [
   // Prevent clickjacking
-  { key: "X-Frame-Options",        value: "SAMEORIGIN" },
+  {
+    key: "X-Frame-Options",
+    value: "SAMEORIGIN",
+  },
+
   // Prevent MIME-type sniffing
-  { key: "X-Content-Type-Options", value: "nosniff" },
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  },
+
   // Referrer privacy
-  { key: "Referrer-Policy",        value: "strict-origin-when-cross-origin" },
-  // Disable legacy features we don't use
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+
+  // Disable browser features we don't use
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    value:
+      "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  // Force HTTPS in production (1 year, include subdomains)
+
+  // Force HTTPS in production
   ...(process.env.NODE_ENV === "production"
     ? [
-        {
-          key: "Strict-Transport-Security",
-          value: "max-age=31536000; includeSubDomains; preload",
-        },
-      ]
+      {
+        key: "Strict-Transport-Security",
+        value:
+          "max-age=31536000; includeSubDomains; preload",
+      },
+    ]
     : []),
+
+  // ─────────────────────────────────────────────────────────
   // Content Security Policy
+  // ─────────────────────────────────────────────────────────
   {
     key: "Content-Security-Policy",
     value: [
+      // Default
       "default-src 'self'",
+
+      // Scripts
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
+
+      // Styles
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+
+      // Fonts
       "font-src 'self' https://fonts.gstatic.com",
+
+      // Images
       "img-src 'self' data: blob: https:",
+
+      // API / network requests
       "connect-src 'self' https://accounts.google.com https://*.resend.com",
-      "frame-src 'self' https://accounts.google.com",
+
+      // ───────────────────────────────────────────────────────
+      // IFRAME SOURCES
+      // ───────────────────────────────────────────────────────
+      //
+      // Intellia360 itself
+      // Google Accounts
+      // Grade 1–12 Vercel lesson/architecture apps
+      // YouTube
+      // YouTube no-cookie
+      // Google Drive
+      //
+      "frame-src 'self' https://accounts.google.com https://*.vercel.app https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://drive.google.com",
+
+      // Prevent plugins
       "object-src 'none'",
+
+      // Restrict base URL
       "base-uri 'self'",
+
+      // Restrict form submissions
       "form-action 'self'",
+
+      // Upgrade insecure requests
       "upgrade-insecure-requests",
     ].join("; "),
   },
 ];
 
+// ─────────────────────────────────────────────────────────────
+// Next.js configuration
+// ─────────────────────────────────────────────────────────────
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
 
+  // ───────────────────────────────────────────────────────────
+  // SECURITY HEADERS
+  // ───────────────────────────────────────────────────────────
   async headers() {
     return [
-      // Allow same-origin iframe embedding for the EduNotes content API
+      // =======================================================
+      // EDUNOTES CONTENT
+      // =======================================================
       {
         source: "/api/student/edunotes/content",
+
         headers: [
           ...securityHeaders.filter(
-            (h) => h.key !== "X-Frame-Options"
+            (header) =>
+              header.key !== "X-Frame-Options"
           ),
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
         ],
       },
+
+      // =======================================================
+      // ALL OTHER ROUTES
+      // =======================================================
       {
         source: "/(.*)",
         headers: securityHeaders,
@@ -66,23 +135,42 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Redirect HTTP → HTTPS in production.
-  // Uses a backtick template literal so the env var actually interpolates.
+  // ───────────────────────────────────────────────────────────
+  // HTTP → HTTPS REDIRECT IN PRODUCTION
+  // ───────────────────────────────────────────────────────────
   async redirects() {
-    if (process.env.NODE_ENV !== "production") return [];
+    // No redirect during local development
+    if (process.env.NODE_ENV !== "production") {
+      return [];
+    }
 
-    const appHost = (process.env.NEXT_PUBLIC_APP_URL ?? "")
+    const appHost = (
+      process.env.NEXT_PUBLIC_APP_URL ?? ""
+    )
       .replace(/^https?:\/\//, "")
       .replace(/\/$/, "");
 
-    if (!appHost) return [];
+    // If app URL is not configured,
+    // don't create a redirect.
+    if (!appHost) {
+      return [];
+    }
 
     return [
       {
-        source:      "/:path*",
-        has:         [{ type: "header", key: "x-forwarded-proto", value: "http" }],
+        source: "/:path*",
+
+        has: [
+          {
+            type: "header",
+            key: "x-forwarded-proto",
+            value: "http",
+          },
+        ],
+
         destination: `https://${appHost}/:path*`,
-        permanent:   true,
+
+        permanent: true,
       },
     ];
   },
