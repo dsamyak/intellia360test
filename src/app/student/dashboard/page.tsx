@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useStudentContext } from "@/context/StudentContext";
 import HeroSectionContainer from "@/components/student/HeroSectionContainer";
@@ -140,7 +140,10 @@ export default function StudentDashboardPage() {
   }
 
   const actionCards = activeLessonData.actionCards ?? {};
-  const architectureUrl = actionCards.architecture ?? activeLessonData.vercelLink ?? "#";
+  const architectureUrl =
+    `/student/lesson/${encodeURIComponent(
+      activeLessonData.id
+    )}`;
   const videoUrl = actionCards.video ?? "";
   const edunotesUrl = `/student/lesson/edunotes?lessonId=${encodeURIComponent(activeLessonData.id)}`;
   const practiceUrl = actionCards.practice ?? "/student/quiz/practice-1";
@@ -266,12 +269,28 @@ export default function StudentDashboardPage() {
       xpReward: xpAward, gemsReward: gemAward,
     },
     {
-      id: "card_video", activityType: "video",
-      title: `Video: ${activeLessonData.title}`, subtitle: "Watch & Learn",
-      description: `Step-by-step video lesson on ${activeLessonData.title}.`,
-      icon: "▶", buttonColor: "orange" as const,
-      targetUrl: videoUrl, enabled: true, isCompleted: isVideoCompleted,
-      xpReward: 10, gemsReward: 0,
+      id: "card_video",
+      activityType: "video",
+
+      title: "Watch & Learn",
+      subtitle: "Learn with a fun video!",
+
+      description: `Watch a fun video about ${activeLessonData.title}.`,
+
+      icon: "🎬",
+
+      buttonColor: "blue" as const,
+
+      targetUrl:
+        actionCards.video ||
+        "https://www.youtube.com/shorts/cmfDZ3FXckY",
+
+      enabled: true,
+
+      isCompleted: isVideoCompleted,
+
+      xpReward: 20,
+      gemsReward: 5,
     },
     {
       id: "card_practice", activityType: "practice",
@@ -349,8 +368,24 @@ export default function StudentDashboardPage() {
   // ── quick actions ───────────────────────────────────────────────────────────
   const quickActions = [
     { icon: "📖", label: "EduNotes", color: "#7c3aed", bg: "rgba(124,58,237,.12)", href: edunotesUrl },
-    { icon: "🧊", label: "Start Lesson", color: "#f97316", bg: "rgba(249,115,22,.12)", href: architectureUrl },
-    { icon: "▶", label: "Watch Video", color: "#3b82f6", bg: "rgba(59,130,246,.12)", href: videoUrl || "#" },
+    {
+      icon: "🧊",
+      label: "Start Lesson",
+      color: "#f97316",
+      bg: "rgba(249,115,22,.12)",
+      href: `/student/lesson/${encodeURIComponent(
+        activeLessonData.id
+      )}`,
+    },
+    {
+      icon: "▶",
+      label: "Watch Video",
+      color: "#3b82f6",
+      bg: "rgba(59,130,246,.12)",
+      href: `/student/lesson/video?lessonId=${encodeURIComponent(
+        activeLessonData.id
+      )}&videoId=cmfDZ3FXckY`,
+    },
     { icon: "🏆", label: "Practice", color: "#10b981", bg: "rgba(16,185,129,.12)", href: practiceUrl },
     { icon: "🎖", label: "Badges", color: "#f59e0b", bg: "rgba(245,158,11,.12)", href: "/student/rewards" },
     { icon: "📊", label: "Progress", color: "#ec4899", bg: "rgba(236,72,153,.12)", href: "/student/leaderboard" },
@@ -567,8 +602,11 @@ export default function StudentDashboardPage() {
           </span>
         </div>
         <div className="db-panel-body">
-          <LearningGridContainer cards={mappedCards} onCardClick={handleCardClick} />
-        </div>
+          <LearningGridContainer
+            cards={mappedCards}
+            onCardClick={handleCardClick}
+            lessonId={activeLessonData.id}
+          />        </div>
       </div>
 
       {/* ── Lesson Navigation ───────────────────────────────────────────────── */}
