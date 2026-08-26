@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Header from "@/components/common/Header";
 import Sidebar from "@/components/student/Sidebar";
 import StickyBottomContainer from "@/components/student/StickyBottomContainer";
@@ -22,7 +22,9 @@ export default function StudentLayout({
             {children}
           </main>
         </div>
-        <StickyBottomContainer />
+        <Suspense fallback={null}>
+          <StickyBottomContainer />
+        </Suspense>
       </div>
     </StudentProvider>
   );
