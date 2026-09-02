@@ -367,3 +367,32 @@ export function isPlatformHealthReady(
       (item) => item.status !== "Checking"
     );
 }
+
+
+/**
+ * Derives an overall health percentage/status from the individual
+ * service checks — shared by AdminHero and PlatformHealth so both
+ * report the same real number instead of a hardcoded one.
+ */
+export function computeHealthSummary(
+  healthItems: HealthCheckItem[]
+): { percentage: number; status: string } {
+  const total = healthItems.length;
+  const operational = healthItems.filter(
+    (item) => item.status === "Operational"
+  ).length;
+
+  const percentage =
+    total > 0 ? Math.round((operational / total) * 100) : 0;
+
+  const status =
+    total === 0
+      ? "Checking..."
+      : operational === total
+        ? "Operational"
+        : operational === 0
+          ? "Checking..."
+          : "Attention Required";
+
+  return { percentage, status };
+}

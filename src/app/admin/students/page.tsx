@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, { ColumnDef } from "@/components/admin/ReusableTable";
-import { fetchStudents, StudentRow } from "@/data/admin/tables";
+import { fetchStudents, updateUserName, deleteUser, StudentRow } from "@/data/admin/tables";
 import { Users, Award, Zap } from "@/components/admin/icons";
 
 /** Random per-account temp password — never reused across students. */
@@ -100,10 +100,60 @@ function AddStudentModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 }
 
+/* ─── Edit Student Modal ────────────────────────────────────────────────────── */
+function EditStudentModal({ student, onClose, onSaved }: { student: StudentRow; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(student.name);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) { setError("Name is required."); return; }
+    setSaving(true); setError("");
+    const result = await updateUserName(student.id, name.trim());
+    setSaving(false);
+    if (result.success) { onSaved(); onClose(); }
+    else { setError(result.message); }
+  }
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:420, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+          <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Edit Student</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+        </div>
+        {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Full Name *</label>
+            <input value={name} onChange={e => setName(e.target.value)}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+            <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+            <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminStudentsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteStudent = async (student: StudentRow) => {
+    if (!window.confirm(`Delete ${student.name}? This cannot be undone.`)) return;
+    const result = await deleteUser(student.id);
+    if (result.success) loadStudents();
+    else window.alert(result.message);
+  };
 
   const loadStudents = () => {
     setLoading(true);
@@ -248,12 +298,24 @@ export default function AdminStudentsPage() {
     },
   ];
 
+  const studentRowActions = [
+    { label: "Edit", onClick: (row: StudentRow) => setEditingStudent(row) },
+    { label: "Delete", danger: true, onClick: handleDeleteStudent },
+  ];
+
   return (
     <AdminLayout>
       {showAddModal && (
         <AddStudentModal
           onClose={() => setShowAddModal(false)}
           onCreated={loadStudents}
+        />
+      )}
+      {editingStudent && (
+        <EditStudentModal
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+          onSaved={loadStudents}
         />
       )}
       <div className="admin-students-page">
@@ -472,6 +534,7 @@ export default function AdminStudentsPage() {
             searchPlaceholder="Search student by name, grade or school..."
             primaryActionLabel="Add Student"
             onPrimaryAction={() => setShowAddModal(true)}
+            rowActions={studentRowActions}
           />
         </div>
       </div>

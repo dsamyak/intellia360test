@@ -124,6 +124,26 @@ export async function fetchTeachers(): Promise<TeacherRow[]> {
 }
 
 /* ============================================================
+   USER (shared Teacher/Student account actions)
+============================================================ */
+
+export async function updateUserName(id: string, name: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`/api/admin/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  const json = await res.json();
+  return { success: !!json.success, message: json.message ?? "Failed to update account." };
+}
+
+export async function deleteUser(id: string): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
+  const json = await res.json();
+  return { success: !!json.success, message: json.message ?? "Failed to delete account." };
+}
+
+/* ============================================================
    STUDENT
 ============================================================ */
 

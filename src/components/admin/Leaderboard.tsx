@@ -17,6 +17,11 @@ export default function Leaderboard() {
         </Link>
       </div>
 
+      {topSchoolsLeaderboard.length === 0 ? (
+        <div className="text-center py-8 text-xs text-slate-400">
+          No school data yet.
+        </div>
+      ) : (
       <div className="flex flex-col gap-2.5">
         {topSchoolsLeaderboard.map((item) => (
           <div key={item.id} className="flex items-center gap-2.5 py-1.5 border-b border-slate-100/50 last:border-b-0">
@@ -52,6 +57,7 @@ export default function Leaderboard() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
