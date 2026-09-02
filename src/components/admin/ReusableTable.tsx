@@ -9,6 +9,12 @@ export interface ColumnDef<T> {
   cell?: (row: T) => React.ReactNode;
 }
 
+export interface RowAction<T> {
+  label: string;
+  onClick: (row: T) => void;
+  danger?: boolean;
+}
+
 interface ReusableTableProps<T> {
   title: string;
   subtitle?: string;
@@ -17,7 +23,10 @@ interface ReusableTableProps<T> {
   searchPlaceholder?: string;
   primaryActionLabel?: string;
   onPrimaryAction?: () => void;
+  rowActions?: RowAction<T>[];
 }
+
+const ROWS_PER_PAGE = 10;
 
 export default function ReusableTable<T extends { id: string }>({
   title,
@@ -27,14 +36,27 @@ export default function ReusableTable<T extends { id: string }>({
   searchPlaceholder = "Search records...",
   primaryActionLabel,
   onPrimaryAction,
+  rowActions,
 }: ReusableTableProps<T>) {
   const [search, setSearch] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const filteredData = data.filter((row) =>
     Object.values(row).some((val) =>
       String(val).toLowerCase().includes(search.toLowerCase())
     )
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / ROWS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * ROWS_PER_PAGE;
+  const pagedData = filteredData.slice(pageStart, pageStart + ROWS_PER_PAGE);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   return (
     <div className="admin-card">
@@ -51,7 +73,7 @@ export default function ReusableTable<T extends { id: string }>({
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 outline-none focus:border-orange-500"
             />
@@ -84,7 +106,7 @@ export default function ReusableTable<T extends { id: string }>({
                 </td>
               </tr>
             ) : (
-              filteredData.map((row) => (
+              pagedData.map((row) => (
                 <tr key={row.id}>
                   {columns.map((col, idx) => (
                     <td key={idx}>
@@ -95,10 +117,50 @@ export default function ReusableTable<T extends { id: string }>({
                         : (row[col.accessor] as React.ReactNode)}
                     </td>
                   ))}
-                  <td>
-                    <button className="text-slate-400 hover:text-slate-600 p-1">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                  <td style={{ position: "relative" }}>
+                    {rowActions && rowActions.length > 0 ? (
+                      <>
+                        <button
+                          className="text-slate-400 hover:text-slate-600 p-1"
+                          onClick={() => setOpenMenuId((prev) => (prev === row.id ? null : row.id))}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openMenuId === row.id && (
+                          <>
+                            <div
+                              style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div
+                              style={{
+                                position: "absolute", right: 0, top: "100%", zIndex: 50,
+                                background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10,
+                                boxShadow: "0 10px 30px rgba(0,0,0,.12)", minWidth: 140, overflow: "hidden",
+                              }}
+                            >
+                              {rowActions.map((action) => (
+                                <button
+                                  key={action.label}
+                                  onClick={() => { setOpenMenuId(null); action.onClick(row); }}
+                                  style={{
+                                    display: "block", width: "100%", textAlign: "left",
+                                    padding: "9px 14px", fontSize: 12.5, fontWeight: 600, background: "none", border: "none",
+                                    color: action.danger ? "#dc2626" : "#334155", cursor: "pointer",
+                                  }}
+                                >
+                                  {action.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <button className="text-slate-400 hover:text-slate-600 p-1">
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))
@@ -110,14 +172,28 @@ export default function ReusableTable<T extends { id: string }>({
       {/* Table Pagination Controls */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
         <span>
-          Showing 1 to {filteredData.length} of {data.length} entries
+          {filteredData.length === 0
+            ? "No entries"
+            : `Showing ${pageStart + 1} to ${Math.min(pageStart + ROWS_PER_PAGE, filteredData.length)} of ${filteredData.length} entries`}
         </span>
         <div className="flex items-center gap-2">
-          <button className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="px-2 font-bold text-slate-900">1</span>
-          <button className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200">
+          <span className="px-2 font-bold text-slate-900">
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

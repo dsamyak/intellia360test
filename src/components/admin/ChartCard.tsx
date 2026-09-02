@@ -2,15 +2,44 @@
 
 import React, { useState } from "react";
 import { platformGrowthData, userDistributionData, monthlyRevenueData } from "@/data/admin/charts";
+import { TrendingUp, Users, IndianRupee } from "@/components/admin/icons";
 
 interface ChartCardProps {
   type: "growth" | "distribution" | "revenue";
   title: string;
 }
 
+const EMPTY_COPY: Record<ChartCardProps["type"], { Icon: typeof TrendingUp; message: string }> = {
+  growth: { Icon: TrendingUp, message: "No growth data yet" },
+  distribution: { Icon: Users, message: "No user distribution data yet" },
+  revenue: { Icon: IndianRupee, message: "No revenue data yet" },
+};
+
+function EmptyChartState({ type }: { type: ChartCardProps["type"] }) {
+  const { Icon, message } = EMPTY_COPY[type];
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-400">
+        <Icon className="h-5 w-5" />
+      </div>
+      <p className="text-sm font-bold text-slate-500">{message}</p>
+      <p className="max-w-[220px] text-xs text-slate-400">
+        This chart will populate automatically as real platform data comes in.
+      </p>
+    </div>
+  );
+}
+
 export default function ChartCard({ type, title }: ChartCardProps) {
   const [filter, setFilter] = useState("This Month");
   const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; label: string; value: number } | null>(null);
+
+  const isEmpty =
+    (type === "growth" && platformGrowthData.length === 0) ||
+    (type === "distribution" && userDistributionData.length === 0) ||
+    (type === "revenue" && monthlyRevenueData.length === 0);
+
+  const distributionTotal = userDistributionData.reduce((sum, item) => sum + item.count, 0);
 
   return (
     <div className="admin-card relative">
@@ -27,6 +56,10 @@ export default function ChartCard({ type, title }: ChartCardProps) {
         </select>
       </div>
 
+      {isEmpty ? (
+        <EmptyChartState type={type} />
+      ) : (
+        <>
       {/* 1. Line/Area Chart with Y-axis labels and Custom Tooltip */}
       {type === "growth" && (
         <div className="w-full relative">
@@ -169,7 +202,7 @@ export default function ChartCard({ type, title }: ChartCardProps) {
               })()}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-lg font-extrabold text-slate-900 leading-none">12,842</span>
+              <span className="text-lg font-extrabold text-slate-900 leading-none">{distributionTotal.toLocaleString()}</span>
               <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Total Users</span>
             </div>
           </div>
@@ -213,6 +246,8 @@ export default function ChartCard({ type, title }: ChartCardProps) {
             })}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

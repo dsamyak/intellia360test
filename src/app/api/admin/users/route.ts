@@ -20,6 +20,14 @@ export interface AdminUserRow {
   createdAt:     string;
   /** True when requestedRole differs from current role — needs admin review. */
   pendingUpgrade: boolean;
+  // Role-scoped profile fields (present when the row's role matches)
+  grade?:        string;
+  school?:       string | null;
+  subject?:      string | null;
+  xpPoints?:     number;
+  learningGems?: number;
+  lastActiveDate?: string | null;
+  classesCount?: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -55,6 +63,12 @@ export async function GET(request: NextRequest) {
         requestedRole: true,
         emailVerified: true,
         createdAt:     true,
+        studentProfile: {
+          select: { grade: true, school: true, xpPoints: true, learningGems: true, lastActiveDate: true },
+        },
+        teacherProfile: {
+          select: { schoolName: true, subject: true, _count: { select: { classes: true } } },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip:    (page - 1) * limit,
@@ -71,6 +85,13 @@ export async function GET(request: NextRequest) {
     emailVerified: u.emailVerified,
     createdAt:     u.createdAt.toISOString(),
     pendingUpgrade: u.requestedRole !== null && u.requestedRole !== u.role,
+    grade:          u.studentProfile?.grade,
+    school:         u.studentProfile?.school ?? u.teacherProfile?.schoolName ?? null,
+    subject:        u.teacherProfile?.subject ?? null,
+    xpPoints:       u.studentProfile?.xpPoints,
+    learningGems:   u.studentProfile?.learningGems,
+    lastActiveDate: u.studentProfile?.lastActiveDate?.toISOString() ?? null,
+    classesCount:   u.teacherProfile?._count.classes,
   }));
 
   if (pending) {

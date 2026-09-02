@@ -60,6 +60,12 @@ export const sidebarMenuItems: MenuItem[] = [
     path: "/admin/payments",
   },
   {
+    id: "reports",
+    label: "Reports",
+    icon: "FileText",
+    path: "/admin/reports",
+  },
+  {
     id: "settings",
     label: "System Settings",
     icon: "Settings",

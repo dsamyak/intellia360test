@@ -7,6 +7,7 @@ import {
   useAdminDashboardData,
   useCountUp,
 } from "@/data/admin/useAdminDashboardData";
+import { computeHealthSummary } from "@/data/admin/dashboard";
 
 import {
   Sparkles,
@@ -62,63 +63,49 @@ export default function AdminHero() {
      PLATFORM HEALTH
   ============================================================ */
 
-  const operationalCount =
-    platformHealth.filter(
-      (item) => item.status === "Operational"
-    ).length;
-
-  const totalHealthItems =
-    platformHealth.length;
-
-  const healthPercentage =
-    totalHealthItems > 0
-      ? Math.round(
-        (operationalCount / totalHealthItems) * 100
-      )
-      : 0;
-
-  const healthStatus =
-    totalHealthItems === 0
-      ? "Checking..."
-      : operationalCount === totalHealthItems
-        ? "Operational"
-        : "Attention Required";
+  const { percentage: healthPercentage, status: healthStatus } =
+    computeHealthSummary(platformHealth);
 
   return (
     <section
       className="
         relative
-        overflow-hidden
         rounded-2xl
-        min-h-[380px]
         border
         border-slate-800/20
         shadow-2xl
         mb-6
-        flex
-        items-center
       "
-      style={{
-        backgroundImage: `
-          linear-gradient(
-            90deg,
-            #0f172a 0%,
-            rgba(15, 23, 42, 0.96) 35%,
-            rgba(15, 23, 42, 0.75) 55%,
-            rgba(15, 23, 42, 0.35) 75%,
-            rgba(15, 23, 42, 0.15) 100%
-          ),
-          url("/assets/image.png")
-        `,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
     >
+      {/* ========================================================
+          BACKGROUND LAYER — clipped separately so it can never
+          crop hero content (cards, shadows, numbers) that grows
+          taller than the min-height at any viewport width.
+      ======================================================== */}
+      <div
+        className="absolute inset-0 rounded-2xl overflow-hidden"
+        style={{
+          backgroundImage: `
+            linear-gradient(
+              90deg,
+              #0f172a 0%,
+              rgba(15, 23, 42, 0.96) 35%,
+              rgba(15, 23, 42, 0.75) 55%,
+              rgba(15, 23, 42, 0.35) 75%,
+              rgba(15, 23, 42, 0.15) 100%
+            ),
+            url("/assets/image.png")
+          `,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
       {/* ========================================================
           HERO CONTENT CONTAINER (2-COLUMN GRID)
       ======================================================== */}
-      <div className="relative z-10 w-full p-6 md:p-8 lg:p-9 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        
+      <div className="relative z-10 w-full min-h-[420px] p-6 md:p-8 lg:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
+
         {/* LEFT COLUMN: TAGLINE, BUTTONS, FEATURE BADGES */}
         <div className="lg:col-span-7 flex flex-col justify-between">
           <div>
@@ -393,10 +380,6 @@ export default function AdminHero() {
               <div className="mt-2 text-[20px] font-[800] text-slate-900 leading-tight">
                 {shownSchools.toLocaleString("en-IN")}
               </div>
-
-              <div className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full w-fit">
-                ↑ 12.4%
-              </div>
             </div>
 
             {/* TEACHERS */}
@@ -413,10 +396,6 @@ export default function AdminHero() {
               <div className="mt-2 text-[20px] font-[800] text-slate-900 leading-tight">
                 {shownTeachers.toLocaleString("en-IN")}
               </div>
-
-              <div className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full w-fit">
-                ↑ 15.7%
-              </div>
             </div>
 
             {/* STUDENTS */}
@@ -432,10 +411,6 @@ export default function AdminHero() {
 
               <div className="mt-2 text-[20px] font-[800] text-slate-900 leading-tight">
                 {shownStudents.toLocaleString("en-IN")}
-              </div>
-
-              <div className="mt-1.5 inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full w-fit">
-                ↑ 18.3%
               </div>
             </div>
           </div>

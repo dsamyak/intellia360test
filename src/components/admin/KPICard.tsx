@@ -53,16 +53,18 @@ export default function KPICard({ stat }: KPICardProps) {
         >
           <IconComponent className="w-5 h-5" />
         </div>
-        <span
-          className="stat-card-growth"
-          style={{
-            color: isUp ? "#10b981" : "#ef4444",
-            backgroundColor: isUp ? "rgba(46, 98, 81, 0.08)" : "rgba(239, 68, 68, 0.08)",
-          }}
-        >
-          {isUp ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
-          <span className="ml-0.5">{stat.growth.toFixed(1)}%</span>
-        </span>
+        {stat.growth !== 0 && (
+          <span
+            className="stat-card-growth"
+            style={{
+              color: isUp ? "#10b981" : "#ef4444",
+              backgroundColor: isUp ? "rgba(46, 98, 81, 0.08)" : "rgba(239, 68, 68, 0.08)",
+            }}
+          >
+            {isUp ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
+            <span className="ml-0.5">{stat.growth.toFixed(1)}%</span>
+          </span>
+        )}
       </div>
       <div className="stat-card-title">{stat.title}</div>
       <div className="stat-card-value">

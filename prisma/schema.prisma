@@ -27,6 +27,23 @@ enum AssignmentStatus {
   COMPLETED
 }
 
+enum SchoolStatus {
+  ACTIVE
+  PENDING
+  INACTIVE
+}
+
+enum CourseStatus {
+  PUBLISHED
+  DRAFT
+}
+
+enum PaymentStatus {
+  COMPLETED
+  PENDING
+  REFUNDED
+}
+
 // ─── User ─────────────────────────────────────────────────────────────────────
 
 model User {
@@ -64,6 +81,7 @@ model StudentProfile {
   userId         String      @unique
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   avatar         String?
+  school         String?
   grade          String      @default("grade1")
   xpPoints       Int         @default(0)
   learningGems   Int         @default(0)
@@ -84,6 +102,7 @@ model TeacherProfile {
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   avatar     String?
   schoolName String?
+  subject    String?
   classes    ClassGroup[]
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
@@ -309,4 +328,88 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+// ─── Admin: Schools ───────────────────────────────────────────────────────────
+
+model School {
+  id             String       @id @default(uuid()) @map("_id")
+  name           String
+  code           String       @unique
+  location       String?
+  adminName      String?
+  adminEmail     String?
+  plan           String       @default("Basic")
+  status         SchoolStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("schools")
+}
+
+// ─── Admin: Courses ───────────────────────────────────────────────────────────
+
+model Course {
+  id               String       @id @default(uuid()) @map("_id")
+  title            String
+  subject          String?
+  grade            String
+  description      String?
+  rating           Float        @default(0)
+  status           CourseStatus @default(DRAFT)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@map("courses")
+}
+
+// ─── Admin: Content Library (metadata + external resource link) ──────────────
+
+model ContentResource {
+  id          String   @id @default(uuid()) @map("_id")
+  title       String
+  description String?
+  category    String   // "edunotes" | "visual-models" | "videos" | "ai-prompts"
+  url         String?  // external resource link (no binary storage provider configured)
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@map("content_resources")
+}
+
+// ─── Admin: Payments ──────────────────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(uuid()) @map("_id")
+  transactionId String        @unique
+  payerName     String
+  schoolOrUser  String?
+  amount        Int           // in rupees
+  method        String        @default("Manual")
+  status        PaymentStatus @default(PENDING)
+  date          DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  @@map("payments")
+}
+
+// ─── Admin: Platform Settings (singleton) ─────────────────────────────────────
+
+model AdminSettings {
+  id                     String   @id @default("global") @map("_id")
+  platformName           String   @default("")
+  supportEmail           String   @default("")
+  academicYear           String   @default("")
+  primaryColor           String   @default("#f97316")
+  logoDisplay            String   @default("badge-text")
+  emailSchoolRegistration Boolean @default(false)
+  emailWeeklySummary     Boolean  @default(false)
+  emailRenewalAlert      Boolean  @default(false)
+  twoFactor              String   @default("mandatory")
+  sessionTimeoutMinutes  Int      @default(30)
+  aiModel                String   @default("fast")
+  dailyQueries           Int      @default(0)
+  updatedAt              DateTime @updatedAt
+
+  @@map("admin_settings")
 }
