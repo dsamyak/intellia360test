@@ -9,6 +9,12 @@ export interface ColumnDef<T> {
   cell?: (row: T) => React.ReactNode;
 }
 
+export interface RowAction<T> {
+  label: string;
+  onClick: (row: T) => void;
+  danger?: boolean;
+}
+
 interface ReusableTableProps<T> {
   title: string;
   subtitle?: string;
@@ -17,6 +23,7 @@ interface ReusableTableProps<T> {
   searchPlaceholder?: string;
   primaryActionLabel?: string;
   onPrimaryAction?: () => void;
+  rowActions?: RowAction<T>[];
 }
 
 export default function ReusableTable<T extends { id: string }>({
@@ -27,8 +34,10 @@ export default function ReusableTable<T extends { id: string }>({
   searchPlaceholder = "Search records...",
   primaryActionLabel,
   onPrimaryAction,
+  rowActions,
 }: ReusableTableProps<T>) {
   const [search, setSearch] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const filteredData = data.filter((row) =>
     Object.values(row).some((val) =>
@@ -95,10 +104,50 @@ export default function ReusableTable<T extends { id: string }>({
                         : (row[col.accessor] as React.ReactNode)}
                     </td>
                   ))}
-                  <td>
-                    <button className="text-slate-400 hover:text-slate-600 p-1">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                  <td style={{ position: "relative" }}>
+                    {rowActions && rowActions.length > 0 ? (
+                      <>
+                        <button
+                          className="text-slate-400 hover:text-slate-600 p-1"
+                          onClick={() => setOpenMenuId((prev) => (prev === row.id ? null : row.id))}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {openMenuId === row.id && (
+                          <>
+                            <div
+                              style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div
+                              style={{
+                                position: "absolute", right: 0, top: "100%", zIndex: 50,
+                                background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10,
+                                boxShadow: "0 10px 30px rgba(0,0,0,.12)", minWidth: 140, overflow: "hidden",
+                              }}
+                            >
+                              {rowActions.map((action) => (
+                                <button
+                                  key={action.label}
+                                  onClick={() => { setOpenMenuId(null); action.onClick(row); }}
+                                  style={{
+                                    display: "block", width: "100%", textAlign: "left",
+                                    padding: "9px 14px", fontSize: 12.5, fontWeight: 600, background: "none", border: "none",
+                                    color: action.danger ? "#dc2626" : "#334155", cursor: "pointer",
+                                  }}
+                                >
+                                  {action.label}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <button className="text-slate-400 hover:text-slate-600 p-1">
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

@@ -9,7 +9,7 @@ export default function AdminProfilePage() {
   const [stats, setStats] = useState({ totalUsers: 0, totalGrades: 0 });
 
   useEffect(() => {
-    fetch("/api/editor/stats")
+    fetch("/api/admin/stats")
       .then(r => r.json())
       .then(j => { if (j.success) setStats({ totalUsers: j.data.totalUsers, totalGrades: j.data.totalGrades }); })
       .catch(() => {});

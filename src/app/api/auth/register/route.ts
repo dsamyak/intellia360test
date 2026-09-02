@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, password, requestedRole, grade } = result.data;
+    const { name, email, password, requestedRole, grade, school, subject } = result.data;
 
     // ── Duplicate-email check ───────────────────────────────────────────────
     // One email → one account only. Re-registering with a different role
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // ── Transactional create ────────────────────────────────────────────────
     // role is ALWAYS STUDENT — requestedRole is stored for admin review.
-    await db.$transaction(async (tx) => {
+    const createdUserId = await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           name,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
       // Role-scoped profile
       if (requestedRole === "TEACHER" || requestedRole === "SCHOOL") {
-        await tx.teacherProfile.create({ data: { userId: newUser.id } });
+        await tx.teacherProfile.create({ data: { userId: newUser.id, schoolName: school, subject } });
       } else if (requestedRole === "EDITOR") {
         // No profile required
       } else {
@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
           data: {
             userId: newUser.id,
             grade: studentGrade,
+            school,
             xpPoints: 0,
             learningGems: 0,
             streakDays: 1,
@@ -100,6 +101,8 @@ export async function POST(request: NextRequest) {
       await tx.emailVerificationToken.create({
         data: { tokenHash, userId: newUser.id, expiresAt, used: false },
       });
+
+      return newUser.id;
     });
 
     // ── Send verification email (fire-and-forget style but still await) ─────
@@ -111,12 +114,13 @@ export async function POST(request: NextRequest) {
       console.error("[auth/register] verification email failed:", emailErr);
     }
 
-    return NextResponse.json<AuthResponse>(
+    return NextResponse.json<AuthResponse<{ userId: string }>>(
       {
         success: true,
         message:
           "Account created! Check your inbox for a verification link. " +
           "Your account starts on the Student plan — an admin can upgrade your role once verified.",
+        data: { userId: createdUserId },
       },
       { status: 201 }
     );

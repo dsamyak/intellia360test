@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import {
   FileText,
@@ -20,8 +20,16 @@ type ContentItem = {
   title: string;
   description: string;
   category: ContentCategory;
+  url?: string | null;
   createdAt: string;
 };
+
+async function fetchContentItems(): Promise<ContentItem[]> {
+  const res = await fetch("/api/admin/content");
+  const json = await res.json();
+  if (!json.success) return [];
+  return json.data as ContentItem[];
+}
 
 type CategoryConfig = {
   id: ContentCategory;
@@ -83,18 +91,27 @@ const categoryConfig: CategoryConfig[] = [
 
 export default function AdminContentPage() {
   /* =========================================
-     Frontend Content State
-     Starts EMPTY intentionally
+     Content State — loaded from /api/admin/content
   ========================================= */
 
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadContent = () => {
+    setLoading(true);
+    fetchContentItems().then((items) => { setContentItems(items); setLoading(false); });
+  };
+
+  useEffect(() => { loadContent(); }, []);
 
   const [showModal, setShowModal] = useState(false);
+  const [previewCategory, setPreviewCategory] = useState<ContentCategory | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "edunotes" as ContentCategory,
+    url: "",
   });
 
   /* =========================================
@@ -138,7 +155,7 @@ export default function AdminContentPage() {
      Add Resource
   ========================================= */
 
-  const handleAddResource = (
+  const handleAddResource = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
@@ -147,25 +164,28 @@ export default function AdminContentPage() {
       return;
     }
 
-    const newItem: ContentItem = {
-      id: `${formData.category}-${Date.now()}`,
-      title: formData.title.trim(),
-      description:
-        formData.description.trim() ||
-        "New Intellia360 learning resource.",
-      category: formData.category,
-      createdAt: new Date().toISOString(),
-    };
-
-    setContentItems((previousItems) => [
-      ...previousItems,
-      newItem,
-    ]);
+    const res = await fetch("/api/admin/content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: formData.title.trim(),
+        description:
+          formData.description.trim() ||
+          "New Intellia360 learning resource.",
+        category: formData.category,
+        url: formData.url.trim() || undefined,
+      }),
+    });
+    const json = await res.json();
+    if (json.success) {
+      loadContent();
+    }
 
     setFormData({
       title: "",
       description: "",
       category: "edunotes",
+      url: "",
     });
 
     setShowModal(false);
@@ -175,10 +195,11 @@ export default function AdminContentPage() {
      Delete Resource
   ========================================= */
 
-  const handleDeleteResource = (id: string) => {
+  const handleDeleteResource = async (id: string) => {
     setContentItems((previousItems) =>
       previousItems.filter((item) => item.id !== id)
     );
+    await fetch(`/api/admin/content/${id}`, { method: "DELETE" });
   };
 
   return (
@@ -302,7 +323,7 @@ export default function AdminContentPage() {
             Empty State
         ===================================== */}
 
-        {contentItems.length === 0 && (
+        {!loading && contentItems.length === 0 && (
           <div className="content-empty-state">
             <div className="content-empty-icon">
               <FileText className="h-7 w-7" />
@@ -376,13 +397,13 @@ export default function AdminContentPage() {
                   <button
                     type="button"
                     className="content-preview-button"
-                    onClick={() => {
-                      console.log(
-                        `Preview ${category.title}`
-                      );
-                    }}
+                    onClick={() =>
+                      setPreviewCategory((prev) =>
+                        prev === category.id ? null : category.id
+                      )
+                    }
                   >
-                    Preview Assets
+                    {previewCategory === category.id ? "Hide Preview" : "Preview Assets"}
                     <span>→</span>
                   </button>
                 </div>
@@ -390,6 +411,46 @@ export default function AdminContentPage() {
             );
           })}
         </div>
+
+        {/* =====================================
+            Category Preview
+        ===================================== */}
+
+        {previewCategory && (
+          <div className="content-resources-section">
+            <div className="content-resources-header">
+              <div>
+                <h2>
+                  Preview:{" "}
+                  {categoryConfig.find((c) => c.id === previewCategory)?.title}
+                </h2>
+                <p>Resources currently added to this category.</p>
+              </div>
+            </div>
+
+            <div className="content-resource-list">
+              {contentItems.filter((item) => item.category === previewCategory).length === 0 ? (
+                <p style={{ fontSize: 13, color: "#64748b" }}>No resources in this category yet.</p>
+              ) : (
+                contentItems
+                  .filter((item) => item.category === previewCategory)
+                  .map((item) => (
+                    <div key={item.id} className="content-resource-item">
+                      <div className="content-resource-info">
+                        <strong>{item.title}</strong>
+                        <p>{item.description}</p>
+                        {item.url && (
+                          <a href={item.url} target="_blank" rel="noreferrer">
+                            {item.url}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* =====================================
             Added Resources
@@ -564,6 +625,26 @@ export default function AdminContentPage() {
                     }
                     placeholder="Describe this resource..."
                     rows={4}
+                  />
+                </div>
+
+                {/* Resource URL */}
+                <div className="content-form-group">
+                  <label htmlFor="resource-url">
+                    Resource URL (optional)
+                  </label>
+
+                  <input
+                    id="resource-url"
+                    type="url"
+                    value={formData.url}
+                    onChange={(event) =>
+                      setFormData((previous) => ({
+                        ...previous,
+                        url: event.target.value,
+                      }))
+                    }
+                    placeholder="https://…"
                   />
                 </div>
 

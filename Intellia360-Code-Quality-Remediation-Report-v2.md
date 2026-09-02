@@ -106,7 +106,7 @@ const secret = resolveSecret(); // crashes at module load, never mid-request
 
 ---
 
-### 10 — TypeScript: NestJS decorator flags + weak strict mode
+### 10 — TypeScript: NestJS decorator flags + weak strict modefix the admin module fully 
 **Severity:** MINOR (correctness risk)  
 **Status:** ✅ Fixed
 

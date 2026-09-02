@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import {
   Settings,
@@ -110,32 +110,60 @@ export default function AdminSettingsPage() {
   ];
 
   /* =========================
+     LOAD SETTINGS
+  ========================= */
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((r) => r.json())
+      .then((json) => {
+        if (!json.success) return;
+        const s = json.data;
+        setPlatformName(s.platformName);
+        setSupportEmail(s.supportEmail);
+        setAcademicYear(s.academicYear);
+        setPrimaryColor(s.primaryColor);
+        setLogoDisplay(s.logoDisplay);
+        setEmailSettings({
+          schoolRegistration: s.emailSchoolRegistration,
+          weeklySummary: s.emailWeeklySummary,
+          renewalAlert: s.emailRenewalAlert,
+        });
+        setTwoFactor(s.twoFactor);
+        setSessionTimeout(String(s.sessionTimeoutMinutes));
+        setAiModel(s.aiModel);
+        setDailyQueries(String(s.dailyQueries));
+      })
+      .catch(() => {});
+  }, []);
+
+  /* =========================
      SAVE SETTINGS
   ========================= */
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const settings = {
-      general: {
-        platformName,
-        supportEmail,
-        academicYear,
-      },
-      branding: {
-        primaryColor,
-        logoDisplay,
-      },
-      email: emailSettings,
-      security: {
-        twoFactor,
-        sessionTimeout,
-      },
-      ai: {
-        aiModel,
-        dailyQueries,
-      },
+      platformName,
+      supportEmail,
+      academicYear,
+      primaryColor,
+      logoDisplay,
+      emailSchoolRegistration: emailSettings.schoolRegistration,
+      emailWeeklySummary: emailSettings.weeklySummary,
+      emailRenewalAlert: emailSettings.renewalAlert,
+      twoFactor,
+      sessionTimeoutMinutes: Number(sessionTimeout) || 30,
+      aiModel,
+      dailyQueries: Number(dailyQueries) || 0,
     };
 
-    console.log("Platform Settings:", settings);
+    const res = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    });
+    const json = await res.json();
+    if (!json.success) return;
 
     setSaved(true);
 

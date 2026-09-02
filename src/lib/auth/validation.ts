@@ -28,6 +28,9 @@ export const RegisterSchema = z
       .default("STUDENT"),
     // Optional grade hint — used to pre-set the student profile grade
     grade: z.string().optional(),
+    // Optional profile hints — used to pre-set student/teacher profile fields
+    school: z.string().optional(),
+    subject: z.string().optional(),
     agreeToTerms: z.literal(true, {
       error: () => ({ message: "You must agree to the Terms of Service" }),
     }),

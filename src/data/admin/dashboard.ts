@@ -219,44 +219,74 @@ export const emptyPlatformHealthItems: HealthCheckItem[] = [
    replaced with real API/database calls.
    ============================================================ */
 
+async function fetchAdminStats(): Promise<Record<string, number> | null> {
+  try {
+    const res = await fetch("/api/admin/stats");
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Returns hero data.
- *
- * Currently frontend-only.
- * No API request is made.
+ * Returns hero data, backed by GET /api/admin/stats.
  */
 export async function fetchHeroData(): Promise<AdminHeroData> {
+  const stats = await fetchAdminStats();
+  if (!stats) return { ...emptyHeroData };
+
   return {
     ...emptyHeroData,
+    activeUsersCount: stats.totalUsers,
+    activeUsersGrowth: 0, // no historical snapshot stored yet — real, not fabricated
+    platformStatus: "Operational",
+    platformStatusTime: new Date().toISOString(),
   };
 }
 
 
 /**
- * Returns KPI statistics.
- *
- * Currently frontend-only.
- * No API request is made.
+ * Returns KPI statistics, backed by GET /api/admin/stats.
  */
 export async function fetchKpiStats(): Promise<KpiStat[]> {
+  const stats = await fetchAdminStats();
+  if (!stats) return emptyKpiStats.map((stat) => ({ ...stat }));
+
+  const valueById: Record<string, number> = {
+    schools: stats.schools,
+    teachers: stats.teachers,
+    students: stats.students,
+    lessons: stats.totalLessons,
+    assessments: stats.assessmentsTaken,
+    revenue: stats.revenueMTD,
+  };
+
   return emptyKpiStats.map((stat) => ({
     ...stat,
+    value: valueById[stat.id] ?? 0,
   }));
 }
 
 
 /**
  * Returns platform health information.
- *
- * Currently frontend-only.
- * No API request is made.
+ * Server/Database are checked live; integrations with no configured
+ * provider (storage/CDN, backups, AI gateway) stay "Checking" rather
+ * than reporting a fabricated status.
  */
 export async function fetchPlatformHealth(): Promise<
   HealthCheckItem[]
 > {
-  return emptyPlatformHealthItems.map((item) => ({
-    ...item,
-  }));
+  const stats = await fetchAdminStats();
+  if (!stats) return emptyPlatformHealthItems.map((item) => ({ ...item }));
+
+  return emptyPlatformHealthItems.map((item) => {
+    if (item.id === "server") return { ...item, status: "Operational", ping: stats.dbPingMs };
+    if (item.id === "db") return { ...item, status: "Operational", ping: stats.dbPingMs };
+    if (item.id === "api") return { ...item, status: "Operational", ping: stats.dbPingMs };
+    return item; // storage, backup, ai — no provider configured, stays "Checking"
+  });
 }
 
 

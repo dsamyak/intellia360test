@@ -1,17 +1,26 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, { ColumnDef } from "@/components/admin/ReusableTable";
-import { mockStudents, StudentRow } from "@/data/admin/tables";
+import { fetchStudents, StudentRow } from "@/data/admin/tables";
 import { Users, Award, Zap } from "@/components/admin/icons";
 
+/** Random per-account temp password — never reused across students. */
+function generateTempPassword(): string {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  const random = Array.from(bytes, (b) => b.toString(36)).join("").slice(0, 10);
+  return `Sg${random}!1`;
+}
+
 /* ─── Add Student Modal ─────────────────────────────────────────────────────── */
-function AddStudentModal({ onClose }: { onClose: () => void }) {
+function AddStudentModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", grade: "grade1", school: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [tempPassword] = useState(generateTempPassword);
 
   const GRADES = ["grade1","grade2","grade3","grade4","grade5","grade6","grade7","grade8","grade9","grade10"];
 
@@ -26,15 +35,16 @@ function AddStudentModal({ onClose }: { onClose: () => void }) {
         body: JSON.stringify({
           name: form.name,
           email: form.email,
-          password: "Student@Intellia360!",
-          confirmPassword: "Student@Intellia360!",
+          password: tempPassword,
+          confirmPassword: tempPassword,
           requestedRole: "STUDENT",
           grade: form.grade,
+          school: form.school || undefined,
           agreeToTerms: true,
         }),
       });
       const json = await res.json();
-      if (json.success) { setSaved(true); }
+      if (json.success) { setSaved(true); onCreated(); }
       else { setError(json.message ?? "Failed to add student."); }
     } catch { setError("Network error. Please try again."); }
     finally { setSaving(false); }
@@ -81,7 +91,7 @@ function AddStudentModal({ onClose }: { onClose: () => void }) {
           <div style={{ textAlign:"center", padding:"20px 0" }}>
             <div style={{ fontSize:48, marginBottom:12 }}>🎓</div>
             <h2 style={{ fontSize:18, fontWeight:800, color:"#1e1b4b", marginBottom:8 }}>Student Added!</h2>
-            <p style={{ fontSize:13, color:"#64748b", marginBottom:20 }}>Account created for <strong>{form.name}</strong>. A verification email has been sent to <strong>{form.email}</strong>. Temporary password: <code style={{background:"#f1f5f9",padding:"2px 6px",borderRadius:4}}>Student@Intellia360!</code></p>
+            <p style={{ fontSize:13, color:"#64748b", marginBottom:20 }}>Account created for <strong>{form.name}</strong>. A verification email has been sent to <strong>{form.email}</strong>. Temporary password: <code style={{background:"#f1f5f9",padding:"2px 6px",borderRadius:4}}>{tempPassword}</code></p>
             <button onClick={onClose} style={{ padding:"10px 24px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontWeight:700, cursor:"pointer" }}>Done</button>
           </div>
         )}
@@ -92,28 +102,38 @@ function AddStudentModal({ onClose }: { onClose: () => void }) {
 
 export default function AdminStudentsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [students, setStudents] = useState<StudentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadStudents = () => {
+    setLoading(true);
+    fetchStudents().then((rows) => { setStudents(rows); setLoading(false); });
+  };
+
+  useEffect(() => { loadStudents(); }, []);
+
   /* =========================================
      Dynamic Student Statistics
   ========================================= */
 
   const studentStats = useMemo(() => {
-    const totalStudents = mockStudents.length;
+    const totalStudents = students.length;
 
-    const activeStudents = mockStudents.filter(
+    const activeStudents = students.filter(
       (student) => student.status === "Active"
     ).length;
 
-    const inactiveStudents = mockStudents.filter(
+    const inactiveStudents = students.filter(
       (student) => student.status !== "Active"
     ).length;
 
-    const totalXP = mockStudents.reduce(
+    const totalXP = students.reduce(
       (total, student) =>
         total + Number(student.xpPoints || 0),
       0
     );
 
-    const totalGems = mockStudents.reduce(
+    const totalGems = students.reduce(
       (total, student) =>
         total + Number(student.gems || 0),
       0
@@ -132,7 +152,7 @@ export default function AdminStudentsPage() {
       totalGems,
       activeRate,
     };
-  }, []);
+  }, [students]);
 
   /* =========================================
      Format Large Numbers
@@ -230,7 +250,12 @@ export default function AdminStudentsPage() {
 
   return (
     <AdminLayout>
-      {showAddModal && <AddStudentModal onClose={() => setShowAddModal(false)} />}
+      {showAddModal && (
+        <AddStudentModal
+          onClose={() => setShowAddModal(false)}
+          onCreated={loadStudents}
+        />
+      )}
       <div className="admin-students-page">
 
         {/* =====================================
@@ -441,8 +466,8 @@ export default function AdminStudentsPage() {
         <div className="student-directory-card">
           <ReusableTable
             title="Student Directory & Gamification Records"
-            subtitle="Monitor student engagement, XP points, learning gems, activity and course progression."
-            data={mockStudents}
+            subtitle={loading ? "Loading students…" : "Monitor student engagement, XP points, learning gems, activity and course progression."}
+            data={students}
             columns={studentColumns}
             searchPlaceholder="Search student by name, grade or school..."
             primaryActionLabel="Add Student"

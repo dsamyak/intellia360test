@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ChartCard from "@/components/admin/ChartCard";
 import {
@@ -11,23 +11,32 @@ import {
 } from "@/components/admin/icons";
 
 export default function AdminAnalyticsPage() {
-  // Starts from zero. Replace with API/backend data later.
-  const analytics = useMemo(
-    () => ({
-      avgSessionTime: 0,
-      sessionChange: 0,
+  // avgSessionTime / activeAIConversations have no tracking model yet —
+  // stay at 0 (real absence of data) rather than a fabricated number.
+  const [analytics, setAnalytics] = useState({
+    avgSessionTime: 0,
+    sessionChange: 0,
 
-      lessonCompletion: 0,
-      lessonChange: 0,
+    lessonCompletion: 0,
+    lessonChange: 0,
 
-      activeAIConversations: 0,
-      aiConversationChange: 0,
+    activeAIConversations: 0,
+    aiConversationChange: 0,
 
-      quizAccuracy: 0,
-      quizAccuracyChange: 0,
-    }),
-    []
-  );
+    quizAccuracy: 0,
+    quizAccuracyChange: 0,
+  });
+
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          setAnalytics((prev) => ({ ...prev, quizAccuracy: json.data.quizAccuracyPercent }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const summaryCards = [
     {
