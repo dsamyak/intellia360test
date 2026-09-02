@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -11,6 +11,16 @@ import {
   FaLinkedinIn,
   FaYoutube,
 } from "react-icons/fa";
+
+type HomepageLeaderboardEntry = {
+  userId: string;
+  name: string;
+  avatar?: string | null;
+  rank: number;
+  xpPoints: number;
+  isCurrentUser?: boolean;
+};
+
 /* ============================================================
    FEATURES
 ============================================================ */
@@ -230,49 +240,39 @@ const courses = [
 
 const audiences = [
   {
-    image: "/assets/home/parents-3d.png",
+    icon: "👨‍👩‍👧",
     title: "For Parents",
     color: "blue",
-    points: [
-      "Track your child's progress",
-      "Identify learning gaps",
-      "Encourage consistent practice",
-      "Support independent learning",
-    ],
+    description: "Stay connected with your child’s learning journey.",
+    points: ["Track progress", "Spot learning gaps", "Encourage consistent practice"],
   },
   {
-    image: "/assets/home/school-3d.png",
-    title: "For Schools",
+    icon: "🎓",
+    title: "For Students",
     color: "purple",
-    points: [
-      "Digital learning infrastructure",
-      "Student management",
-      "Progress monitoring",
-      "AI-assisted learning",
-      "Scalable & secure platform",
-    ],
+    description: "Turn everyday learning into an exciting adventure.",
+    points: ["Earn XP & badges", "Play interactive challenges", "Learn at your own pace"],
   },
   {
-    image: "/assets/home/coaching-3d.png",
-    title: "For Coaching Centres",
+    icon: "🏫",
+    title: "For Schools",
     color: "orange",
-    points: [
-      "Interactive curriculum",
-      "Performance analytics",
-      "Gamification",
-      "Easy deployment",
-    ],
+    description: "Bring engaging, data-driven learning into every classroom.",
+    points: ["Manage students", "Monitor progress", "Scale learning securely"],
   },
   {
-    image: "/assets/home/student-achievement-3d.png",
-    title: "Loved by Learners",
+    icon: "👩‍🏫",
+    title: "For Teachers",
+    color: "green",
+    description: "Powerful tools to teach better and understand every learner.",
+    points: ["View learning insights", "Identify skill gaps", "Support personalized learning"],
+  },
+  {
+    icon: "🏢",
+    title: "For Coaching Centres",
     color: "pink",
-    points: [
-      "Fun mathematics",
-      "Games and rewards",
-      "Interactive learning",
-      "Personalized experience",
-    ],
+    description: "Make coaching more interactive, measurable and rewarding.",
+    points: ["Interactive curriculum", "Performance analytics", "Gamified practice"],
   },
 ];
 
@@ -290,10 +290,79 @@ const audiences = [
 
 export default function HomePage() {
   const [openDropdown, setOpenDropdown] = useState<"math" | "schools" | null>(null);
+  const [pinnedDropdown, setPinnedDropdown] = useState<"math" | "schools" | null>(null);
+
+  // ============================================================
+  // LIVE HOMEPAGE LEADERBOARD
+  // Reuses the existing student leaderboard API/database.
+  // ============================================================
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [leaderboardEntries, setLeaderboardEntries] = useState<HomepageLeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+  const fetchHomepageLeaderboard = useCallback(async () => {
+    try {
+      setLeaderboardLoading(true);
+
+      const response = await fetch("/api/student/leaderboard?limit=6", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Leaderboard request failed: ${response.status}`);
+      }
+
+      const json = await response.json();
+
+      if (json?.success && json?.data) {
+        setLeaderboardEntries(
+          Array.isArray(json.data.entries) ? json.data.entries.slice(0, 6) : []
+        );
+      } else {
+        setLeaderboardEntries([]);
+      }
+    } catch (error) {
+      console.error("[Homepage Leaderboard]", error);
+      setLeaderboardEntries([]);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, []);
 
   const handleDropdown = (dropdown: "math" | "schools") => {
-    setOpenDropdown((current) => (current === dropdown ? null : dropdown));
+    setPinnedDropdown((current) => {
+      const next = current === dropdown ? null : dropdown;
+      setOpenDropdown(next);
+      return next;
+    });
   };
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest(".header-mega-dropdown")) {
+        setOpenDropdown(null);
+        setPinnedDropdown(null);
+      }
+
+      if (!target.closest(".homepage-leaderboard-widget")) {
+        setLeaderboardOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    fetchHomepageLeaderboard();
+
+    // Refresh periodically so homepage rankings stay current.
+    const interval = window.setInterval(fetchHomepageLeaderboard, 30000);
+
+    return () => window.clearInterval(interval);
+  }, [fetchHomepageLeaderboard]);
 
   return (
     <main className="home-page">
@@ -326,8 +395,8 @@ export default function HomePage() {
               <Image
                 src="/assets/logo/intellia360-log.png"
                 alt="Intellia360"
-                width={170}
-                height={70}
+                width={350}
+                height={150}
                 priority
                 className="home-logo-image"
               />
@@ -389,23 +458,31 @@ export default function HomePage() {
 
                     <div className="mega-divider" />
 
-                    <Link href="/login?grade=1">
+                    <Link href="/login">
+                      LKG
+                    </Link>
+
+                    <Link href="/login">
+                      UKG
+                    </Link>
+
+                    <Link href="/login">
                       Grade 1
                     </Link>
 
-                    <Link href="/login?grade=2">
+                    <Link href="/login">
                       Grade 2
                     </Link>
 
-                    <Link href="/login?grade=3">
+                    <Link href="/login">
                       Grade 3
                     </Link>
 
-                    <Link href="/login?grade=4">
+                    <Link href="/login">
                       Grade 4
                     </Link>
 
-                    <Link href="/login?grade=5">
+                    <Link href="/login">
                       Grade 5
                     </Link>
 
@@ -430,24 +507,32 @@ export default function HomePage() {
 
                     <div className="mega-divider" />
 
-                    <Link href="/login?grade=6">
+                    <Link href="/login">
                       Grade 6
                     </Link>
 
-                    <Link href="/login?grade=7">
+                    <Link href="/login">
                       Grade 7
                     </Link>
 
-                    <Link href="/login?grade=8">
+                    <Link href="/login">
                       Grade 8
                     </Link>
 
-                    <Link href="/login?grade=9">
+                    <Link href="/login">
                       Grade 9
                     </Link>
 
-                    <Link href="/login?grade=10">
+                    <Link href="/login">
                       Grade 10
+                    </Link>
+
+                    <Link href="/login">
+                      Grade 11
+                    </Link>
+
+                    <Link href="/login">
+                      Grade 12
                     </Link>
 
                   </div>
@@ -516,10 +601,7 @@ export default function HomePage() {
 
               {/* THINK TALES */}
 
-              <Link
-                href="#thinktales"
-                className="header-nav-link"
-              >
+              <Link href="/thinktales">
                 ThinkTales
               </Link>
 
@@ -740,14 +822,16 @@ export default function HomePage() {
 
       </header>
       {/* ======================================================
-    HERO
+    HERO SECTION
 ====================================================== */}
 
       <section className="hero-section">
 
         <div className="home-container hero-grid">
 
-          {/* HERO CONTENT */}
+          {/* =========================
+        LEFT CONTENT
+    ========================= */}
 
           <div className="hero-content">
 
@@ -758,18 +842,17 @@ export default function HomePage() {
             <h1>
               Intelligence Through
               <br />
-              Exploration.
+              <span>Exploration.</span>
             </h1>
 
             <div className="hero-underline" />
 
             <Link
-              href="/courses"
+              href="/login"
               className="hero-course-btn"
             >
               Explore Course Packages
             </Link>
-
 
             {/* RATING CARD */}
 
@@ -794,14 +877,41 @@ export default function HomePage() {
             </div>
 
           </div>
+          {/* Right Hero Video */}
+          <div className="hero-video-area">
+            <div className="hero-video-card">
+              <video
+                className="mascot-hero-video"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                onClick={(e) => {
+                  const video = e.currentTarget;
 
-
-
+                  if (video.muted) {
+                    video.muted = false;
+                    video.volume = 1;
+                    video.play();
+                  } else {
+                    video.muted = true;
+                  }
+                }}
+                aria-label="Intellia360 mascot introduction video"
+              >
+                <source
+                  src="/assets/home/mascot_intro.mp4"
+                  type="video/mp4"
+                />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
 
         </div>
 
       </section>
-
       {/* ======================================================
           FEATURES
       ====================================================== */}
@@ -910,13 +1020,7 @@ export default function HomePage() {
 
           <div className="courses-carousel">
 
-            <button
-              type="button"
-              className="course-arrow course-arrow-left"
-              aria-label="Previous courses"
-            >
-              ←
-            </button>
+
 
 
             <div className="courses-grid">
@@ -1002,7 +1106,7 @@ export default function HomePage() {
 
 
                     <Link
-                      href={`/login?grade=${course.grade.toLowerCase()}`}
+                      href="/login"
                       className="course-button"
                     >
                       Start Learning →
@@ -1017,13 +1121,7 @@ export default function HomePage() {
             </div>
 
 
-            <button
-              type="button"
-              className="course-arrow course-arrow-right"
-              aria-label="Next courses"
-            >
-              →
-            </button>
+
 
           </div>
 
@@ -1042,7 +1140,7 @@ export default function HomePage() {
 
 
             <Link
-              href="#courses"
+              href="/courses"
               className="view-all-courses"
             >
               View All Courses
@@ -1198,91 +1296,92 @@ export default function HomePage() {
           SHOWCASE
       ====================================================== */}
 
-      <section className="showcase-section">
-
+      <section className="showcase-section experience-section" id="experience">
         <div className="home-container">
-
           <div className="section-heading">
-
-            <span className="section-eyebrow">
-              EXPERIENCE INTELLIA360
-            </span>
-
-            <h2>
-              See
-              <span>
-                {" "}Intellia360
-              </span>
-              {" "}in Action
-            </h2>
-
+            <span className="section-eyebrow">EXPERIENCE INTELLIA360</span>
+            <h2>See <span>Intellia360</span> in Action</h2>
+            <p>Explore how interactive lessons, gamified practice and AI-powered guidance make learning more engaging.</p>
           </div>
-
-
-          <div className="showcase-grid">
-
-            {showcase.map((item, index) => (
-
-              <div
-                className="showcase-card"
+          <div className="experience-list">
+            {[
+              {
+                title: "Learn Through Interactive Experiences",
+                label: "01 • EXPLORE",
+                text: "Students discover concepts through visual lessons, stories and hands-on activities that make difficult ideas easier to understand.",
+                points: [
+                  "Visual concept explanations",
+                  "Interactive activities",
+                  "Learn by exploring",
+                ],
+              },
+              {
+                title: "Practice That Feels Like Play",
+                label: "02 • PRACTICE",
+                text: "Turn practice into a motivating challenge with games, quizzes, XP and rewards that encourage students to keep improving.",
+                points: [
+                  "Games & challenges",
+                  "XP, levels and rewards",
+                  "Instant practice feedback",
+                ],
+              },
+              {
+                title: "AI That Helps Every Learner Grow",
+                label: "03 • IMPROVE",
+                text: "Intellia360 turns learning activity into useful insights so students can improve and adults can understand progress clearly.",
+                points: [
+                  "Progress insights",
+                  "Learning-gap detection",
+                  "Personalized support",
+                ],
+              },
+            ].map((item, index) => (
+              <article
+                className={`experience-row ${index % 2 === 0 ? "content-left" : "video-left"
+                  }`}
                 key={item.title}
               >
+                {/* Content */}
+                <div className="experience-copy">
+                  <span className="experience-label">
+                    {item.label}
+                  </span>
 
-                <div
-                  className={`showcase-image showcase-${index}`}
-                >
+                  <h3>{item.title}</h3>
 
-                  <div className="showcase-label">
-                    {item.title}
-                  </div>
+                  <p>{item.text}</p>
 
-
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="showcase-3d-image"
-                  />
-
-
-                  <button
-                    type="button"
-                    className="showcase-play"
-                    aria-label={`Play ${item.title}`}
-                  >
-                    ▶
-                  </button>
-
-
-                  <div className="showcase-time">
-                    01:02
-                  </div>
-
+                  <ul>
+                    {item.points.map((point) => (
+                      <li key={point}>
+                        <span>✓</span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-
-                <p>
-                  {item.description}
-                </p>
-
-              </div>
-
+                {/* Video */}
+                <div className="experience-video-card">
+                  <video
+                    className="experience-video"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label={`${item.title} demonstration`}
+                  >
+                    <source
+                      src="/assets/home/mascot_intro.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+                </div>
+              </article>
             ))}
-
           </div>
-
-
-          <div className="carousel-dots">
-
-            <span className="selected" />
-            <span />
-            <span />
-            <span />
-            <span />
-
-          </div>
-
         </div>
-
       </section>
 
 
@@ -1388,116 +1487,28 @@ export default function HomePage() {
 
       <section className="audience-section" id="parents">
         <div className="home-container">
-
           <div className="section-heading audience-heading">
-            <span className="section-eyebrow">
-              BUILT FOR EVERYONE
-            </span>
-
-            <h2>
-              One Platform.
-              <span> Everyone Grows.</span>
-            </h2>
-
-            <p>
-              One connected learning ecosystem for students,
-              parents, schools and coaching centres.
-            </p>
+            <span className="section-eyebrow">BUILT FOR EVERYONE</span>
+            <h2>One Platform. <span>Every Learner Matters.</span></h2>
+            <p>One connected ecosystem designed to support students, families, educators and learning organizations.</p>
           </div>
 
-
-          <div className="audience-ecosystem">
-
-            {/* CONNECTING LINES */}
-            <div className="ecosystem-line line-top-left" />
-            <div className="ecosystem-line line-top-right" />
-            <div className="ecosystem-line line-bottom-left" />
-            <div className="ecosystem-line line-bottom-right" />
-
-
-            {/* CENTER HUB */}
-            <div className="ecosystem-center">
-
-              <div className="ecosystem-orbit orbit-one" />
-              <div className="ecosystem-orbit orbit-two" />
-
-              <div className="ecosystem-hub">
-
-                <img
-                  src="/assets/logo/intellia360-log.png"
-                  alt="Intellia360"
-                  className="ecosystem-logo-image"
-                />
-
-                <small>
-                  ONE LEARNING ECOSYSTEM
-                </small>
-
-              </div>
-
-              <div className="ecosystem-dot dot-blue" />
-              <div className="ecosystem-dot dot-purple" />
-              <div className="ecosystem-dot dot-orange" />
-              <div className="ecosystem-dot dot-green" />
-
-            </div>
-
-
-            {/* AUDIENCE CARDS */}
-            <div className="audience-card-grid">
-
-              {audiences.map((audience, index) => (
-
-                <div
-                  className={`audience-card ${audience.color} audience-card-${index + 1}`}
-                  key={audience.title}
-                  id={
-                    audience.title === "For Schools"
-                      ? "schools"
-                      : undefined
-                  }
-                >
-
-                  <div className="audience-card-content">
-
-                    <span className="audience-label">
-                      {audience.title === "For Parents" && "FAMILY"}
-                      {audience.title === "For Schools" && "EDUCATION"}
-                      {audience.title === "For Coaching Centres" && "COACHING"}
-                      {audience.title === "Loved by Learners" && "STUDENTS"}
-                    </span>
-
-                    <h2>
-                      {audience.title}
-                    </h2>
-
-                    <ul>
-                      {audience.points.map((point) => (
-                        <li key={point}>
-                          <span className="check-icon">✓</span>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Link href="/login" className="audience-btn">
-                      Explore
-                      <span>→</span>
-                    </Link>
-
-                  </div>
-
-
-
-
-                </div>
-
-              ))}
-
-            </div>
-
+          <div className="audience-card-grid audience-grid-new">
+            {audiences.map((audience) => (
+              <article className={`audience-card audience-card-modern ${audience.color}`} key={audience.title}>
+                <div className="audience-modern-icon" aria-hidden="true">{audience.icon}</div>
+                <span className="audience-label">{audience.title === "For Students" ? "LEARNERS" : audience.title.replace("For ", "").toUpperCase()}</span>
+                <h2>{audience.title}</h2>
+                <p className="audience-description">{audience.description}</p>
+                <ul>
+                  {audience.points.map((point) => (
+                    <li key={point}><span className="check-icon">✓</span>{point}</li>
+                  ))}
+                </ul>
+                <Link href="/login" className="audience-btn">Explore <span>→</span></Link>
+              </article>
+            ))}
           </div>
-
         </div>
       </section>
 
@@ -1576,6 +1587,134 @@ export default function HomePage() {
       {/* ======================================================
           FOOTER
       ====================================================== */}
+
+
+      {/* ======================================================
+          LIVE LEADERBOARD — RIGHT SIDE DRAWER
+          Uses the existing /api/student/leaderboard endpoint.
+      ====================================================== */}
+      <div className="homepage-leaderboard-widget">
+        <button
+          type="button"
+          className={`homepage-leaderboard-tab ${leaderboardOpen ? "open" : ""}`}
+          onClick={() => {
+            setLeaderboardOpen((current) => !current);
+            if (!leaderboardOpen && leaderboardEntries.length === 0) {
+              fetchHomepageLeaderboard();
+            }
+          }}
+          aria-expanded={leaderboardOpen}
+          aria-controls="homepage-leaderboard-drawer"
+          aria-label="Open leaderboard"
+        >
+          <span>LEADERBOARD</span>
+        </button>
+
+        <aside
+          id="homepage-leaderboard-drawer"
+          className={`homepage-leaderboard-drawer ${leaderboardOpen ? "open" : ""}`}
+          aria-hidden={!leaderboardOpen}
+        >
+          <div className="homepage-leaderboard-header">
+            <div className="homepage-leaderboard-title-wrap">
+              <span className="homepage-leaderboard-trophy">🏆</span>
+              <div>
+                <span className="homepage-leaderboard-eyebrow">
+                  LIVE RANKINGS
+                </span>
+                <h3>INTELLIA CHAMPIONS</h3>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="homepage-leaderboard-close"
+              onClick={() => setLeaderboardOpen(false)}
+              aria-label="Close leaderboard"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="homepage-leaderboard-list">
+            {leaderboardLoading ? (
+              <div className="homepage-leaderboard-state">
+                <span className="homepage-leaderboard-spinner" />
+                <span>Loading rankings...</span>
+              </div>
+            ) : leaderboardEntries.length === 0 ? (
+              <div className="homepage-leaderboard-state">
+                <span className="homepage-leaderboard-state-icon">🏆</span>
+                <span>No rankings available yet.</span>
+              </div>
+            ) : (
+              leaderboardEntries.slice(0, 6).map((entry) => (
+                <div
+                  key={entry.userId}
+                  className={`homepage-leaderboard-row ${entry.rank === 1
+                    ? "rank-first"
+                    : entry.rank === 2
+                      ? "rank-second"
+                      : entry.rank === 3
+                        ? "rank-third"
+                        : ""
+                    }`}
+                >
+                  <div className="homepage-leaderboard-rank">
+                    {entry.rank === 1
+                      ? "🥇"
+                      : entry.rank === 2
+                        ? "🥈"
+                        : entry.rank === 3
+                          ? "🥉"
+                          : `${entry.rank}th`}
+                  </div>
+
+                  <div className="homepage-leaderboard-student">
+                    {entry.avatar ? (
+                      <img
+                        src={entry.avatar}
+                        alt=""
+                        className="homepage-leaderboard-avatar"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="homepage-leaderboard-avatar-fallback">
+                        {entry.name?.charAt(0).toUpperCase() || "S"}
+                      </span>
+                    )}
+
+                    <div className="homepage-leaderboard-name-wrap">
+                      <span className="homepage-leaderboard-name">
+                        {entry.name}
+                      </span>
+
+                      {entry.isCurrentUser && (
+                        <span className="homepage-leaderboard-you">YOU</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <span className="homepage-leaderboard-xp">
+                    ⭐ {Number(entry.xpPoints || 0).toLocaleString()}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <Link
+            href="/student/leaderboard"
+            className="homepage-view-leaderboard"
+            onClick={() => setLeaderboardOpen(false)}
+          >
+            View Full Leaderboard
+            <span>→</span>
+          </Link>
+        </aside>
+      </div>
 
       <footer className="site-footer" id="contact">
 

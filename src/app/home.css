@@ -19,39 +19,53 @@
 
 
 /* =========================================================
-   HEADER
+   INTELLIA360 HOMEPAGE — HEADER
 ========================================================= */
 
-/* ============================================================
-   HEADER
-============================================================ */
 
-.home-header {
+/* =========================================================
+   HEADER BASE
+========================================================= */
+
+.home-page .home-header {
     position: relative;
-    z-index: 1000;
+    z-index: 10000;
+
     width: 100%;
-    background: #eaf4ff;
+
+    background: #ffffff;
+
+    margin: 0;
+    padding: 0;
 }
 
 
-/* ============================================================
+/* =========================================================
    TOP OFFER BAR
-============================================================ */
+========================================================= */
 
-.header-offer-bar {
+.home-page .header-offer-bar {
     width: 100%;
-    min-height: 50px;
+    min-height: 42px;
+    height: 42px;
 
     display: flex;
     align-items: center;
+    justify-content: center;
 
     background: #dceeff;
 
-    border-bottom: 1px solid rgba(20, 65, 110, 0.04);
+    border-bottom: 1px solid rgba(20, 65, 110, 0.05);
+
+    margin: 0;
+    padding: 0;
 }
 
-.offer-inner {
-    min-height: 50px;
+.home-page .offer-inner {
+    width: 100%;
+
+    min-height: 42px;
+    height: 42px;
 
     display: flex;
     align-items: center;
@@ -62,30 +76,1306 @@
     color: #32465b;
 
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.2;
 
     white-space: nowrap;
+
+    margin: 0;
+    padding: 0;
 }
 
-.offer-icon {
+.home-page .offer-icon {
     font-size: 15px;
+    line-height: 1;
 }
 
-.offer-inner strong {
+.home-page .offer-inner strong {
     color: #30455c;
     font-weight: 800;
 }
 
-.offer-inner b {
+.home-page .offer-inner b {
     color: #30455c;
     font-weight: 800;
 }
 
-.offer-stat {
+.home-page .offer-stat {
     margin-left: 3px;
     color: #52677c;
 }
 
+
+/* =========================================================
+   MAIN HEADER
+========================================================= */
+
+.home-page .header-main {
+    position: relative;
+    z-index: 10001;
+
+    width: 100%;
+
+    height: 78px !important;
+    min-height: 78px !important;
+
+    display: flex;
+    align-items: center;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid rgba(20, 65, 110, 0.06);
+
+    margin: 0;
+    padding: 0;
+}
+
+
+/* =========================================================
+   HEADER INNER
+========================================================= */
+
+.home-page .header-inner {
+    position: relative;
+    z-index: 10001;
+
+    width: min(1400px, calc(100% - 80px)) !important;
+
+    height: 78px !important;
+    min-height: 78px !important;
+
+    margin: 0 auto !important;
+    padding: 0 !important;
+
+    display: flex;
+    align-items: center;
+
+    gap: 30px;
+}
+
+
+/* =========================================================
+   LOGO WRAPPER
+========================================================= */
+
+.home-page .home-logo {
+    position: relative;
+
+    width: 230px !important;
+    height: 78px !important;
+
+    min-width: 230px !important;
+
+    flex: 0 0 230px !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    text-decoration: none;
+
+    overflow: visible;
+}
+
+
+/* =========================================================
+   BIG LOGO
+========================================================= */
+
+.home-page .home-logo-image {
+    width: 230px !important;
+    height: auto !important;
+
+    max-width: 230px !important;
+    max-height: 72px !important;
+
+    display: block !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    object-fit: contain !important;
+
+    object-position: left center;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.home-page .desktop-nav {
+    position: relative;
+    z-index: 10001;
+
+    flex: 1;
+
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 28px;
+
+    margin: 0;
+    padding: 0;
+}
+
+
+/* =========================================================
+   NORMAL NAV LINKS
+========================================================= */
+
+.home-page .header-nav-link,
+.home-page .desktop-nav>a {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    height: 44px;
+
+    padding: 0 4px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #171717;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    line-height: 1;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.home-page .header-nav-link:hover,
+.home-page .desktop-nav>a:hover {
+    color: #087fd3;
+}
+
+.home-page .header-nav-link.active {
+    color: #087fd3;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   ACTIVE HOME UNDERLINE
+========================================================= */
+
+.home-page .header-nav-link.active::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    bottom: 5px;
+
+    height: 3px;
+
+    border-radius: 999px;
+
+    background: #2f5bea;
+}
+
+
+/* =========================================================
+   DROPDOWN WRAPPER
+========================================================= */
+
+.home-page .header-mega-dropdown {
+    position: static !important;
+
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+
+    height: 78px;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: visible !important;
+}
+
+
+/* =========================================================
+   DROPDOWN TRIGGER
+========================================================= */
+
+.home-page .header-dropdown-trigger {
+    position: relative;
+
+    min-height: 44px;
+    height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 8px;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #172033;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 650;
+
+    line-height: 1;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.home-page .header-dropdown-trigger:hover {
+    background: #eff7ff;
+
+    color: #087fd3;
+
+    border-color: #d8eaff;
+}
+
+.home-page .header-dropdown-trigger.dropdown-trigger-active {
+    background: #e7f3ff;
+
+    color: #087fd3;
+
+    border-color: #d2e7fb;
+}
+
+
+/* =========================================================
+   DROPDOWN ARROW
+========================================================= */
+
+.home-page .dropdown-arrow {
+    width: 14px;
+    height: 14px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 14px;
+
+    margin: 0;
+    padding: 0;
+
+    font-size: 11px;
+    line-height: 1;
+
+    transform: none !important;
+
+    color: currentColor;
+}
+
+
+/* =========================================================
+   MEGA MENU
+========================================================= */
+
+.home-page .header-mega-menu {
+    position: absolute;
+
+    z-index: 10050;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   MATH / SCHOOL MENU
+========================================================= */
+
+.home-page .math-menu,
+.home-page .school-menu {
+    width: 100%;
+    max-width: 100%;
+
+    box-sizing: border-box;
+
+    min-width: 0;
+}
+
+.home-page .math-menu>*,
+.home-page .school-menu>* {
+    min-width: 0;
+    max-width: 100%;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   MEGA MENU TEXT
+========================================================= */
+
+.home-page .mega-description p,
+.home-page .school-menu-description p {
+    max-width: 100%;
+
+    white-space: normal;
+
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+
+/* =========================================================
+   MEGA MENU IMAGES
+========================================================= */
+
+.home-page .mega-image-wrap,
+.home-page .school-menu-image-wrap {
+    max-width: 100%;
+    min-width: 0;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+}
+
+.home-page .mega-image,
+.home-page .school-menu-image {
+    max-width: 100%;
+
+    height: auto;
+
+    display: block;
+
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.home-page .header-actions {
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 14px;
+
+    flex: 0 0 auto;
+
+    margin: 0;
+    padding: 0;
+}
+
+
+/* =========================================================
+   HEADER ICON BUTTONS
+========================================================= */
+
+.home-page .header-icon-btn,
+.home-page .header-cart-btn {
+    position: relative;
+
+    width: 38px;
+    height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #111827;
+
+    cursor: pointer;
+}
+
+.home-page .header-icon-btn svg,
+.home-page .header-cart-btn svg {
+    width: 22px;
+    height: 22px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.home-page .header-icon-btn:hover,
+.home-page .header-cart-btn:hover {
+    color: #087fd3;
+}
+
+
+/* =========================================================
+   CART COUNT
+========================================================= */
+
+.home-page .cart-count {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    min-width: 18px;
+    height: 18px;
+
+    padding: 0 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: #1689df;
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    line-height: 18px;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.home-page .header-login-btn {
+    min-width: 76px;
+    height: 44px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 20px;
+
+    border-radius: 999px;
+
+    background: #1689df;
+
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.home-page .header-login-btn:hover {
+    background: #087fd3;
+
+    color: #ffffff;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 8px 18px rgba(22, 137, 223, 0.22);
+}
+
+
+/* =========================================================
+   MAIN PAGE OVERFLOW FIX
+========================================================= */
+
+.home-page .home-main,
+.home-page main,
+.home-page .home-container {
+    overflow-x: visible;
+}
+
+.home-page section {
+    max-width: 100%;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADINGS
+========================================================= */
+
+.home-page section h1,
+.home-page section h2,
+.home-page section h3 {
+    max-width: 100%;
+
+    overflow-wrap: break-word;
+
+    word-break: normal;
+}
+
+
+/* =========================================================
+   SECTION HEADING SAFETY
+========================================================= */
+
+.home-page .section-title,
+.home-page .section-heading,
+.home-page .section-header {
+    width: 100%;
+    max-width: 100%;
+
+    box-sizing: border-box;
+
+    overflow: visible;
+}
+
+.home-page .section-title h2,
+.home-page .section-heading h2,
+.home-page .section-header h2 {
+    width: 100%;
+    max-width: 100%;
+
+    white-space: normal;
+}
+
+
+/* =========================================================
+   DESKTOP — 1200px+
+========================================================= */
+
+@media (min-width: 1201px) {
+
+    .home-page .header-mega-menu {
+        left: 50%;
+        right: auto;
+
+        width: min(1160px, calc(100vw - 40px));
+        max-width: calc(100vw - 40px);
+
+        box-sizing: border-box;
+    }
+
+    .home-page .home-logo {
+        width: 230px !important;
+        min-width: 230px !important;
+        flex-basis: 230px !important;
+    }
+
+    .home-page .home-logo-image {
+        width: 230px !important;
+        max-width: 230px !important;
+    }
+}
+
+
+/* =========================================================
+   LAPTOP — 901px TO 1200px
+========================================================= */
+
+@media (min-width: 901px) and (max-width: 1200px) {
+
+    .home-page .header-inner {
+        width: calc(100% - 40px) !important;
+
+        gap: 20px;
+    }
+
+    .home-page .home-logo {
+        width: 190px !important;
+        min-width: 190px !important;
+        flex-basis: 190px !important;
+    }
+
+    .home-page .home-logo-image {
+        width: 190px !important;
+        max-width: 190px !important;
+        max-height: 68px !important;
+    }
+
+    .home-page .desktop-nav {
+        gap: 16px;
+    }
+
+    .home-page .header-nav-link,
+    .home-page .header-dropdown-trigger {
+        font-size: 13px;
+    }
+
+    .home-page .header-actions {
+        gap: 8px;
+    }
+
+    .home-page .header-login-btn {
+        min-width: 68px;
+        padding: 0 16px;
+    }
+
+    .home-page .header-mega-menu {
+        left: 50%;
+
+        width: calc(100vw - 40px);
+        max-width: calc(100vw - 40px);
+    }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .home-page .header-main {
+        height: 72px !important;
+        min-height: 72px !important;
+    }
+
+    .home-page .header-inner {
+        width: calc(100% - 30px) !important;
+
+        height: 72px !important;
+        min-height: 72px !important;
+
+        gap: 15px;
+    }
+
+    .home-page .home-logo {
+        width: 165px !important;
+        height: 72px !important;
+
+        min-width: 165px !important;
+        flex-basis: 165px !important;
+    }
+
+    .home-page .home-logo-image {
+        width: 165px !important;
+        max-width: 165px !important;
+
+        max-height: 65px !important;
+    }
+
+    .home-page .desktop-nav {
+        gap: 12px;
+    }
+
+    .home-page .header-nav-link,
+    .home-page .header-dropdown-trigger {
+        font-size: 12px;
+    }
+
+    .home-page .header-actions {
+        height: 72px;
+
+        gap: 5px;
+    }
+
+    .home-page .header-icon-btn,
+    .home-page .header-cart-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .home-page .header-login-btn {
+        height: 40px;
+
+        min-width: 62px;
+
+        padding: 0 14px;
+
+        font-size: 13px;
+    }
+
+    .home-page .header-mega-menu {
+        left: 50%;
+
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+    }
+
+    .home-page .math-menu,
+    .home-page .school-menu {
+        width: 100%;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .home-page .header-main {
+        height: 68px !important;
+        min-height: 68px !important;
+    }
+
+    .home-page .header-inner {
+        width: calc(100% - 20px) !important;
+
+        height: 68px !important;
+        min-height: 68px !important;
+
+        gap: 8px;
+    }
+
+    .home-page .home-logo {
+        width: 145px !important;
+        height: 68px !important;
+
+        min-width: 145px !important;
+        flex-basis: 145px !important;
+    }
+
+    .home-page .home-logo-image {
+        width: 145px !important;
+        max-width: 145px !important;
+
+        max-height: 62px !important;
+    }
+
+    .home-page .desktop-nav {
+        gap: 5px;
+    }
+
+    .home-page .header-nav-link,
+    .home-page .header-dropdown-trigger {
+        font-size: 11px;
+    }
+
+    .home-page .header-actions {
+        height: 68px;
+
+        gap: 2px;
+    }
+
+    .home-page .header-icon-btn,
+    .home-page .header-cart-btn {
+        width: 30px;
+        height: 30px;
+    }
+
+    .home-page .header-icon-btn svg,
+    .home-page .header-cart-btn svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .home-page .header-login-btn {
+        height: 36px;
+
+        min-width: 55px;
+
+        padding: 0 11px;
+
+        font-size: 12px;
+    }
+
+    .home-page .header-mega-menu {
+        left: 50%;
+
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .home-page .header-inner {
+        width: calc(100% - 12px) !important;
+        gap: 5px;
+    }
+
+    .home-page .home-logo {
+        width: 120px !important;
+        min-width: 120px !important;
+        flex-basis: 120px !important;
+    }
+
+    .home-page .home-logo-image {
+        width: 120px !important;
+        max-width: 120px !important;
+    }
+
+    .home-page .desktop-nav {
+        gap: 2px;
+    }
+
+    .home-page .header-nav-link,
+    .home-page .header-dropdown-trigger {
+        font-size: 10px;
+    }
+
+    .home-page .header-actions {
+        gap: 0;
+    }
+
+    .home-page .header-login-btn {
+        min-width: 48px;
+        padding: 0 8px;
+    }
+}
+
+/* ============================================================
+   MAIN MEGA MENU
+============================================================ */
+
+.home-page .header-mega-menu {
+    position: absolute !important;
+
+    top: calc(100% + 1px);
+    left: 50%;
+
+    width: min(1160px, calc(100vw - 48px));
+    max-width: calc(100vw - 48px);
+
+    box-sizing: border-box;
+
+    display: grid;
+
+    padding: 26px 30px 30px;
+
+    background: #ffffff;
+
+    border: 1px solid #e3ebf4;
+    border-top: 1px solid #edf3f8;
+
+    border-radius: 0 0 18px 18px;
+
+    box-shadow:
+        0 20px 45px rgba(15, 42, 70, .12),
+        0 5px 18px rgba(15, 42, 70, .06);
+
+    overflow: hidden;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform:
+        translateX(-50%) translateY(-8px);
+
+    transition:
+        opacity .18s ease,
+        transform .18s ease,
+        visibility .18s ease;
+
+    z-index: 99999;
+}
+
+
+/* Open */
+
+.home-page .header-mega-menu.mega-menu-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+
+    transform:
+        translateX(-50%) translateY(0);
+}
+
+
+/* ============================================================
+   MATH PROGRAM DROPDOWN
+============================================================ */
+
+.home-page .math-menu {
+    grid-template-columns:
+        180px 180px minmax(250px, 1fr) minmax(350px, 1.25fr);
+
+    gap: 28px;
+
+    align-items: start;
+}
+
+
+/* ============================================================
+   SCHOOL DROPDOWN
+============================================================ */
+
+.home-page .school-menu {
+    grid-template-columns:
+        210px 260px minmax(380px, 1fr);
+
+    gap: 30px;
+
+    align-items: start;
+}
+
+
+/* ============================================================
+   DROPDOWN COLUMNS
+============================================================ */
+
+.home-page .mega-column,
+.home-page .school-menu-left,
+.home-page .school-menu-middle,
+.home-page .school-menu-right {
+    min-width: 0;
+}
+
+
+/* ============================================================
+   COLUMN HEADINGS
+============================================================ */
+
+.home-page .mega-column h3,
+.home-page .mega-column h4,
+.home-page .school-menu h3,
+.home-page .school-menu h4 {
+    margin: 0 0 12px;
+
+    padding-bottom: 9px;
+
+    border-bottom: 1px solid #d9e2ec;
+
+    color: #172033;
+
+    font-size: 14px;
+    font-weight: 750;
+
+    text-transform: uppercase;
+    letter-spacing: .2px;
+}
+
+
+/* ============================================================
+   DROPDOWN LINKS
+============================================================ */
+
+.home-page .mega-column>a:not(.mega-dashboard-btn),
+.home-page .school-menu-left>a:not(.school-start-btn),
+.home-page .school-menu-middle>a {
+    display: flex;
+    align-items: center;
+
+    min-height: 38px;
+
+    padding: 7px 9px;
+
+    margin: 1px 0;
+
+    border-radius: 7px;
+
+    color: #202936;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+.home-page .mega-column>a:not(.mega-dashboard-btn):hover,
+.home-page .school-menu-left>a:not(.school-start-btn):hover,
+.home-page .school-menu-middle>a:hover {
+    background: #eff7ff;
+    color: #087fd3;
+
+    transform: translateX(3px);
+}
+
+
+/* ============================================================
+   DESCRIPTION COLUMN
+============================================================ */
+
+.home-page .mega-description,
+.home-page .school-menu-description {
+    padding: 0 2px;
+}
+
+.home-page .mega-description h3,
+.home-page .school-menu-description h3 {
+    margin: 0 0 12px;
+
+    color: #087fd3;
+
+    font-size: 18px;
+    font-weight: 750;
+}
+
+.home-page .mega-description p,
+.home-page .school-menu-description p {
+    margin: 0;
+
+    color: #5d6673;
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   IMAGE SECTION
+============================================================ */
+
+.home-page .mega-image-wrap,
+.home-page .school-menu-image-wrap {
+    width: 100%;
+    height: 225px;
+
+    overflow: hidden;
+
+    border-radius: 13px;
+
+    background: #f4f8fc;
+}
+
+.home-page .mega-image,
+.home-page .school-menu-image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    border-radius: 13px;
+
+    transition: transform .3s ease;
+}
+
+.home-page .mega-image-wrap:hover .mega-image,
+.home-page .school-menu-image-wrap:hover .school-menu-image {
+    transform: scale(1.02);
+}
+
+
+/* ============================================================
+   DASHBOARD / START BUTTON
+============================================================ */
+
+.home-page .mega-dashboard-btn,
+.home-page .school-start-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 46px;
+
+    margin-top: 15px;
+
+    padding: 0 20px;
+
+    border-radius: 8px !important;
+
+    background: linear-gradient(135deg,
+            #ffb20f,
+            #ff9200) !important;
+
+    color: #111111 !important;
+
+    font-size: 13px !important;
+    font-weight: 800 !important;
+
+    text-decoration: none;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.home-page .mega-dashboard-btn:hover,
+.home-page .school-start-btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 18px rgba(255, 146, 0, .22);
+}
+
+
+/* ============================================================
+   "PLAY / LEARN / EVOLVE" SECTION
+   Keeps it BELOW the dropdown instead of overlapping it.
+============================================================ */
+
+.home-page .header-mega-menu+* {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ============================================================
+   NORMAL SMALL NAV DROPDOWN
+============================================================ */
+
+.home-page .nav-dropdown-menu {
+    position: absolute;
+
+    z-index: 99999;
+
+    max-height: calc(100vh - 110px);
+
+    overflow-y: auto;
+
+    background: #ffffff;
+
+    border: 1px solid #e2eaf2;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 16px 35px rgba(15, 42, 70, .12);
+}
+
+
+/* ============================================================
+   PREVENT DROPDOWN FROM GOING OFF SCREEN
+============================================================ */
+
+@media (max-width: 1200px) {
+
+    .home-page .header-mega-menu {
+        width: min(1000px, calc(100vw - 30px));
+        max-width: calc(100vw - 30px);
+
+        padding: 24px;
+    }
+
+    .home-page .math-menu {
+        grid-template-columns:
+            150px 150px 1fr 1.1fr;
+
+        gap: 20px;
+    }
+
+    .home-page .school-menu {
+        grid-template-columns:
+            180px 220px 1fr;
+
+        gap: 22px;
+    }
+
+    .home-page .mega-image-wrap,
+    .home-page .school-menu-image-wrap {
+        height: 200px;
+    }
+}
+
+
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .home-page .header-mega-menu {
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
+
+        left: 50%;
+
+        padding: 22px;
+
+        max-height: calc(100vh - 100px);
+
+        overflow-y: auto;
+    }
+
+    .home-page .math-menu,
+    .home-page .school-menu {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .home-page .mega-image-wrap,
+    .home-page .school-menu-image-wrap {
+        grid-column: 1 / -1;
+
+        height: 220px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 600px) {
+
+    .home-page .header-mega-menu {
+        top: 100%;
+
+        width: calc(100vw - 20px);
+        max-width: calc(100vw - 20px);
+
+        padding: 18px;
+
+        border-radius: 0 0 14px 14px;
+    }
+
+    .home-page .math-menu,
+    .home-page .school-menu {
+        grid-template-columns: 1fr;
+
+        gap: 18px;
+    }
+
+    .home-page .mega-image-wrap,
+    .home-page .school-menu-image-wrap {
+        grid-column: auto;
+
+        height: 190px;
+    }
+
+    .home-page .mega-dashboard-btn,
+    .home-page .school-start-btn {
+        width: 100%;
+    }
+}
 
 /* ============================================================
    MAIN HEADER
@@ -123,8 +1413,8 @@
 }
 
 .home-logo-image {
-    width: 170px;
-    height: auto;
+    width: 100px;
+    height: 50px;
 
     display: block;
     object-fit: contain;
@@ -837,183 +2127,113 @@
 
 }
 
-/* =========================================================
-   HERO
-========================================================= */
-
-/* =========================================================
-   HERO SECTION
-========================================================= */
+/* ============================================================
+   HERO SECTION — INTELLIA360
+============================================================ */
 
 .hero-section {
     position: relative;
-    padding: 55px 0 35px;
+    width: 100%;
+    padding: 65px 0 85px;
+    background: #ffffff;
     overflow: hidden;
-
-    /* Hero background image */
-    background-image:
-        linear-gradient(90deg,
-            rgba(235, 247, 255, 0.88) 0%,
-            rgba(235, 247, 255, 0.68) 38%,
-            rgba(235, 247, 255, 0.25) 72%,
-            rgba(235, 247, 255, 0.08) 100%),
-        url("/assets/home/hero-dark-bg.png");
-
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
 }
 
 .hero-grid {
+    position: relative;
+    z-index: 2;
+
     display: grid;
     grid-template-columns: 0.9fr 1.1fr;
     align-items: center;
-    gap: 55px;
+
+    gap: 70px;
+    min-height: 570px;
 }
 
 
-/* =========================================================
-   HERO CONTENT
-========================================================= */
+/* ============================================================
+   HERO LEFT CONTENT
+============================================================ */
 
 .hero-content {
     position: relative;
-    z-index: 5;
+    z-index: 3;
+    padding-left: 10px;
 }
-
-.hero-stars {
-    position: absolute;
-    left: -35px;
-    top: 40px;
-
-    color: #fbbf24;
-    font-size: 26px;
-}
-
-
-/* =========================================================
-   HERO EYEBROW
-========================================================= */
 
 .hero-eyebrow {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
 
     margin-bottom: 18px;
+    padding: 8px 16px;
 
-    color: #172554;
-
-    font-size: 15px;
-    font-weight: 800;
-
-    position: relative;
-}
-
-.hero-eyebrow::after {
-    content: "";
-
-    position: absolute;
-    left: 0;
-    bottom: -8px;
-
-    width: 105px;
-    height: 3px;
-
+    background: #eff6ff;
     border-radius: 50px;
 
-    background: #2563eb;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
-
-
-/* =========================================================
-   HERO HEADING
-========================================================= */
 
 .hero-content h1 {
     margin: 0;
 
-    font-size: clamp(42px, 5vw, 68px);
-    line-height: 1.03;
+    color: #111827;
 
+    font-size: clamp(48px, 5vw, 72px);
+    line-height: 1.05;
+
+    font-weight: 800;
     letter-spacing: -3px;
-
-    font-weight: 900;
-
-    color: #172554;
 }
 
 .hero-content h1 span {
-    background: linear-gradient(90deg,
-            #2563eb,
-            #6d28d9,
-            #7c3aed);
-
-    -webkit-background-clip: text;
-    background-clip: text;
-
-    color: transparent;
+    color: #2563eb;
 }
 
 
-/* =========================================================
-   HERO SUB HEADING
-========================================================= */
+/* ============================================================
+   HERO UNDERLINE
+============================================================ */
 
-.hero-content h2 {
-    margin: 14px 0 20px;
+.hero-underline {
+    width: 110px;
+    height: 5px;
 
-    font-size: 25px;
-    line-height: 1.25;
+    margin: 24px 0 30px;
 
-    color: #172554;
+    border-radius: 50px;
+
+    background: #f59e0b;
 }
 
 
-/* =========================================================
-   HERO DESCRIPTION
-========================================================= */
+/* ============================================================
+   COURSE BUTTON
+============================================================ */
 
-.hero-content p {
-    max-width: 650px;
-
-    margin: 0;
-
-    line-height: 1.75;
-
-    color: #64748b;
-
-    font-size: 15px;
-}
-
-
-/* =========================================================
-   HERO BUTTONS
-========================================================= */
-
-.hero-buttons {
-    display: flex;
-    align-items: center;
-
-    gap: 15px;
-
-    margin-top: 28px;
-}
-
-.primary-btn,
-.secondary-btn {
+.hero-course-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    min-height: 52px;
+    min-height: 54px;
+    padding: 0 28px;
 
-    padding: 15px 27px;
+    border-radius: 12px;
 
-    border-radius: 11px;
+    background: #2563eb;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
 
     text-decoration: none;
 
-    font-size: 15px;
-    font-weight: 800;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.20);
 
     transition:
         transform 0.2s ease,
@@ -1021,266 +2241,197 @@
         background 0.2s ease;
 }
 
+.hero-course-btn:hover {
+    background: #1d4ed8;
 
-/* Orange button */
-
-.primary-btn {
-    background: linear-gradient(135deg,
-            #ff7a00,
-            #ff5a00);
-
-    color: #ffffff;
+    transform: translateY(-3px);
 
     box-shadow:
-        0 10px 25px rgba(249, 115, 22, 0.25);
-}
-
-.primary-btn:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 14px 30px rgba(249, 115, 22, 0.35);
-}
-
-.primary-btn span {
-    margin-left: 10px;
+        0 15px 32px rgba(37, 99, 235, 0.28);
 }
 
 
-/* Explore button */
+/* ============================================================
+   RATING CARD
+============================================================ */
 
-.secondary-btn {
-    color: #2563eb;
-
-    border: 1.5px solid #7292f8;
-
-    background: rgba(255, 255, 255, 0.92);
-}
-
-.secondary-btn:hover {
-    background: #eff6ff;
-
-    transform: translateY(-2px);
-}
-
-
-/* =========================================================
-   HERO AUDIENCE
-========================================================= */
-
-.hero-audience {
+.hero-rating-card {
     display: flex;
     align-items: center;
 
-    gap: 12px;
+    width: fit-content;
 
-    margin-top: 20px;
+    gap: 15px;
 
-    font-size: 13px;
+    margin-top: 28px;
+    padding: 13px 18px;
 
-    color: #334155;
+    background: #ffffff;
 
-    font-weight: 700;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
 
-    flex-wrap: wrap;
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.07);
 }
 
-.hero-audience b {
-    color: #2563eb;
+.rating-score {
+    color: #f59e0b;
+
+    font-size: 27px;
+    font-weight: 800;
+    line-height: 1;
 }
 
-
-/* =========================================================
-   HERO VISUAL
-========================================================= */
-
-.hero-visual {
-    min-width: 0;
-
-    position: relative;
-
+.rating-content {
     display: flex;
     flex-direction: column;
 
-    align-items: center;
+    gap: 3px;
+}
 
-    z-index: 3;
+.rating-content strong {
+    color: #172554;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.rating-content span {
+    color: #64748b;
+
+    font-size: 11px;
 }
 
 
-/* =========================================================
-   HERO VIDEO / VISUAL CARD
-========================================================= */
+/* ============================================================
+   HERO VIDEO AREA
+============================================================ */
+
+.hero-video-area {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+}
+
+
+/* ============================================================
+   VIDEO CARD
+============================================================ */
 
 .hero-video-card {
+    position: relative;
+
     width: 100%;
+    max-width: 700px;
 
     padding: 10px;
 
-    border-radius: 25px;
+    background: #ffffff;
 
-    background: rgba(255, 255, 255, 0.96);
-
-    border: 1px solid #dbe7ff;
+    border: 1px solid #e2e8f0;
+    border-radius: 28px;
 
     box-shadow:
-        0 18px 45px rgba(30, 64, 175, 0.15),
-        0 0 0 8px rgba(219, 234, 254, 0.45);
+        0 25px 60px rgba(15, 23, 42, 0.12),
+        0 8px 25px rgba(37, 99, 235, 0.08);
 
     overflow: hidden;
 }
 
 
-/* =========================================================
-   VIDEO SCREEN
-========================================================= */
+/* ============================================================
+   VIDEO
+============================================================ */
 
-.video-screen {
-    height: 320px;
-
+.hero-video-wrapper {
     position: relative;
 
+    width: 100%;
+
+    aspect-ratio: 16 / 10;
+
     overflow: hidden;
 
-    border-radius: 16px;
+    border-radius: 20px;
 
-    background:
-        radial-gradient(circle at 30% 30%,
-            #075985,
-            transparent 30%),
-        linear-gradient(135deg,
-            #082f49,
-            #164e63);
+    background: #eff6ff;
 }
 
+.hero-video-wrapper iframe,
+.hero-video {
+    position: absolute;
 
-/* If actual video/image is added */
+    inset: 0;
 
-.video-screen video,
-.video-screen img {
     width: 100%;
     height: 100%;
 
     display: block;
 
+    border: 0;
+
     object-fit: cover;
 
-    object-position: center;
+    border-radius: inherit;
 }
 
 
-/* =========================================================
-   VIDEO EQUATION
-========================================================= */
+/* ============================================================
+   VIDEO DECORATIVE ELEMENTS
+============================================================ */
 
-.video-equation {
+.hero-decoration {
     position: absolute;
 
-    top: 28px;
-    left: 50%;
+    z-index: 5;
 
-    transform: translateX(-50%);
+    pointer-events: none;
 
-    white-space: nowrap;
-
-    color: #ffffff;
-
-    font-size: 37px;
-
-    font-weight: 900;
-
-    z-index: 2;
+    font-weight: 800;
 }
 
-.video-equation strong {
-    color: #facc15;
+.hero-star-one {
+    top: 55px;
+    left: -18px;
+
+    color: #f59e0b;
+
+    font-size: 27px;
+}
+
+.hero-star-two {
+    right: -15px;
+    bottom: 85px;
+
+    color: #8b5cf6;
+
+    font-size: 30px;
+}
+
+.hero-plus {
+    top: 15px;
+    left: 45%;
+
+    color: #2563eb;
+
+    font-size: 28px;
 }
 
 
-/* =========================================================
-   MATH CHARACTER
-========================================================= */
+/* ============================================================
+   VIDEO PLAY BUTTON
+============================================================ */
 
-.math-character {
+.video-play {
     position: absolute;
 
-    left: 40px;
-    bottom: 35px;
-
-    font-size: 150px;
-
-    z-index: 2;
-}
-
-.robot {
-    position: absolute;
-
-    left: 43%;
-    bottom: 40px;
-
-    font-size: 110px;
-
-    z-index: 2;
-}
-
-
-/* =========================================================
-   NUMBER BLOCKS
-========================================================= */
-
-.number-blocks {
-    position: absolute;
-
-    right: 40px;
-    bottom: 60px;
-
-    display: flex;
-
-    gap: 12px;
-
-    z-index: 2;
-}
-
-.block {
-    display: flex;
-    flex-direction: column;
-
-    gap: 7px;
-}
-
-.block span {
-    display: grid;
-    place-items: center;
-
-    width: 35px;
-    height: 35px;
-
-    border-radius: 5px;
-
-    color: #ffffff;
-
-    font-weight: 900;
-}
-
-.block.orange span {
-    background: #f59e0b;
-}
-
-.block.green span {
-    background: #22c55e;
-}
-
-
-/* =========================================================
-   PLAY BUTTON
-========================================================= */
-
-.video-play,
-.showcase-play {
-    position: absolute;
-
-    left: 50%;
     top: 50%;
+    left: 50%;
 
     transform: translate(-50%, -50%);
 
@@ -1290,17 +2441,16 @@
     display: grid;
     place-items: center;
 
+    border: 4px solid rgba(255, 255, 255, 0.85);
     border-radius: 50%;
 
-    border: 5px solid rgba(255, 255, 255, 0.75);
-
-    background: rgba(15, 23, 42, 0.65);
+    background: rgba(15, 23, 42, 0.68);
 
     color: #ffffff;
 
-    font-size: 26px;
+    font-size: 25px;
 
-    z-index: 5;
+    z-index: 10;
 
     cursor: pointer;
 
@@ -1309,93 +2459,315 @@
         background 0.2s ease;
 }
 
-.video-play:hover,
-.showcase-play:hover {
+.video-play:hover {
     transform: translate(-50%, -50%) scale(1.08);
 
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(15, 23, 42, 0.85);
 }
 
 
-/* =========================================================
-   VIDEO CONTROLS
-========================================================= */
+/* ============================================================
+   HERO VIDEO FEATURE STRIP
+============================================================ */
 
-.video-controls {
-    display: flex;
-    align-items: center;
+.hero-video-features {
+    position: relative;
+    z-index: 4;
 
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
 
-    padding: 9px 12px 2px;
+    width: 92%;
 
-    font-size: 11px;
+    margin: 14px auto 0;
 
-    color: #475569;
-}
+    padding: 13px 15px;
 
-.video-progress {
-    flex: 1;
+    background: #ffffff;
 
-    height: 5px;
-
-    border-radius: 99px;
-
-    background: #dbeafe;
-
-    overflow: hidden;
-}
-
-.video-progress div {
-    width: 30%;
-
-    height: 100%;
-
-    background: #2563eb;
-
-    border-radius: inherit;
-}
-
-
-/* =========================================================
-   HERO FEATURE STRIP
-========================================================= */
-
-.hero-feature-strip {
-    width: calc(100% - 30px);
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    gap: 18px;
-
-    margin-top: 14px;
-
-    padding: 13px;
-
-    background: rgba(255, 255, 255, 0.96);
-
+    border: 1px solid #e2e8f0;
     border-radius: 15px;
 
     box-shadow:
-        0 8px 25px rgba(30, 64, 175, 0.08);
+        0 8px 25px rgba(15, 23, 42, 0.06);
+}
 
+.hero-video-features div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    font-size: 15px;
+}
+
+.hero-video-features div+div {
+    border-left: 1px solid #e2e8f0;
+}
+
+.hero-video-features span {
     color: #334155;
 
-    font-size: 13px;
-
-    font-weight: 800;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.hero-feature-strip i {
-    height: 20px;
-    width: 1px;
 
-    background: #cbd5e1;
+/* ============================================================
+   HERO BACKGROUND DECORATION
+============================================================ */
+
+.hero-section::before {
+    content: "";
+
+    position: absolute;
+
+    width: 430px;
+    height: 430px;
+
+    top: -180px;
+    right: -140px;
+
+    border-radius: 50%;
+
+    background: rgba(219, 234, 254, 0.45);
+
+    filter: blur(10px);
+
+    pointer-events: none;
 }
 
+.hero-section::after {
+    content: "";
+
+    position: absolute;
+
+    width: 300px;
+    height: 300px;
+
+    bottom: -150px;
+    left: -100px;
+
+    border-radius: 50%;
+
+    background: rgba(254, 215, 170, 0.28);
+
+    filter: blur(15px);
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (max-width: 1100px) {
+
+    .hero-grid {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 35px;
+    }
+
+    .hero-content h1 {
+        font-size: 52px;
+    }
+
+    .hero-video-card {
+        max-width: 620px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE / TABLET
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .hero-section {
+        padding: 50px 0 65px;
+    }
+
+    .hero-grid {
+        grid-template-columns: 1fr;
+
+        gap: 40px;
+
+        min-height: auto;
+    }
+
+    .hero-content {
+        max-width: 700px;
+
+        margin: 0 auto;
+
+        padding-left: 0;
+
+        text-align: center;
+    }
+
+    .hero-content h1 {
+        font-size: 52px;
+    }
+
+    .hero-underline {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-course-btn {
+        margin: 0 auto;
+    }
+
+    .hero-rating-card {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-video-card {
+        max-width: 760px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 600px) {
+
+    .hero-section {
+        padding: 38px 0 50px;
+    }
+
+    .hero-grid {
+        gap: 30px;
+    }
+
+    .hero-eyebrow {
+        font-size: 12px;
+
+        padding: 7px 13px;
+    }
+
+    .hero-content h1 {
+        font-size: 40px;
+
+        letter-spacing: -1.7px;
+    }
+
+    .hero-underline {
+        width: 85px;
+        height: 4px;
+
+        margin-top: 20px;
+        margin-bottom: 25px;
+    }
+
+    .hero-course-btn {
+        width: 100%;
+
+        min-height: 50px;
+    }
+
+    .hero-rating-card {
+        width: 100%;
+
+        justify-content: center;
+
+        padding: 12px 14px;
+    }
+
+    .rating-score {
+        font-size: 24px;
+    }
+
+    .rating-content strong {
+        font-size: 12px;
+    }
+
+    .rating-content span {
+        font-size: 10px;
+    }
+
+    .hero-video-card {
+        padding: 7px;
+
+        border-radius: 20px;
+    }
+
+    .hero-video-wrapper {
+        border-radius: 14px;
+
+        aspect-ratio: 16 / 10;
+    }
+
+    .video-play {
+        width: 56px;
+        height: 56px;
+
+        font-size: 20px;
+    }
+
+    .hero-video-features {
+        width: 100%;
+
+        grid-template-columns: 1fr;
+
+        gap: 8px;
+
+        padding: 11px;
+    }
+
+    .hero-video-features div+div {
+        border-left: none;
+
+        border-top: 1px solid #e2e8f0;
+
+        padding-top: 8px;
+    }
+
+    .hero-star-one {
+        left: 5px;
+        top: 35px;
+    }
+
+    .hero-star-two {
+        right: 5px;
+        bottom: 55px;
+    }
+}
+
+
+/* ============================================================
+   SMALL MOBILE
+============================================================ */
+
+@media (max-width: 420px) {
+
+    .hero-content h1 {
+        font-size: 35px;
+    }
+
+    .hero-eyebrow {
+        font-size: 11px;
+    }
+
+    .hero-video-card {
+        padding: 5px;
+    }
+
+    .hero-video-wrapper {
+        border-radius: 11px;
+    }
+
+    .hero-video-features span {
+        font-size: 10px;
+    }
+}
 
 /* =========================================================
    FEATURES
@@ -3079,7 +4451,7 @@ a {
 
     border-radius: 30px;
 
-    background: #eff6ff;
+    background: #2a384b;
 
     border: 1px solid #dbeafe;
 
@@ -5162,7 +6534,7 @@ a {
 .footer-column h3 {
     margin: 0 0 8px;
 
-    color: #172554;
+    color: #0f172a#172554;
 
     font-size: 13px;
     font-weight: 900;
@@ -5771,29 +7143,7 @@ a {
    HERO SECTION - BACKGROUND IMAGE
 ============================================================ */
 
-.hero-section {
-    position: relative;
-    padding: 70px 0 35px;
-    min-height: 680px;
 
-    background-image:
-        linear-gradient(90deg,
-            rgba(248, 251, 255, 0.82) 0%,
-            rgba(248, 251, 255, 0.55) 40%,
-            rgba(248, 251, 255, 0.20) 100%),
-        url("/assets/home/math-learning-bg.png");
-
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-
-    overflow: hidden;
-}
-
-/* Remove old decorative circle */
-.hero-section::before {
-    display: none;
-}
 
 /* Keep content above background */
 .hero-section .home-container {
@@ -5835,7 +7185,7 @@ a {
 ============================================================ */
 
 .site-footer {
-    background: #050505;
+    background: #dad5e4;
     color: #ffffff;
     border-top: 1px solid #171717;
     overflow: hidden;
@@ -5852,7 +7202,7 @@ a {
 }
 
 .footer-trust {
-    background: #050505;
+    background: #251e66;
     border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 
@@ -6004,7 +7354,7 @@ a {
     position: relative;
     width: 100%;
     padding: 65px 30px 25px;
-    background: #282522;
+    background: #0f172a;
     color: #ffffff;
     text-align: center;
     overflow: hidden;
@@ -7310,116 +8660,447 @@ a {
 /* ============================================================
    INTELLIA360 FINAL DESIGN OVERRIDES
 ============================================================ */
+/* ============================================================
+   INTELLIA360 — HERO SECTION
+============================================================ */
 
-/* HERO: dark background + white text + clear right-side image */
 .home-page .hero-section {
     position: relative;
-    min-height: 680px;
-    padding: 65px 0 45px;
+    width: 100%;
+    min-height: 540px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 35px 0 45px;
+
+    background: #f5f9ff !important;
+
     overflow: hidden;
-
-    background-image:
-        linear-gradient(90deg,
-            rgba(5, 20, 45, .90) 0%,
-            rgba(7, 25, 52, .78) 34%,
-            rgba(8, 29, 58, .48) 58%,
-            rgba(8, 29, 58, .18) 82%,
-            rgba(8, 29, 58, .08) 100%),
-        url("/assets/home/hero-dark-bg.png");
-
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
 }
 
+/* Remove old decorative backgrounds */
 .home-page .hero-section::before,
 .home-page .hero-section::after {
     display: none !important;
     content: none !important;
 }
 
+/* ============================================================
+   CONTAINER
+============================================================ */
+
 .home-page .hero-section .home-container {
-    position: relative;
-    z-index: 5;
+    width: min(1120px, calc(100% - 80px));
+    margin: 0 auto;
 }
+
+/* ============================================================
+   HERO GRID
+============================================================ */
 
 .home-page .hero-grid {
     display: grid;
-    grid-template-columns: minmax(390px, .88fr) minmax(520px, 1.12fr);
+
+    grid-template-columns: 1fr 1fr;
+
     align-items: center;
+
     gap: 55px;
-    min-height: 570px;
+
+    width: 100%;
+    min-height: 470px;
 }
+
+/* ============================================================
+   LEFT CONTENT
+============================================================ */
 
 .home-page .hero-content {
     position: relative;
-    z-index: 10;
-    max-width: 650px;
+    z-index: 5;
+
+    width: 100%;
+    max-width: 560px;
+
+    padding: 10px 0;
 }
 
+/* Small label */
 .home-page .hero-eyebrow {
-    color: #ffffff !important;
+    display: inline-flex;
+    align-items: center;
+
+    margin-bottom: 18px;
+    padding: 6px 12px;
+
+    background: #eef6ff;
+
+    border: 1px solid #d7e9ff;
+    border-radius: 999px;
+
+    color: #2563eb !important;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    line-height: 1;
 }
 
 .home-page .hero-eyebrow::after {
-    background: #60a5fa !important;
+    display: none !important;
 }
 
+/* ============================================================
+   HEADING
+============================================================ */
+
 .home-page .hero-content h1 {
-    color: #ffffff !important;
-    font-size: clamp(44px, 5vw, 68px);
-    line-height: 1.03;
-    letter-spacing: -3px;
+    margin: 0;
+
+    color: #101828 !important;
+
+    font-size: clamp(44px, 4.3vw, 62px);
+
+    line-height: 1.05;
+
+    letter-spacing: -2.8px;
+
     font-weight: 900;
 }
 
 .home-page .hero-content h1 span {
-    background: linear-gradient(90deg, #60a5fa, #a78bfa, #c4b5fd) !important;
+    display: inline;
+
+    background: linear-gradient(90deg,
+            #1769ff 0%,
+            #2563eb 45%,
+            #6236e8 100%) !important;
+
     -webkit-background-clip: text !important;
     background-clip: text !important;
+
     color: transparent !important;
 }
 
+/* ============================================================
+   SUB HEADING
+============================================================ */
+
 .home-page .hero-content h2 {
-    color: #ffffff !important;
+    margin: 18px 0 0;
+
+    color: #243b63 !important;
+
+    font-size: 17px;
+
+    line-height: 1.5;
+
+    font-weight: 700;
 }
+
+/* ============================================================
+   DESCRIPTION
+============================================================ */
 
 .home-page .hero-content p {
-    color: rgba(255, 255, 255, .88) !important;
+    max-width: 500px;
+
+    margin: 15px 0 24px;
+
+    color: #53657d !important;
+
+    font-size: 15px;
+
+    line-height: 1.65;
 }
 
+/* ============================================================
+   AUDIENCE
+============================================================ */
+
 .home-page .hero-audience {
-    color: rgba(255, 255, 255, .88) !important;
+    margin-top: 10px;
+
+    color: #53657d !important;
+
+    font-size: 13px;
 }
 
 .home-page .hero-audience b {
-    color: #60a5fa !important;
+    color: #2563eb !important;
 }
 
-/* Remove old white card around the right visual */
-.home-page .hero-visual {
+/* ============================================================
+   BUTTONS
+============================================================ */
+
+.home-page .hero-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 22px;
+}
+
+.home-page .hero-actions a,
+.home-page .hero-actions button {
+    min-height: 46px;
+
+    padding: 0 20px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+
+    font-weight: 750;
+
+    text-decoration: none;
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+/* Primary */
+.home-page .hero-actions .primary,
+.home-page .hero-actions .hero-primary {
+    background: #1769ff !important;
+
+    color: #ffffff !important;
+
+    border: 1px solid #1769ff !important;
+
+    box-shadow:
+        0 8px 20px rgba(23, 105, 255, .18);
+}
+
+.home-page .hero-actions .primary:hover,
+.home-page .hero-actions .hero-primary:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 25px rgba(23, 105, 255, .25);
+}
+
+/* Secondary */
+.home-page .hero-actions .secondary,
+.home-page .hero-actions .hero-secondary {
+    background: #ffffff !important;
+
+    color: #1769ff !important;
+
+    border: 1px solid #bcd8ff !important;
+}
+
+.home-page .hero-actions .secondary:hover,
+.home-page .hero-actions .hero-secondary:hover {
+    background: #f3f8ff !important;
+
+    transform: translateY(-2px);
+}
+
+/* ============================================================
+   RATING
+============================================================ */
+
+.home-page .hero-rating {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    width: fit-content;
+
+    margin-top: 18px;
+
+    padding: 7px 11px;
+
+    background: #ffffff;
+
+    border: 1px solid #e3eaf3;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 4px 14px rgba(15, 23, 42, .05);
+}
+
+.home-page .hero-rating strong {
+    color: #f59e0b;
+
+    font-size: 13px;
+}
+
+.home-page .hero-rating span {
+    color: #fbbf24;
+
+    font-size: 11px;
+
+    letter-spacing: 1px;
+}
+
+.home-page .hero-rating small {
+    color: #64748b;
+
+    font-size: 9px;
+}
+
+/* ============================================================
+   RIGHT VIDEO AREA
+============================================================ */
+
+.home-page .hero-video-area {
     position: relative;
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
     min-width: 0;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 8;
+
+    padding: 0;
 }
 
-.home-page .hero-3d-scene {
+/* ============================================================
+   SQUARE HERO VIDEO CARD
+============================================================ */
+
+.home-page .hero-video-card {
     position: relative;
-    width: 100%;
-    min-height: 520px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+
+    width: min(100%, 500px);
+    aspect-ratio: 1 / 1;
+
+    margin: 0 auto;
     padding: 0;
+
     background: transparent !important;
-    border: 0 !important;
+    border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    overflow: visible;
+
+    overflow: hidden;
+}
+
+/* ============================================================
+   VIDEO — SQUARE + SLIGHT VERTICAL CROP
+============================================================ */
+
+.home-page .mascot-hero-video {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    /*
+      Square container ke andar video fill hoga.
+      Portrait video ka thoda top/bottom crop hoga.
+    */
+    object-fit: cover;
+
+    /*
+      Mascot ko center mein rakhta hai.
+      Agar mascot thoda upar/niche chahiye ho
+      to is value ko change kar sakte ho.
+    */
+    object-position: center center;
+
+    background: transparent;
+
+    border: none !important;
+    outline: none !important;
+
+    cursor: pointer;
+
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* ============================================================
+   DESKTOP
+============================================================ */
+
+@media (min-width: 1200px) {
+
+    .home-page .hero-video-card {
+        width: 500px;
+        height: 500px;
+
+        aspect-ratio: 1 / 1;
+    }
+
+    .home-page .mascot-hero-video {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+        object-position: center 38%;
+    }
+}
+
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .home-page .hero-video-card {
+        width: min(100%, 480px);
+
+        aspect-ratio: 1 / 1;
+    }
+
+    .home-page .mascot-hero-video {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+        object-position: center center;
+    }
+}
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 600px) {
+
+    .home-page .hero-video-card {
+        width: min(100%, 380px);
+
+        aspect-ratio: 1 / 1;
+    }
+
+    .home-page .mascot-hero-video {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+        object-position: center 45%;
+    }
+}
+
+/* ============================================================
+   REMOVE OLD HERO VISUAL STYLES
+============================================================ */
+
+.home-page .hero-visual,
+.home-page .hero-3d-scene {
+    background: transparent !important;
+
+    border: none !important;
+
+    box-shadow: none !important;
 }
 
 .home-page .hero-3d-scene::before,
@@ -7427,180 +9108,145 @@ a {
     display: none !important;
 }
 
-.home-page .hero-3d-image {
-    position: relative;
-    z-index: 10;
-    display: block;
-    width: min(100%, 680px);
-    height: auto;
-    max-height: 520px;
-    object-fit: contain;
-    object-position: center;
-    filter: drop-shadow(0 25px 35px rgba(0, 0, 0, .28));
+/* ============================================================
+   LARGE DESKTOP
+============================================================ */
+
+@media (min-width: 1200px) {
+
+    .home-page .hero-section {
+        min-height: 570px;
+
+        padding: 35px 0 45px;
+    }
+
+    .home-page .hero-section .home-container {
+        width: min(1180px, calc(100% - 100px));
+    }
+
+    .home-page .hero-grid {
+        grid-template-columns: 0.95fr 1.05fr;
+
+        gap: 70px;
+
+        min-height: 500px;
+    }
+
+    .home-page .hero-content h1 {
+        font-size: 62px;
+    }
+
+    .home-page .hero-video-card {
+        width: min(100%, 560px);
+    }
+
+    .home-page .mascot-hero-video {
+        max-height: 520px;
+    }
 }
 
-.home-page .hero-floating-badge,
-.home-page .hero-progress-card {
-    z-index: 20;
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .home-page .hero-section {
+        min-height: auto;
+
+        padding: 50px 0;
+    }
+
+    .home-page .hero-section .home-container {
+        width: min(92%, 720px);
+    }
+
+    .home-page .hero-grid {
+        grid-template-columns: 1fr;
+
+        gap: 35px;
+
+        min-height: auto;
+
+        text-align: center;
+    }
+
+    .home-page .hero-content {
+        max-width: 650px;
+
+        margin: 0 auto;
+    }
+
+    .home-page .hero-content p {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .home-page .hero-actions {
+        justify-content: center;
+    }
+
+    .home-page .hero-rating {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .home-page .hero-video-card {
+        width: min(100%, 540px);
+    }
 }
 
+/* ============================================================
+   MOBILE
+============================================================ */
 
-/* DROPDOWN: clean click-controlled menu */
-.home-page .home-header {
-    position: relative;
-    z-index: 10000;
+@media (max-width: 600px) {
+
+    .home-page .hero-section {
+        padding: 35px 0 45px;
+    }
+
+    .home-page .hero-section .home-container {
+        width: calc(100% - 30px);
+    }
+
+    .home-page .hero-grid {
+        gap: 30px;
+    }
+
+    .home-page .hero-content h1 {
+        font-size: 42px;
+
+        line-height: 1.06;
+
+        letter-spacing: -2px;
+    }
+
+    .home-page .hero-content p {
+        font-size: 14px;
+    }
+
+    .home-page .hero-actions {
+        flex-wrap: wrap;
+    }
+
+    .home-page .hero-actions a,
+    .home-page .hero-actions button {
+        min-height: 44px;
+
+        padding: 0 17px;
+    }
+
+    .home-page .hero-video-card {
+        width: 100%;
+    }
+
+    .home-page .mascot-hero-video {
+        width: 100%;
+
+        max-height: none;
+    }
 }
-
-.home-page .header-main,
-.home-page .header-inner,
-.home-page .desktop-nav {
-    position: relative;
-    z-index: 10001;
-}
-
-.home-page .header-dropdown-trigger {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 14px;
-    border: 1px solid transparent;
-    border-radius: 9px;
-    background: transparent;
-    color: #172033;
-    font-size: 15px;
-    font-weight: 650;
-    cursor: pointer;
-    transition: background .2s ease, color .2s ease, border-color .2s ease;
-}
-
-.home-page .header-dropdown-trigger:hover {
-    background: #f0f7ff;
-    color: #1289e8;
-    border-color: #dbeafe;
-}
-
-.home-page .header-dropdown-trigger.dropdown-trigger-active {
-    background: #e3f2ff;
-    color: #087fd3;
-    border-color: #c7e4fb;
-}
-
-.home-page .dropdown-arrow {
-    width: 16px;
-    height: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transform: none !important;
-}
-
-.home-page .header-mega-dropdown {
-    position: static !important;
-    flex: 0 0 auto;
-}
-
-/* React controls .mega-menu-open */
-.home-page .header-mega-menu {
-    position: absolute !important;
-    top: calc(100% + 1px);
-    left: 50%;
-    width: min(1180px, calc(100vw - 40px));
-    max-width: calc(100vw - 40px);
-    max-height: calc(100vh - 120px);
-    display: grid;
-    padding: 28px 30px 78px;
-    background: #ffffff;
-    border: 1px solid #dbe7f3;
-    border-radius: 0 0 18px 18px;
-    box-shadow: 0 24px 60px rgba(15, 42, 70, .18), 0 5px 18px rgba(37, 99, 235, .07);
-    overflow-x: hidden;
-    overflow-y: auto;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transform: translateX(-50%) translateY(-8px);
-    transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
-    z-index: 99999;
-}
-
-.home-page .header-mega-menu.mega-menu-open {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
-}
-
-.home-page .header-mega-dropdown:hover .header-mega-menu:not(.mega-menu-open) {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-.home-page .math-menu {
-    grid-template-columns: 190px 165px minmax(250px, 1fr) minmax(320px, 1.2fr);
-    gap: 30px;
-}
-
-.home-page .school-menu {
-    grid-template-columns: 220px 270px minmax(380px, 1fr);
-    gap: 32px;
-}
-
-.home-page .mega-column>a:not(.mega-dashboard-btn),
-.home-page .school-menu-left>a:not(.school-start-btn) {
-    display: flex;
-    align-items: center;
-    min-height: 42px;
-    padding: 8px 10px;
-    border-radius: 9px;
-    color: #1f2937;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background .18s ease, color .18s ease, transform .18s ease;
-}
-
-.home-page .mega-column>a:not(.mega-dashboard-btn):hover,
-.home-page .school-menu-left>a:not(.school-start-btn):hover {
-    background: #eff7ff;
-    color: #087fd3;
-    transform: translateX(3px);
-}
-
-.home-page .mega-image-wrap,
-.home-page .school-menu-image-wrap {
-    width: 100%;
-    min-height: 240px;
-    overflow: hidden;
-    border-radius: 14px;
-    background: #f4f8fc;
-}
-
-.home-page .mega-image,
-.home-page .school-menu-image {
-    width: 100%;
-    height: 240px;
-    display: block;
-    object-fit: cover;
-    border-radius: 14px;
-}
-
-.home-page .mega-dashboard-btn,
-.home-page .school-start-btn {
-    border-radius: 8px !important;
-    background: linear-gradient(135deg, #ffb20f, #ff9200) !important;
-    color: #111111 !important;
-    font-weight: 800 !important;
-}
-
-.home-page .nav-dropdown-menu {
-    z-index: 99999;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-}
-
 
 /* HOW INTELLIA360 WORKS — background image */
 .home-page .how-section {
@@ -8332,5 +9978,1172 @@ a {
         padding: 9px 14px;
         gap: 7px;
         font-size: 10px;
+    }
+}
+
+/* ============================================================
+   FINAL HOMEPAGE UI POLISH
+   These overrides intentionally sit at the end so they win over
+   older duplicate homepage rules in this stylesheet.
+============================================================ */
+
+.home-page {
+    background: #ffffff;
+    color: #172554;
+}
+
+.home-page .home-container {
+    width: min(1240px, calc(100% - 48px));
+}
+
+/* ---------------- HEADER ---------------- */
+.home-page .home-header,
+.home-page .header-main {
+    background: #ffffff;
+}
+
+.home-page .header-main {
+    border-bottom: 1px solid #e8eef7;
+}
+
+.home-page .header-inner {
+    min-height: 78px;
+    gap: 28px;
+}
+
+.home-page .home-logo-image {
+    width: 115px;
+    height: 70px;
+}
+
+.home-page .desktop-nav {
+    gap: 10px;
+}
+
+.home-page .header-nav-link,
+.home-page .header-dropdown-trigger {
+    min-height: 42px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.home-page .header-nav-link:hover {
+    color: #2563eb;
+    background: #f5f9ff;
+}
+
+.home-page .header-nav-link.active {
+    color: #2563eb;
+}
+
+.home-page .header-actions {
+    gap: 10px;
+}
+
+.home-page .header-login-btn {
+    min-height: 42px;
+    padding: 0 22px;
+    border-radius: 999px;
+    font-weight: 800;
+}
+
+/* ---------------- DROPDOWNS ---------------- */
+.home-page .header-mega-dropdown {
+    position: static !important;
+    overflow: visible !important;
+}
+
+.home-page .header-mega-menu {
+    top: calc(100% + 2px) !important;
+    width: min(1180px, calc(100vw - 32px)) !important;
+    max-width: calc(100vw - 32px) !important;
+    max-height: calc(100vh - 96px);
+    padding: 28px 30px 32px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border: 1px solid #e3ebf5;
+    border-radius: 0 0 18px 18px;
+    background: #ffffff;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, .14);
+}
+
+.home-page .header-mega-menu.mega-menu-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.home-page .mega-column h4,
+.home-page .school-menu-left h4,
+.home-page .school-menu-description h4 {
+    color: #64748b;
+}
+
+.home-page .mega-column>a:not(.mega-dashboard-btn),
+.home-page .school-menu-left>a:not(.school-start-btn),
+.home-page .school-menu-middle>a {
+    color: #111827 !important;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.home-page .mega-column>a:not(.mega-dashboard-btn):hover,
+.home-page .school-menu-left>a:not(.school-start-btn):hover,
+.home-page .school-menu-middle>a:hover {
+    color: #2563eb !important;
+    background: #f3f8ff;
+}
+
+.home-page .mega-description p,
+.home-page .school-menu-description p {
+    color: #526174;
+    line-height: 1.65;
+    white-space: normal;
+    overflow: visible;
+}
+
+.home-page .mega-image-wrap,
+.home-page .school-menu-image-wrap {
+    height: 225px;
+    min-height: 0;
+}
+
+/* ---------------- HERO ---------------- */
+.home-page .hero-section {
+    min-height: 0;
+    padding: 68px 0 72px;
+    background: #ffffff;
+}
+
+.home-page .hero-grid {
+    grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
+    gap: 58px;
+    min-height: 520px;
+}
+
+.home-page .hero-content {
+    max-width: 610px;
+    padding-left: 0;
+}
+
+.home-page .hero-content h1 {
+    color: #101827;
+    font-size: clamp(48px, 5.1vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -3.5px;
+}
+
+.home-page .hero-content h1 span {
+    background: linear-gradient(90deg, #1769ff 0%, #5b38e8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.home-page .hero-video-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-page .hero-video-card {
+    width: min(100%, 500px);
+    aspect-ratio: 1 / 1;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #edf6ff;
+    box-shadow: 0 24px 55px rgba(37, 99, 235, .12);
+}
+
+.home-page .mascot-hero-video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    border: 0;
+    outline: 0;
+}
+
+/* Hide all old hero overlays that make the video look like a player. */
+.home-page .hero-video-card .video-play,
+.home-page .hero-video-card .hero-video-features,
+.home-page .hero-video-card .hero-floating-badge,
+.home-page .hero-video-card .hero-progress-card {
+    display: none !important;
+}
+
+/* ---------------- WHY INTELLIA360 ---------------- */
+/* ============================================================
+   FEATURES SECTION — BACKGROUND IMAGE
+============================================================ */
+.home-page .features-section {
+    position: relative;
+
+    background-image:
+        linear-gradient(rgba(5, 20, 45, 0.72),
+            rgba(7, 25, 52, 0.78)),
+        url("/assets/home/hero-dark-bg.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    color: #ffffff;
+
+    overflow: hidden;
+}
+
+.home-page .features-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.home-page .feature-item {
+    min-height: 175px;
+    padding: 24px;
+    border-radius: 22px;
+    background: #ffffff;
+}
+
+.home-page .feature-content h3 {
+    font-size: 18px;
+}
+
+/* ---------------- EXPERIENCE INTELLIA360 ---------------- */
+.home-page .experience-section {
+    padding: 96px 0;
+    background: #f8fbff;
+}
+
+.home-page .experience-section .section-heading {
+    margin-bottom: 54px;
+}
+
+/* =========================================================
+   EXPERIENCE INTELLIA360
+   Alternating Content / Video Layout
+========================================================= */
+
+.home-page .experience-list {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.home-page .experience-row {
+    width: 100%;
+    min-height: 430px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 55px;
+
+    padding: 34px;
+    background: #ffffff;
+    border: 1px solid #e5edf7;
+    border-radius: 28px;
+
+    box-shadow:
+        0 12px 35px rgba(30, 64, 175, 0.07);
+
+    overflow: hidden;
+}
+
+/* -----------------------------------------
+   1st & 3rd:
+   CONTENT LEFT | VIDEO RIGHT
+------------------------------------------ */
+
+.home-page .experience-row.content-left .experience-copy {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.home-page .experience-row.content-left .experience-video-card {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+/* -----------------------------------------
+   2nd:
+   VIDEO LEFT | CONTENT RIGHT
+------------------------------------------ */
+
+.home-page .experience-row.video-left .experience-video-card {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.home-page .experience-row.video-left .experience-copy {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.home-page .experience-copy {
+    max-width: 560px;
+}
+
+.home-page .experience-label {
+    display: inline-block;
+    margin-bottom: 14px;
+
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.home-page .experience-copy h3 {
+    margin: 0 0 18px;
+
+    color: #111827;
+    font-size: clamp(30px, 3vw, 44px);
+    line-height: 1.08;
+    font-weight: 850;
+    letter-spacing: -1.5px;
+}
+
+.home-page .experience-copy p {
+    margin: 0 0 22px;
+
+    color: #64748b;
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.home-page .experience-copy ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.home-page .experience-copy li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    color: #334155;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.home-page .experience-copy li span {
+    width: 23px;
+    height: 23px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: #eaf2ff;
+    color: #2563eb;
+
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   VIDEO
+========================================================= */
+
+.home-page .experience-video-card {
+    width: 100%;
+    height: 360px;
+
+    overflow: hidden;
+
+    border-radius: 22px;
+    background: #eef5ff;
+
+    position: relative;
+}
+
+.home-page .experience-video {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+    object-position: center;
+
+    border: 0;
+    outline: none;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+    .home-page .experience-row {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 26px;
+    }
+
+    .home-page .experience-row.content-left .experience-copy,
+    .home-page .experience-row.content-left .experience-video-card,
+    .home-page .experience-row.video-left .experience-copy,
+    .home-page .experience-row.video-left .experience-video-card {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    /* Keep alternating visual order on mobile */
+    .home-page .experience-row.content-left .experience-copy {
+        order: 1;
+    }
+
+    .home-page .experience-row.content-left .experience-video-card {
+        order: 2;
+    }
+
+    .home-page .experience-row.video-left .experience-video-card {
+        order: 1;
+    }
+
+    .home-page .experience-row.video-left .experience-copy {
+        order: 2;
+    }
+
+    .home-page .experience-video-card {
+        height: 330px;
+    }
+
+    .home-page .experience-copy {
+        max-width: 100%;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+    .home-page .experience-row {
+        padding: 20px;
+        border-radius: 20px;
+        gap: 22px;
+    }
+
+    .home-page .experience-copy h3 {
+        font-size: 29px;
+    }
+
+    .home-page .experience-copy p {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .home-page .experience-video-card {
+        height: 270px;
+        border-radius: 18px;
+    }
+}
+
+/* ---------------- BUILT FOR EVERYONE ---------------- */
+.home-page .audience-section {
+    padding: 96px 0;
+    background: #ffffff;
+}
+
+.home-page .audience-heading {
+    margin-bottom: 48px;
+}
+
+.home-page .audience-grid-new {
+    position: static;
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.home-page .audience-grid-new .audience-card-modern {
+    position: relative;
+    inset: auto !important;
+    width: auto;
+    min-height: 345px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #e4ebf4;
+    border-top: 4px solid #2563eb;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .06);
+}
+
+.home-page .audience-grid-new .audience-card-modern:nth-child(2) {
+    border-top-color: #7c3aed;
+}
+
+.home-page .audience-grid-new .audience-card-modern:nth-child(3) {
+    border-top-color: #f97316;
+}
+
+.home-page .audience-grid-new .audience-card-modern:nth-child(4) {
+    border-top-color: #16a34a;
+}
+
+.home-page .audience-grid-new .audience-card-modern:nth-child(5) {
+    border-top-color: #ec4899;
+}
+
+.home-page .audience-modern-icon {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 18px;
+    border-radius: 17px;
+    background: #eff6ff;
+    font-size: 28px;
+}
+
+.home-page .audience-card-modern:nth-child(2) .audience-modern-icon {
+    background: #f3e8ff;
+}
+
+.home-page .audience-card-modern:nth-child(3) .audience-modern-icon {
+    background: #fff3e8;
+}
+
+.home-page .audience-card-modern:nth-child(4) .audience-modern-icon {
+    background: #ecfdf3;
+}
+
+.home-page .audience-card-modern:nth-child(5) .audience-modern-icon {
+    background: #fdf2f8;
+}
+
+.home-page .audience-card-modern .audience-label {
+    margin-bottom: 7px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.home-page .audience-card-modern h2 {
+    margin: 0 0 10px;
+    font-size: 21px;
+}
+
+.home-page .audience-description {
+    margin: 0 0 16px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.home-page .audience-card-modern ul {
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.home-page .audience-card-modern li {
+    align-items: flex-start;
+    font-size: 12px;
+}
+
+.home-page .audience-card-modern .audience-btn {
+    margin-top: auto;
+    align-self: flex-start;
+}
+
+.home-page .audience-grid-new .audience-card-modern:hover {
+    transform: translateY(-6px);
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 1150px) {
+    .home-page .header-inner {
+        gap: 16px;
+    }
+
+    .home-page .desktop-nav {
+        gap: 4px;
+    }
+
+    .home-page .header-nav-link,
+    .home-page .header-dropdown-trigger {
+        font-size: 13px;
+        padding-inline: 8px;
+    }
+
+    .home-page .hero-grid {
+        gap: 36px;
+    }
+
+    .home-page .audience-grid-new {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .home-page .home-container {
+        width: min(100% - 32px, 720px);
+    }
+
+    .home-page .header-inner {
+        min-height: 70px;
+    }
+
+    .home-page .desktop-nav {
+        display: none;
+    }
+
+    .home-page .hero-grid {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .home-page .hero-content {
+        max-width: 720px;
+    }
+
+    .home-page .hero-video-card {
+        width: min(100%, 520px);
+        margin-inline: auto;
+    }
+
+    .home-page .features-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-page .experience-row {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 26px;
+    }
+
+    .home-page .experience-row.video-left .experience-video-card {
+        order: initial;
+    }
+
+    .home-page .audience-grid-new {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .home-page .home-container {
+        width: min(100% - 24px, 520px);
+    }
+
+    .home-page .home-logo-image {
+        width: 125px;
+    }
+
+    .home-page .header-actions {
+        gap: 6px;
+    }
+
+    .home-page .header-login-btn {
+        padding-inline: 16px;
+    }
+
+    .home-page .hero-section {
+        padding: 44px 0 55px;
+    }
+
+    .home-page .hero-content h1 {
+        font-size: clamp(42px, 12vw, 56px);
+        letter-spacing: -2.4px;
+    }
+
+    .home-page .hero-video-card {
+        width: min(100%, 420px);
+        border-radius: 22px;
+    }
+
+    .home-page .features-section,
+    .home-page .experience-section,
+    .home-page .audience-section {
+        padding: 68px 0;
+    }
+
+    .home-page .features-grid,
+    .home-page .audience-grid-new {
+        grid-template-columns: 1fr;
+    }
+
+    .home-page .experience-row {
+        border-radius: 22px;
+        padding: 20px;
+    }
+
+    .home-page .experience-copy h3 {
+        font-size: 30px;
+    }
+
+    .home-page .experience-video-card {
+        aspect-ratio: 16 / 10;
+        border-radius: 18px;
+    }
+}
+
+/* ============================================================
+   HOMEPAGE LIVE LEADERBOARD
+============================================================ */
+
+.homepage-leaderboard-widget {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 100vh;
+    z-index: 99999;
+    pointer-events: none;
+}
+
+.homepage-leaderboard-tab {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+
+    width: 44px;
+    height: 150px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 12px 0 0 12px;
+
+    background: linear-gradient(180deg, #ff9f1c 0%, #ff8500 100%);
+    color: #fff;
+
+    cursor: pointer;
+    pointer-events: auto;
+
+    box-shadow: -5px 8px 24px rgba(245, 130, 0, 0.22);
+    transition: width .22s ease, box-shadow .22s ease;
+}
+
+.homepage-leaderboard-tab:hover,
+.homepage-leaderboard-tab.open {
+    width: 48px;
+    box-shadow: -7px 10px 28px rgba(245, 130, 0, 0.30);
+}
+
+.homepage-leaderboard-tab span {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 850;
+    letter-spacing: 1.2px;
+    white-space: nowrap;
+}
+
+.homepage-leaderboard-drawer {
+    position: absolute;
+    top: 50%;
+    right: 0;
+
+    width: min(390px, calc(100vw - 52px));
+    max-height: min(640px, calc(100vh - 40px));
+
+    display: flex;
+    flex-direction: column;
+
+    background: #fff;
+    border: 1px solid #e7edf5;
+    border-right: 0;
+    border-radius: 20px 0 0 20px;
+
+    box-shadow: -16px 18px 55px rgba(15, 23, 42, .18);
+
+    overflow: hidden;
+
+    transform: translate(105%, -50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+        transform .28s cubic-bezier(.22, 1, .36, 1),
+        opacity .2s ease,
+        visibility .2s ease;
+}
+
+.homepage-leaderboard-drawer.open {
+    transform: translate(0, -50%);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.homepage-leaderboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 20px 20px 16px;
+
+    border-bottom: 1px solid #edf2f7;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.homepage-leaderboard-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.homepage-leaderboard-trophy {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+    background: #fff3df;
+
+    font-size: 23px;
+}
+
+.homepage-leaderboard-eyebrow {
+    display: block;
+    margin-bottom: 3px;
+
+    color: #2563eb;
+    font-size: 9px;
+    font-weight: 850;
+    letter-spacing: .13em;
+}
+
+.homepage-leaderboard-header h3 {
+    margin: 0;
+
+    color: #18243a;
+    font-size: 19px;
+    line-height: 1.15;
+    font-weight: 850;
+    letter-spacing: .02em;
+}
+
+.homepage-leaderboard-close {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f1f5f9;
+    color: #475569;
+
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+
+    transition: background .18s ease, color .18s ease;
+}
+
+.homepage-leaderboard-close:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.homepage-leaderboard-list {
+    min-height: 0;
+    padding: 10px 12px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.homepage-leaderboard-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.homepage-leaderboard-list::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background: #cbd5e1;
+}
+
+.homepage-leaderboard-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+
+    min-height: 62px;
+    margin-bottom: 8px;
+    padding: 8px 8px;
+
+    border: 1px solid #edf2f7;
+    border-left: 3px solid #dbe7f3;
+    border-radius: 12px;
+
+    background: #fff;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+}
+
+.homepage-leaderboard-row:hover {
+    transform: translateX(-2px);
+    border-color: #d7e5f5;
+    box-shadow: 0 7px 20px rgba(30, 64, 175, .08);
+}
+
+.homepage-leaderboard-row.rank-first {
+    border-left-color: #f59e0b;
+    background: linear-gradient(90deg, #fffaf0, #fff);
+}
+
+.homepage-leaderboard-row.rank-second {
+    border-left-color: #3b82f6;
+}
+
+.homepage-leaderboard-row.rank-third {
+    border-left-color: #64748b;
+}
+
+.homepage-leaderboard-rank {
+    text-align: center;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.homepage-leaderboard-row.rank-first .homepage-leaderboard-rank {
+    font-size: 21px;
+}
+
+.homepage-leaderboard-row.rank-second .homepage-leaderboard-rank,
+.homepage-leaderboard-row.rank-third .homepage-leaderboard-rank {
+    font-size: 19px;
+}
+
+.homepage-leaderboard-student {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.homepage-leaderboard-avatar,
+.homepage-leaderboard-avatar-fallback {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+
+    border-radius: 50%;
+}
+
+.homepage-leaderboard-avatar {
+    display: block;
+    object-fit: cover;
+    background: #eef4fb;
+}
+
+.homepage-leaderboard-avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f1ff;
+    color: #2563eb;
+
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.homepage-leaderboard-name-wrap {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.homepage-leaderboard-name {
+    min-width: 0;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #19304e;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.homepage-leaderboard-you {
+    flex: 0 0 auto;
+
+    padding: 2px 5px;
+    border-radius: 5px;
+
+    background: #dbeafe;
+    color: #2563eb;
+
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: .04em;
+}
+
+.homepage-leaderboard-xp {
+    flex: 0 0 auto;
+
+    padding: 7px 9px;
+    border-radius: 9px;
+
+    background: #eef5ff;
+    color: #2563eb;
+
+    font-size: 11px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.rank-first .homepage-leaderboard-xp {
+    background: #fff0d4;
+    color: #d97706;
+}
+
+.homepage-leaderboard-state {
+    min-height: 180px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    color: #64748b;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.homepage-leaderboard-state-icon {
+    font-size: 30px;
+}
+
+.homepage-leaderboard-spinner {
+    width: 25px;
+    height: 25px;
+
+    border: 3px solid #dbeafe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+
+    animation: homepageLeaderboardSpin .75s linear infinite;
+}
+
+@keyframes homepageLeaderboardSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.homepage-view-leaderboard {
+    margin: 4px 16px 16px;
+    padding: 12px 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border-radius: 11px;
+
+    background: #2563eb;
+    color: #fff;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.homepage-view-leaderboard:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .22);
+}
+
+@media (max-width: 600px) {
+    .homepage-leaderboard-tab {
+        width: 40px;
+        height: 132px;
+    }
+
+    .homepage-leaderboard-tab:hover,
+    .homepage-leaderboard-tab.open {
+        width: 42px;
+    }
+
+    .homepage-leaderboard-drawer {
+        width: min(350px, calc(100vw - 46px));
+        max-height: calc(100vh - 24px);
+    }
+
+    .homepage-leaderboard-header {
+        padding: 16px 16px 13px;
+    }
+
+    .homepage-leaderboard-row {
+        grid-template-columns: 36px minmax(0, 1fr) auto;
+        min-height: 58px;
+    }
+
+    .homepage-leaderboard-avatar,
+    .homepage-leaderboard-avatar-fallback {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    .homepage-leaderboard-name {
+        font-size: 12px;
     }
 }
