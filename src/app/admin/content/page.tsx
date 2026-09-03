@@ -105,6 +105,13 @@ export default function AdminContentPage() {
   useEffect(() => { loadContent(); }, []);
 
   const [showModal, setShowModal] = useState(false);
+
+  // Quick Action links arrive as /admin/content?new=1 and open this page's own add-resource modal.
+  useEffect(() => {
+    // One-time deep-link handoff on mount, not a render-driven update.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (new URLSearchParams(window.location.search).get("new") === "1") setShowModal(true);
+  }, []);
   const [previewCategory, setPreviewCategory] = useState<ContentCategory | null>(null);
 
   const [formData, setFormData] = useState({

@@ -172,6 +172,13 @@ export default function AdminSchoolsPage() {
 
   useEffect(() => { loadSchools(); }, []);
 
+  // Quick Action links arrive as /admin/schools?new=1 and open this page's own onboard modal.
+  useEffect(() => {
+    // One-time deep-link handoff on mount, not a render-driven update.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (new URLSearchParams(window.location.search).get("new") === "1") setShowOnboardModal(true);
+  }, []);
+
   /* =========================================
      Dynamic School Statistics
   ========================================= */

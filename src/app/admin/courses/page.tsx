@@ -175,6 +175,13 @@ export default function AdminCoursesPage() {
 
   useEffect(() => { loadCourses(); }, []);
 
+  // Quick Action links arrive as /admin/courses?new=1 and open this page's own create modal.
+  useEffect(() => {
+    // One-time deep-link handoff on mount, not a render-driven update.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (new URLSearchParams(window.location.search).get("new") === "1") setShowCreateModal(true);
+  }, []);
+
   /* =========================================
      Dynamic Course Statistics
   ========================================= */

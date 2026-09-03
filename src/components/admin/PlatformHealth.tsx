@@ -2,80 +2,92 @@
 
 import React from "react";
 import Link from "next/link";
-import { useAdminDashboardData } from "@/data/admin/useAdminDashboardData";
-import { computeHealthSummary } from "@/data/admin/dashboard";
-import { ArrowRight, ShieldCheck } from "@/components/admin/icons";
+import type { AdminHealthItem } from "@/data/admin/useAdminDashboard";
+import { ArrowRight, CheckCircle2, AlertTriangle, HelpCircle } from "@/components/admin/icons";
 
-export default function PlatformHealth() {
-  const { platformHealth } = useAdminDashboardData();
-  const { percentage: healthPercentage, status: healthStatus } =
-    computeHealthSummary(platformHealth);
+interface PlatformHealthProps {
+  health: AdminHealthItem[];
+}
+
+const statusMeta: Record<
+  AdminHealthItem["status"],
+  { Icon: React.ComponentType<{ className?: string }>; tone: string }
+> = {
+  Operational: { Icon: CheckCircle2, tone: "ok" },
+  Degraded: { Icon: AlertTriangle, tone: "warn" },
+  "Not configured": { Icon: HelpCircle, tone: "muted" },
+};
+
+export default function PlatformHealth({ health }: PlatformHealthProps) {
+  const operational = health.filter((item) => item.status === "Operational").length;
+  const allGood = health.length > 0 && operational === health.length;
+  const degraded = health.some((item) => item.status === "Degraded");
 
   return (
-    <div className="admin-card">
-      <div className="admin-card-header mb-3">
-        <h3 className="admin-card-title">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 inline" /> System Health
-        </h3>
+    <section className="admin-card admin-health-card">
+      <header className="admin-card-header">
+        <h3 className="admin-card-title">System Health</h3>
         <Link href="/admin/settings" className="admin-link-action">
           Manage <ArrowRight className="w-3.5 h-3.5" />
         </Link>
-      </div>
+      </header>
 
-      {/* Top compact dashboard gauge */}
-      <div className="flex items-center gap-3 bg-emerald-50/50 border border-emerald-100/40 p-2.5 rounded-xl mb-3">
-        <div className="relative w-11 h-11 shrink-0 flex items-center justify-center">
-          <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-            <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#d1fae5" strokeWidth="4" />
-            <circle
-              cx="18"
-              cy="18"
-              r="15.9155"
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="4"
-              strokeDasharray={`${healthPercentage} ${100 - healthPercentage}`}
-              strokeLinecap="round"
+      <div className={`admin-health-hero${degraded ? " is-warn" : ""}`}>
+        <span className="admin-health-shield" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path
+              d="M24 4 8 10v12c0 10 6.8 19.2 16 22 9.2-2.8 16-12 16-22V10L24 4Z"
+              fill="url(#healthShield)"
             />
+            <path
+              d="m17 24 5 5 10-10"
+              stroke="#fff"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <defs>
+              <linearGradient id="healthShield" x1="8" y1="4" x2="40" y2="44">
+                <stop stopColor="#8b7cff" />
+                <stop offset="1" stopColor="#5b4bdb" />
+              </linearGradient>
+            </defs>
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-slate-800">
-            {healthPercentage}%
-          </div>
-        </div>
+        </span>
+
         <div>
-          <h4 className="text-xs font-extrabold text-slate-800 leading-tight">System Status</h4>
-          <p className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0"></span>
-            {healthStatus === "Operational" ? "All Systems Operational" : healthStatus}
-          </p>
+          <strong className="admin-health-count">
+            {operational}/{health.length}
+          </strong>
+          <span className="admin-health-caption">services operational</span>
         </div>
       </div>
 
-      {/* Bottom compact 2x2 grid of service states */}
-      <div className="grid grid-cols-2 gap-2">
-        {platformHealth.map((item) => {
-          const statusStyle =
-            item.status === "Operational"
-              ? "text-emerald-600 bg-emerald-50 border-emerald-100"
-              : item.status === "Degraded"
-                ? "text-amber-600 bg-amber-50 border-amber-100"
-                : item.status === "Maintenance"
-                  ? "text-blue-600 bg-blue-50 border-blue-100"
-                  : "text-slate-500 bg-slate-100 border-slate-200";
-
+      <ul className="admin-health-list">
+        {health.map((item) => {
+          const { Icon, tone } = statusMeta[item.status];
           return (
-            <div key={item.id} className="flex flex-col gap-1.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100/60">
-              <div className="text-[10px] font-bold text-slate-500 truncate">{item.name}</div>
-              <span className="text-[9px] font-bold text-slate-400">
-                {item.status === "Checking" ? "—" : `${item.ping}ms ping`}
+            <li key={item.id} className="admin-health-row">
+              <span className={`admin-health-icon tone-${tone}`}>
+                <Icon className="w-4 h-4" />
               </span>
-              <span className={`self-start text-[9px] font-extrabold border px-1.5 py-0.5 rounded-full ${statusStyle}`}>
-                {item.status}
+              <span className="admin-health-name">
+                {item.name}
+                <span className="admin-health-detail">{item.detail}</span>
               </span>
-            </div>
+              <span className={`admin-health-status tone-${tone}`}>{item.status}</span>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ul>
+
+      <p className="admin-health-footnote">
+        {allGood
+          ? "All configured systems are running smoothly."
+          : degraded
+            ? "One or more services need attention."
+            : "Some integrations have no provider configured yet."}
+      </p>
+    </section>
   );
 }
