@@ -50,3 +50,18 @@ export function countLessonsByGrade(): Record<string, number> {
 
   return counts;
 }
+
+/**
+ * Real size of the daily-quiz question bank shipped with the app.
+ * Same filesystem-backed content store the lesson counts come from.
+ */
+export function countQuestionBank(): number {
+  try {
+    const file = path.join(process.cwd(), "src", "data", "daily-questions.json");
+    if (!fs.existsSync(file)) return 0;
+    const parsed: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}

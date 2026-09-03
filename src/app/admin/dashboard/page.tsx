@@ -1,138 +1,185 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import AdminHero from "@/components/admin/AdminHero";
 import KPICard from "@/components/admin/KPICard";
-import ChartCard from "@/components/admin/ChartCard";
-import Leaderboard from "@/components/admin/Leaderboard";
+import LearningOverviewCard from "@/components/admin/LearningOverviewCard";
 import ActivityCard from "@/components/admin/ActivityCard";
-import QuickActionCard from "@/components/admin/QuickActionCard";
 import PlatformHealth from "@/components/admin/PlatformHealth";
-import NotificationCard from "@/components/admin/NotificationCard";
-import { useAdminDashboardData } from "@/data/admin/useAdminDashboardData";
+import TopCoursesCard from "@/components/admin/TopCoursesCard";
+import UserDistributionCard from "@/components/admin/UserDistributionCard";
+import QuickActionCard from "@/components/admin/QuickActionCard";
+import { useAuth } from "@/context/AuthContext";
+import { useAdminDashboard, RANGE_OPTIONS, RangeKey } from "@/data/admin/useAdminDashboard";
+import {
+  Calendar,
+  ChevronDown,
+  Download,
+  RefreshCw,
+  AlertTriangle,
+} from "@/components/admin/icons";
+
+function DashboardSkeleton() {
+  return (
+    <div className="admin-dashboard-skeleton" aria-hidden="true">
+      <div className="admin-skeleton-grid">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="admin-skeleton admin-skeleton-kpi" />
+        ))}
+      </div>
+      <div className="admin-skeleton-row">
+        <div className="admin-skeleton admin-skeleton-chart" />
+        <div className="admin-skeleton admin-skeleton-panel" />
+        <div className="admin-skeleton admin-skeleton-panel" />
+      </div>
+      <div className="admin-skeleton-row">
+        <div className="admin-skeleton admin-skeleton-panel" />
+        <div className="admin-skeleton admin-skeleton-panel" />
+        <div className="admin-skeleton admin-skeleton-panel" />
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
-  const { kpiStats } = useAdminDashboardData();
+  const { user } = useAuth();
+  const { data, range, setRange, isLoading, isRefreshing, error, refresh } = useAdminDashboard();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const adminName = user?.name?.trim() || "Admin";
+
+  /** Reuses the existing ADMIN-only CSV export endpoint. */
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+
+    try {
+      const res = await fetch("/api/admin/reports/export?type=all");
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `intellia360-admin-report-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.alert("Could not generate the report. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <AdminLayout>
-      <main className="admin-dashboard-page">
+      <div className="admin-dashboard-page">
+        {/* ── Page header ──────────────────────────────────────────────── */}
+        <header className="admin-page-head">
+          <div>
+            <h1 className="admin-welcome-title">Welcome back, {adminName}! 👋</h1>
+            <p className="admin-welcome-sub">
+              Here&apos;s what&apos;s happening on Intellia360 today.
+            </p>
+          </div>
 
-        {/* =====================================================
-            HERO
-        ====================================================== */}
+          <div className="admin-page-head-actions">
+            <div className="admin-range-picker">
+              <Calendar className="w-4 h-4" />
+              <select
+                value={range}
+                onChange={(e) => setRange(e.target.value as RangeKey)}
+                aria-label="Reporting period"
+                disabled={isLoading}
+              >
+                {RANGE_OPTIONS.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4" />
+            </div>
 
-        <section className="admin-dashboard-hero-section">
-          <AdminHero />
-        </section>
+            <button
+              type="button"
+              className="admin-icon-btn"
+              onClick={refresh}
+              disabled={isLoading || isRefreshing}
+              title="Refresh dashboard"
+              aria-label="Refresh dashboard"
+            >
+              <RefreshCw className={`w-4 h-4${isRefreshing ? " is-spinning" : ""}`} />
+            </button>
 
-        {/* =====================================================
-            PLATFORM OVERVIEW + KPI
-        ====================================================== */}
+            <button
+              type="button"
+              className="admin-primary-button"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? "Preparing…" : "Export Report"}
+            </button>
+          </div>
+        </header>
 
-        <section className="admin-dashboard-section admin-overview-section">
-          <div className="admin-section-heading compact">
+        {data && (
+          <p className="admin-range-caption">
+            Showing <strong>{data.range.label}</strong> · compared with {data.range.previousLabel}
+          </p>
+        )}
+
+        {/* ── Error ────────────────────────────────────────────────────── */}
+        {error && (
+          <div className="admin-error-banner" role="alert">
+            <AlertTriangle className="w-5 h-5" />
             <div>
-              <h2>Platform Overview</h2>
-              <p>
-                Monitor schools, teachers, students and platform activity.
-              </p>
+              <strong>Couldn&apos;t load the dashboard</strong>
+              <span>{error}</span>
             </div>
+            <button type="button" className="admin-secondary-button" onClick={refresh}>
+              Try again
+            </button>
           </div>
+        )}
 
-          <div className="admin-stats-grid admin-dashboard-kpi-grid">
-            {kpiStats.map((stat) => (
-              <KPICard
-                key={stat.id}
-                stat={stat}
+        {/* ── Content ──────────────────────────────────────────────────── */}
+        {isLoading && !data ? (
+          <DashboardSkeleton />
+        ) : data ? (
+          <div className={`admin-dashboard-body${isRefreshing ? " is-refreshing" : ""}`}>
+            <section className="admin-kpi-grid" aria-label="Platform key metrics">
+              {data.kpis.map((kpi) => (
+                <KPICard key={kpi.id} kpi={kpi} comparisonLabel={data.range.previousLabel} />
+              ))}
+            </section>
+
+            <section className="admin-dashboard-row primary-row">
+              <LearningOverviewCard
+                series={data.series}
+                tiles={data.overviewTiles}
+                range={range}
+                onRangeChange={setRange}
+                isRefreshing={isRefreshing}
               />
-            ))}
-          </div>
-        </section>
+              <ActivityCard activity={data.activity} />
+              <PlatformHealth health={data.health} />
+            </section>
 
-        {/* =====================================================
-            PLATFORM ANALYTICS
-        ====================================================== */}
-
-        <section className="admin-dashboard-section admin-analytics-section">
-          <div className="admin-section-heading compact">
-            <div>
-              <h2>Platform Analytics</h2>
-              <p>
-                Track platform growth and user distribution.
-              </p>
-            </div>
-          </div>
-
-          <div className="admin-dashboard-analytics-grid">
-
-            {/* Platform Growth */}
-            <div className="admin-dashboard-analytics-card growth-card">
-              <ChartCard
-                type="growth"
-                title="Platform Growth"
+            <section className="admin-dashboard-row secondary-row">
+              <TopCoursesCard courses={data.topCourses} />
+              <UserDistributionCard
+                total={data.distribution.total}
+                slices={data.distribution.slices}
               />
-            </div>
-
-            {/* User Distribution */}
-            <div className="admin-dashboard-analytics-card distribution-card">
-              <ChartCard
-                type="distribution"
-                title="User Distribution"
-              />
-            </div>
-
-            {/* Platform Health */}
-            <div className="admin-dashboard-analytics-card health-card">
-              <PlatformHealth />
-            </div>
-
-          </div>
-        </section>
-
-        {/* =====================================================
-            PLATFORM ACTIVITY
-        ====================================================== */}
-
-        <section className="admin-dashboard-section admin-activity-section">
-
-          <div className="admin-section-heading compact">
-            <div>
-              <h2>Platform Activity</h2>
-              <p>
-                Recent activities, quick actions and important updates.
-              </p>
-            </div>
-          </div>
-
-          <div className="admin-dashboard-activity-grid">
-
-            {/* Top Performing Schools */}
-            <div className="admin-dashboard-bottom-card">
-              <Leaderboard />
-            </div>
-
-            {/* Recent Activity */}
-            <div className="admin-dashboard-bottom-card">
-              <ActivityCard />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="admin-dashboard-bottom-card quick-actions-card">
               <QuickActionCard />
-            </div>
-
+            </section>
           </div>
-
-          {/* Notifications - compact secondary row */}
-          <div className="admin-dashboard-notification-row">
-            <NotificationCard />
-          </div>
-
-        </section>
-
-      </main>
+        ) : null}
+      </div>
     </AdminLayout>
   );
 }

@@ -61,26 +61,26 @@ export default function ReusableTable<T extends { id: string }>({
   return (
     <div className="admin-card">
       {/* Table Header Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
-        <div>
-          <h3 className="text-lg font-extrabold text-slate-900">{title}</h3>
-          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+      <div className="admin-table-toolbar">
+        <div className="admin-table-heading">
+          <h3 className="admin-card-title">{title}</h3>
+          {subtitle && <p className="admin-card-subtitle">{subtitle}</p>}
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="admin-table-controls">
+          <div className="admin-table-search">
+            <Search className="admin-table-search-icon" />
             <input
               type="text"
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 outline-none focus:border-orange-500"
+              className="table-search-input"
             />
           </div>
 
           {primaryActionLabel && (
-            <button onClick={onPrimaryAction} className="admin-btn-primary text-xs py-2 px-3 shrink-0">
+            <button onClick={onPrimaryAction} className="admin-btn-primary">
               + {primaryActionLabel}
             </button>
           )}
@@ -95,13 +95,13 @@ export default function ReusableTable<T extends { id: string }>({
               {columns.map((col, idx) => (
                 <th key={idx}>{col.header}</th>
               ))}
-              <th className="w-10"></th>
+              <th className="admin-table-actions-col"></th>
             </tr>
           </thead>
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="text-center py-8 text-slate-400 text-xs font-semibold">
+                <td colSpan={columns.length + 1} className="admin-table-empty">
                   No records match your search query.
                 </td>
               </tr>
@@ -121,7 +121,7 @@ export default function ReusableTable<T extends { id: string }>({
                     {rowActions && rowActions.length > 0 ? (
                       <>
                         <button
-                          className="text-slate-400 hover:text-slate-600 p-1"
+                          className="admin-table-row-btn"
                           onClick={() => setOpenMenuId((prev) => (prev === row.id ? null : row.id))}
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -157,7 +157,7 @@ export default function ReusableTable<T extends { id: string }>({
                         )}
                       </>
                     ) : (
-                      <button className="text-slate-400 hover:text-slate-600 p-1">
+                      <button className="admin-table-row-btn">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     )}
@@ -170,29 +170,29 @@ export default function ReusableTable<T extends { id: string }>({
       </div>
 
       {/* Table Pagination Controls */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-500">
+      <div className="admin-table-pagination">
         <span>
           {filteredData.length === 0
             ? "No entries"
             : `Showing ${pageStart + 1} to ${Math.min(pageStart + ROWS_PER_PAGE, filteredData.length)} of ${filteredData.length} entries`}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="admin-table-pager">
           <button
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage <= 1}
-            className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="admin-table-page-btn"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="px-2 font-bold text-slate-900">
+          <span className="admin-table-page-count">
             {currentPage} / {totalPages}
           </span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage >= totalPages}
-            className="p-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="admin-table-page-btn"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
