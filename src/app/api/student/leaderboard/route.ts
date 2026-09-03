@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireStudentSession } from "@/lib/student/require-student-session";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
@@ -33,84 +32,161 @@ export interface LeaderboardResponse {
   currentUserStats: CurrentUserStats | null;
 }
 
-// GET /api/student/leaderboard?grade=grade1&limit=50
+/**
+ * PUBLIC LEADERBOARD
+ *
+ * Login is NOT required.
+ *
+ * Example:
+ * GET /api/student/leaderboard
+ * GET /api/student/leaderboard?limit=6
+ * GET /api/student/leaderboard?grade=grade1&limit=6
+ */
 export async function GET(request: NextRequest) {
   try {
-    const { session, errorResponse } = await requireStudentSession();
-    if (errorResponse) return errorResponse;
-
     const { searchParams } = new URL(request.url);
-    const grade = searchParams.get("grade") ?? undefined;
-    const limitParam = parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10);
-    const limit = isNaN(limitParam)
-      ? DEFAULT_LIMIT
-      : Math.min(Math.max(1, limitParam), MAX_LIMIT);
 
-    // Fetch all student profiles for ranking from real database
+    // Optional grade filter
+    const grade = searchParams.get("grade") ?? undefined;
+
+    // Limit
+    const limitParam = parseInt(
+      searchParams.get("limit") ?? String(DEFAULT_LIMIT),
+      10
+    );
+
+    const limit = Number.isNaN(limitParam)
+      ? DEFAULT_LIMIT
+      : Math.min(
+        Math.max(1, limitParam),
+        MAX_LIMIT
+      );
+
+    /**
+     * ---------------------------------------------------------
+     * FETCH STUDENTS FROM DATABASE
+     * ---------------------------------------------------------
+     *
+     * IMPORTANT:
+     * There is NO requireStudentSession() here.
+     *
+     * Therefore this API can be accessed even when the user
+     * is not logged in.
+     */
+
     const profiles = await db.studentProfile.findMany({
       where: {
         ...(grade ? { grade } : {}),
-        user: { role: "STUDENT" },
+
+        user: {
+          role: "STUDENT",
+        },
       },
+
       include: {
-        user: { select: { id: true, name: true, role: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+          },
+        },
       },
+
+      /**
+       * Highest XP first.
+       * Learning gems are used as a secondary tie-breaker.
+       */
       orderBy: [
-        { xpPoints: "desc" },
-        { learningGems: "desc" }, // real secondary tiebreaker
+        {
+          xpPoints: "desc",
+        },
+        {
+          learningGems: "desc",
+        },
       ],
     });
 
+    /**
+     * Total students matching the filter
+     */
     const total = profiles.length;
 
-    // Find the current user's rank from real database records
-    const currentUserProfile = profiles.find((p) => p.userId === session.userId);
-    const currentUserRankIndex = profiles.findIndex((p) => p.userId === session.userId);
-    const currentUserRank = currentUserRankIndex >= 0 ? currentUserRankIndex + 1 : null;
-
-    const currentUserStats: CurrentUserStats | null = currentUserProfile
-      ? {
-          rank: currentUserRank,
-          xpPoints: currentUserProfile.xpPoints,
-          streakDays: currentUserProfile.streakDays,
-          learningGems: currentUserProfile.learningGems,
-          grade: currentUserProfile.grade,
-        }
-      : null;
+    /**
+     * ---------------------------------------------------------
+     * CREATE LEADERBOARD ENTRIES
+     * ---------------------------------------------------------
+     */
 
     const entries: LeaderboardEntry[] = profiles
       .slice(0, limit)
-      .map((p, index) => ({
-        rank: index + 1,
-        userId: p.userId,
-        name: p.user.name,
-        avatar: p.avatar,
-        grade: p.grade,
-        xpPoints: p.xpPoints,
-        learningGems: p.learningGems,
-        streakDays: p.streakDays,
-        isCurrentUser: p.userId === session.userId,
-      }));
+      .map((profile, index) => {
+        return {
+          rank: index + 1,
+
+          userId: profile.userId,
+
+          name: profile.user.name,
+
+          avatar: profile.avatar,
+
+          grade: profile.grade,
+
+          xpPoints: profile.xpPoints,
+
+          learningGems: profile.learningGems,
+
+          streakDays: profile.streakDays,
+
+          /**
+           * Since this is a PUBLIC endpoint and there is no
+           * required login/session, we don't mark a current user.
+           */
+          isCurrentUser: false,
+        };
+      });
+
+    /**
+     * ---------------------------------------------------------
+     * RESPONSE
+     * ---------------------------------------------------------
+     */
 
     return NextResponse.json<AuthResponse<LeaderboardResponse>>(
       {
         success: true,
+
         message: "OK",
+
         data: {
           entries,
+
           total,
-          currentUserRank,
-          currentUserStats,
+
+          currentUserRank: null,
+
+          currentUserStats: null,
         },
       },
-      { status: 200 }
+      {
+        status: 200,
+      }
     );
   } catch (error) {
-    console.error("[student/leaderboard]", error);
+    console.error(
+      "[student/leaderboard] Error:",
+      error
+    );
+
     return NextResponse.json<AuthResponse>(
-      { success: false, message: "An unexpected error occurred" },
-      { status: 500 }
+      {
+        success: false,
+
+        message: "An unexpected error occurred",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
-

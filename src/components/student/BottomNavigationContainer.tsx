@@ -12,57 +12,158 @@ export default function BottomNavigationContainer({
   onPrevious,
   onNext,
 }: BottomNavigationContainerProps) {
-  const { activeLessonId, curriculum } = useStudentContext();
+  const { activeLessonId, curriculum, completedLessons } =
+    useStudentContext();
 
-  const allTopics = curriculum ? curriculum.chapters.flatMap((c) => c.topics) : [];
-  const currentIndex = allTopics.findIndex((t) => t.id === activeLessonId);
+  const allTopics = curriculum
+    ? curriculum.chapters.flatMap((chapter) => chapter.topics)
+    : [];
 
-  const prevTopic = currentIndex > 0 ? allTopics[currentIndex - 1] : null;
-  const nextTopic = currentIndex >= 0 && currentIndex < allTopics.length - 1 ? allTopics[currentIndex + 1] : null;
+  const currentIndex = allTopics.findIndex(
+    (topic) => topic.id === activeLessonId
+  );
+
+  const prevTopic =
+    currentIndex > 0 ? allTopics[currentIndex - 1] : null;
+
+  const nextTopic =
+    currentIndex >= 0 &&
+      currentIndex < allTopics.length - 1
+      ? allTopics[currentIndex + 1]
+      : null;
+
+  const completedCount = allTopics.filter((topic) =>
+    completedLessons.includes(topic.id)
+  ).length;
+
+  const totalCount = allTopics.length;
+
+  const progress =
+    totalCount > 0
+      ? Math.round((completedCount / totalCount) * 100)
+      : 0;
+
+  const currentNumber =
+    currentIndex >= 0 ? currentIndex + 1 : 1;
 
   return (
     <nav className="bottom-navigation-container">
-      <div 
-        className="nav-prev-card"
+      {/* ==================================================
+          PREVIOUS QUEST
+          ================================================== */}
+
+      <div
+        className={`quest-nav-card quest-prev ${!prevTopic ? "quest-disabled" : ""
+          }`}
         onClick={prevTopic ? onPrevious : undefined}
-        style={{ cursor: prevTopic ? "pointer" : "default", opacity: prevTopic ? 1 : 0.5 }}
       >
         <button
-          className="nav-circle-btn"
+          className="quest-nav-button"
           onClick={onPrevious}
           disabled={!prevTopic}
+          aria-label="Previous lesson"
         >
-          ←
+          <span className="quest-arrow">←</span>
         </button>
-        <div className="nav-text-group">
-          <span className="nav-label">Previous</span>
-          <span className="nav-topic-title">{prevTopic ? prevTopic.title : "Start of Chapter"}</span>
+
+        <div className="quest-nav-info">
+          <span className="quest-nav-label">
+            ← BACK QUEST
+          </span>
+
+          <span className="quest-nav-title">
+            {prevTopic
+              ? prevTopic.title
+              : "Start of Adventure"}
+          </span>
         </div>
       </div>
 
-      <div className="quest-path-milestones">
-        <span className="milestone-icon">🌱</span>
-        <div className="milestone-line" />
-        <span className="milestone-icon active">⭐</span>
-        <div className="milestone-line dashed" />
-        <span className="milestone-icon locked">🔒</span>
+      {/* ==================================================
+          CENTER QUEST PROGRESS
+          ================================================== */}
+
+      <div className="quest-progress-center">
+        {/* Top reward */}
+
+        <div className="quest-progress-reward">
+          <span className="quest-trophy">🏆</span>
+
+          <span>
+            {completedCount} / {totalCount} Quests
+          </span>
+        </div>
+
+        {/* Quest path */}
+
+        <div className="quest-path">
+          <span className="quest-path-dot completed">
+            ✓
+          </span>
+
+          <span className="quest-path-line">
+            <span
+              className="quest-path-fill"
+              style={{
+                width: `${progress}%`,
+              }}
+            />
+          </span>
+
+          <span className="quest-path-dot current">
+            ⭐
+          </span>
+
+          <span className="quest-path-line dashed">
+            <span />
+          </span>
+
+          <span className="quest-path-dot locked">
+            🔒
+          </span>
+        </div>
+
+        {/* Current position */}
+
+        <div className="quest-progress-text">
+          <span className="quest-progress-number">
+            Quest {currentNumber}
+          </span>
+
+          <span className="quest-progress-percent">
+            {progress}% Complete
+          </span>
+        </div>
       </div>
 
-      <div 
-        className="nav-next-card"
+      {/* ==================================================
+          NEXT QUEST
+          ================================================== */}
+
+      <div
+        className={`quest-nav-card quest-next ${!nextTopic ? "quest-disabled" : ""
+          }`}
         onClick={nextTopic ? onNext : undefined}
-        style={{ cursor: nextTopic ? "pointer" : "default", opacity: nextTopic ? 1 : 0.5 }}
       >
-        <div className="nav-text-group text-right">
-          <span className="nav-label">Next Up</span>
-          <span className="nav-topic-title">{nextTopic ? nextTopic.title : "Chapter Complete"}</span>
+        <div className="quest-nav-info next-info">
+          <span className="quest-nav-label">
+            NEXT QUEST →
+          </span>
+
+          <span className="quest-nav-title">
+            {nextTopic
+              ? nextTopic.title
+              : "🎉 Adventure Complete!"}
+          </span>
         </div>
+
         <button
-          className="nav-circle-btn next-btn"
+          className="quest-nav-button next-button"
           onClick={onNext}
           disabled={!nextTopic}
+          aria-label="Next lesson"
         >
-          →
+          <span className="quest-arrow">→</span>
         </button>
       </div>
     </nav>

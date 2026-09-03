@@ -3638,3 +3638,200 @@ html.admin-dark .table-search-input {
 html.admin-dark .table-search-input::placeholder {
   color: var(--admin-text-3);
 }
+
+/* =========================================================
+   RESPONSIVE SAFETY PATCH  (carried over from main)
+
+   Merge note: main's "FINAL RESPONSIVE PATCH" was written against the
+   previous admin layout. The shell, navbar, dashboard grid, KPI and card
+   breakpoints now live in the v3 design system above, so only the rules
+   that main added for surfaces the redesign did NOT touch are kept here —
+   the students/courses pages, the shared page headers, wide data tables
+   and generic overflow guards.
+   ========================================================= */
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+/* Keep flex/grid children from forcing horizontal overflow. */
+.admin-shell,
+.admin-main-wrapper,
+.admin-content-body,
+.admin-dashboard-page,
+.admin-card,
+.student-stats-grid,
+.student-overview-grid,
+.course-stats-grid,
+.course-overview-grid {
+  min-width: 0;
+}
+
+/* Wide directory tables scroll inside their own container rather than
+   stretching the page. */
+@media (max-width: 1024px) {
+  .admin-table {
+    min-width: 640px;
+  }
+
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* =========================================================
+   TABLET / MOBILE — pages outside the redesigned dashboard
+   ========================================================= */
+@media (max-width: 768px) {
+  .admin-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-page-title {
+    font-size: clamp(24px, 7vw, 32px);
+    overflow-wrap: anywhere;
+  }
+
+  .admin-page-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .student-overview-grid,
+  .course-overview-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .student-overview-card,
+  .course-overview-card,
+  .student-directory-card,
+  .course-directory-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .student-stat-card,
+  .course-stat-card {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .student-stat-content,
+  .course-stat-content {
+    min-width: 0;
+  }
+
+  .student-stat-content strong,
+  .course-stat-content>strong,
+  .student-stat-content span,
+  .course-stat-content>span,
+  .student-stat-content small,
+  .course-stat-content>small {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary {
+    max-width: 100%;
+  }
+
+  .admin-profile-dropdown {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  .student-stats-grid,
+  .course-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .student-stat-card,
+  .course-stat-card {
+    min-height: 96px;
+    padding: 0.9rem;
+  }
+
+  .student-stat-icon,
+  .course-stat-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+  }
+
+  .student-overview-header,
+  .course-overview-header {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-btn-primary,
+  .admin-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-profile-dropdown {
+    right: -2px;
+    width: min(230px, calc(100vw - 20px));
+  }
+}
+
+@media (max-width: 360px) {
+  .student-stat-card,
+  .course-stat-card {
+    padding: 0.75rem;
+  }
+}
+
+/* =========================================================
+   SAFE MEDIA / CONTENT RULES
+   ========================================================= */
+@media (max-width: 768px) {
+  .admin-content-body iframe,
+  .admin-content-body video,
+  .admin-content-body canvas,
+  .admin-content-body img {
+    max-width: 100%;
+  }
+
+  .admin-content-body iframe {
+    width: 100%;
+  }
+
+  .admin-content-body pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .admin-content-body code {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-content-body input,
+  .admin-content-body select,
+  .admin-content-body textarea {
+    width: 100%;
+    min-width: 0;
+  }
+}
