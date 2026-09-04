@@ -11,7 +11,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading:       boolean;
   login:    (input: LoginInput)    => Promise<{ success: boolean; message: string; unverified?: boolean }>;
-  register: (input: RegisterInput) => Promise<{ success: boolean; message: string }>;
+  register: (input: RegisterInput) => Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }>;
   logout:   ()                     => Promise<void>;
   hasRole:  (...roles: UserRole[]) => boolean;
 }
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body:    JSON.stringify(input),
     });
     const json = await res.json();
-    return { success: json.success, message: json.message };
+    return { success: json.success, message: json.message, errors: json.errors };
   }, []);
 
   // ── Logout ─────────────────────────────────────────────────────────────────
