@@ -59,11 +59,11 @@ export async function POST(request: NextRequest) {
     // ── Look up user ───────────────────────────────────────────────────────
     const user = await db.user.findUnique({
       where:  { email },
-      select: { id: true, name: true, emailVerified: true },
+      select: { id: true, name: true, emailVerified: true, deletedAt: true },
     });
 
     // Already verified or no account → generic OK (anti-enumeration)
-    if (!user || user.emailVerified) {
+    if (!user || user.emailVerified || user.deletedAt !== null) {
       return NextResponse.json<AuthResponse>(OK, { status: 200 });
     }
 

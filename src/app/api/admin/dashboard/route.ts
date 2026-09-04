@@ -185,6 +185,42 @@ function average(values: number[]): number {
   return Math.round(values.reduce((sum, v) => sum + v, 0) / values.length);
 }
 
+/**
+ * Backup freshness.
+ *
+ * A backup job that quietly stopped running looks exactly like one that is
+ * working, so staleness is reported as Degraded rather than left invisible.
+ * The threshold is one and a half days: the schedule is nightly, so a single
+ * missed run should surface the next morning.
+ */
+const BACKUP_STALE_MS = 36 * 60 * 60 * 1000;
+
+function buildBackupHealth(
+  last: { finishedAt: Date | null; documentCount: number; destination: string } | null
+): AdminHealthItem {
+  if (!last?.finishedAt) {
+    return {
+      id: "backup",
+      name: "Database Backup",
+      status: "Not configured",
+      detail: "No verified backup recorded yet",
+    };
+  }
+
+  const ageMs = Date.now() - last.finishedAt.getTime();
+  const ageHours = Math.round(ageMs / 3_600_000);
+  const offsite = last.destination.includes("s3");
+
+  return {
+    id: "backup",
+    name: "Database Backup",
+    status: ageMs > BACKUP_STALE_MS ? "Degraded" : "Operational",
+    detail:
+      `${last.documentCount.toLocaleString("en-IN")} documents, ${ageHours}h ago` +
+      (offsite ? " (off-site copy held)" : " — LOCAL ONLY, no off-site copy"),
+  };
+}
+
 /* ─── Handler ─────────────────────────────────────────────────────────────── */
 
 export async function GET(request: NextRequest) {
@@ -227,6 +263,7 @@ export async function GET(request: NextRequest) {
     recentCourses,
     recentContent,
     recentPayments,
+    lastBackup,
   ] = await Promise.all([
     db.user.groupBy({ by: ["role"], _count: { _all: true } }),
     db.user.count({ where: { role: "STUDENT", createdAt: { lt: from } } }),
@@ -273,6 +310,13 @@ export async function GET(request: NextRequest) {
       select: { id: true, payerName: true, amount: true, status: true, date: true },
       orderBy: { date: "desc" },
       take: 4,
+    }),
+    // Most recent verified backup — turns "are we backed up?" into something
+    // the dashboard can answer, instead of a question for the ops channel.
+    db.backupRun.findFirst({
+      where: { status: "SUCCESS", verified: true },
+      select: { finishedAt: true, documentCount: true, destination: true, sizeBytes: true },
+      orderBy: { startedAt: "desc" },
     }),
   ]);
   const dbPingMs = Date.now() - dbStart;
@@ -527,6 +571,7 @@ export async function GET(request: NextRequest) {
       status: emailConfigured ? "Operational" : "Not configured",
       detail: emailConfigured ? "Resend provider connected" : "No provider configured",
     },
+    buildBackupHealth(lastBackup),
   ];
 
   const data: AdminDashboardData = {

@@ -1,5 +1,5 @@
 /**
- * GET  /api/admin/courses  — ADMIN-only: list courses
+ * GET  /api/admin/courses  — ADMIN-only: list courses (paged, searchable)
  * POST /api/admin/courses  — ADMIN-only: create a course (draft)
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -7,21 +7,56 @@ import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
 import { countLessonsByGrade } from "@/lib/content/lesson-count";
+import { recordAudit } from "@/lib/audit";
+import type { Prisma } from "@prisma/client";
 import type { AuthResponse } from "@/types/auth";
 
 const CreateCourseSchema = z.object({
-  title: z.string().min(1, "Course title is required"),
-  subject: z.string().optional(),
-  grade: z.string().default("grade1"),
-  description: z.string().optional(),
+  title: z.string().min(1, "Course title is required").max(200),
+  subject: z.string().max(120).optional(),
+  grade: z.string().regex(/^grade\d{1,2}$/, "grade must look like grade1…grade12").default("grade1"),
+  description: z.string().max(2000).optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const { errorResponse } = await requireAdminSession();
   if (errorResponse) return errorResponse;
 
-  const [courses, studentGrades] = await Promise.all([
-    db.course.findMany({ orderBy: { createdAt: "desc" } }),
+  const { searchParams } = new URL(request.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10)));
+  const q = searchParams.get("q") ?? "";
+  const grade = searchParams.get("grade") ?? undefined;
+  const status = searchParams.get("status");
+  const includeArchived = searchParams.get("includeArchived") === "true";
+
+  // Search/filter/pagination happen in the database. The previous version
+  // returned every course row on every request and left filtering to the
+  // client, which grows linearly with the catalogue.
+  const where: Prisma.CourseWhereInput = {
+    ...(includeArchived ? {} : { archivedAt: null }),
+    ...(grade ? { grade } : {}),
+    ...(status === "PUBLISHED" || status === "DRAFT" ? { status } : {}),
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { subject: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [total, courses, studentGrades] = await Promise.all([
+    db.course.count({ where }),
+    db.course.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    // One grouped query for enrolment across all grades, rather than a count
+    // per course row (which would be an N+1 over the catalogue).
     db.studentProfile.groupBy({ by: ["grade"], _count: { _all: true } }),
   ]);
 
@@ -34,27 +69,68 @@ export async function GET() {
     enrolledStudents: enrolledByGrade.get(c.grade) ?? 0,
   }));
 
-  return NextResponse.json<AuthResponse<typeof withLiveCounts>>(
-    { success: true, message: "OK", data: withLiveCounts },
+  return NextResponse.json(
+    {
+      success: true,
+      message: "OK",
+      data: withLiveCounts,
+      meta: { total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) },
+    },
     { status: 200 }
   );
 }
 
 export async function POST(req: NextRequest) {
-  const { errorResponse } = await requireAdminSession();
+  const { session, errorResponse } = await requireAdminSession();
   if (errorResponse) return errorResponse;
 
   const body = await req.json().catch(() => ({}));
   const result = CreateCourseSchema.safeParse(body);
   if (!result.success) {
     return NextResponse.json<AuthResponse>(
-      { success: false, message: "Validation failed", errors: result.error.flatten().fieldErrors as Record<string, string[]> },
+      {
+        success: false,
+        message: "Validation failed",
+        errors: result.error.flatten().fieldErrors as Record<string, string[]>,
+      },
       { status: 422 }
+    );
+  }
+
+  // A course is identified by title within a grade. Without this check a
+  // double-submitted form silently creates two catalogue entries that then
+  // split the same enrolment and completion numbers between them.
+  const duplicate = await db.course.findFirst({
+    where: {
+      grade: result.data.grade,
+      title: { equals: result.data.title, mode: "insensitive" },
+      archivedAt: null,
+    },
+    select: { id: true, title: true },
+  });
+
+  if (duplicate) {
+    return NextResponse.json<AuthResponse>(
+      {
+        success: false,
+        message: `A course titled "${duplicate.title}" already exists for ${result.data.grade}.`,
+      },
+      { status: 409 }
     );
   }
 
   const course = await db.course.create({
     data: { ...result.data, status: "DRAFT" },
+  });
+
+  await recordAudit({
+    actor: { userId: session.userId, email: session.email, role: session.role },
+    action: "course.create",
+    entityType: "Course",
+    entityId: course.id,
+    summary: `Created course "${course.title}" (${course.grade})`,
+    after: course,
+    request: req,
   });
 
   return NextResponse.json<AuthResponse<typeof course>>(
