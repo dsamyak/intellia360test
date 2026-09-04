@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireStudentSession } from "@/lib/student/require-student-session";
 import { db } from "@/lib/db";
+import { resolveActivityReward, KNOWN_ACTIVITY_TYPES } from "@/lib/student/rewards";
 import type { AuthResponse } from "@/types/auth";
 
 const CompleteActivitySchema = z.object({
   lessonId: z.string().min(1, "lessonId is required"),
-  activityType: z.string().min(1, "activityType is required"),
-  grade: z.string().optional().default("grade1"),
-  xpReward: z.number().int().min(0).optional().default(0),
-  gemsReward: z.number().int().min(0).optional().default(0),
+  activityType: z.enum(KNOWN_ACTIVITY_TYPES as [string, ...string[]]),
+  grade: z.string().regex(/^grade\d{1,2}$/).optional().default("grade1"),
+  // xpReward / gemsReward are still accepted for backwards compatibility with
+  // the existing client, but they are IGNORED — the server decides the award.
+  // Trusting these let any student POST themselves an arbitrary XP balance.
+  xpReward: z.number().int().min(0).optional(),
+  gemsReward: z.number().int().min(0).optional(),
 });
 
 /** Activity types that also mark the parent lesson as completed. */
@@ -41,7 +45,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { lessonId, activityType, grade, xpReward, gemsReward } = result.data;
+    const { lessonId, activityType, grade } = result.data;
+    const { xp: xpReward, gems: gemsReward } = resolveActivityReward(
+      activityType,
+      grade,
+      lessonId
+    );
 
     // ── Idempotency check ──────────────────────────────────────────────────
     const existing = await db.completedActivity.findUnique({

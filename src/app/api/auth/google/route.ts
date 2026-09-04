@@ -28,6 +28,14 @@ const GOOGLE_JWKS = createRemoteJWKSet(
   new URL("https://www.googleapis.com/oauth2/v3/certs")
 );
 
+/** Signals that the matched account is deactivated; aborts the upsert transaction. */
+class DeactivatedAccountError extends Error {
+  constructor() {
+    super("Account deactivated");
+    this.name = "DeactivatedAccountError";
+  }
+}
+
 interface GoogleClaims {
   sub:            string;   // Google user ID
   email:          string;
@@ -102,44 +110,66 @@ export async function POST(request: NextRequest) {
   // If the email already exists with a password account, link them together
   // (set emailVerified=true, don't change the password or role).
   // If no account exists, create one as STUDENT (they can change role later).
-  const dbUser = await db.$transaction(async (tx) => {
-    const existing = await tx.user.findUnique({
-      where: { email: claims.email },
-    });
-
-    if (existing) {
-      // Merge: mark email as verified (Google has verified it for us)
-      return tx.user.update({
-        where: { id: existing.id },
-        data:  { emailVerified: true },
+  let dbUser;
+  try {
+    dbUser = await db.$transaction(async (tx) => {
+      const existing = await tx.user.findUnique({
+        where: { email: claims.email },
       });
+
+      if (existing) {
+        // A deactivated account must not be able to sign in through the Google
+        // button either. Thrown inside the transaction so nothing is written.
+        if (existing.deletedAt !== null) throw new DeactivatedAccountError();
+
+        // Merge: mark email as verified (Google has verified it for us)
+        return tx.user.update({
+          where: { id: existing.id },
+          data:  { emailVerified: true },
+        });
+      }
+
+      // New user via Google — no password, email is already verified
+      const newUser = await tx.user.create({
+        data: {
+          email:         claims.email,
+          name:          claims.name,
+          password:      "", // Google users authenticate via token, not password
+          role:          "STUDENT",
+          emailVerified: true, // Google has verified it
+        },
+      });
+
+      // Auto-create StudentProfile
+      await tx.studentProfile.create({
+        data: {
+          userId:        newUser.id,
+          grade:         "grade1",
+          xpPoints:      0,
+          learningGems:  0,
+          streakDays:    1,
+          lastActiveDate: new Date(),
+        },
+      });
+
+      return newUser;
+    });
+  } catch (err) {
+    if (err instanceof DeactivatedAccountError) {
+      return NextResponse.json<AuthResponse>(
+        {
+          success: false,
+          message: "This account has been deactivated. Please contact an administrator.",
+        },
+        { status: 403 }
+      );
     }
-
-    // New user via Google — no password, email is already verified
-    const newUser = await tx.user.create({
-      data: {
-        email:         claims.email,
-        name:          claims.name,
-        password:      "", // Google users authenticate via token, not password
-        role:          "STUDENT",
-        emailVerified: true, // Google has verified it
-      },
-    });
-
-    // Auto-create StudentProfile
-    await tx.studentProfile.create({
-      data: {
-        userId:        newUser.id,
-        grade:         "grade1",
-        xpPoints:      0,
-        learningGems:  0,
-        streakDays:    1,
-        lastActiveDate: new Date(),
-      },
-    });
-
-    return newUser;
-  });
+    console.error("[auth/google] user upsert failed:", err);
+    return NextResponse.json<AuthResponse>(
+      { success: false, message: "An unexpected error occurred. Please try again." },
+      { status: 500 }
+    );
+  }
 
   // ── Issue session ──────────────────────────────────────────────────────────
   const user: AuthUser = {

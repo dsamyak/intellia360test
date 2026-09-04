@@ -12,7 +12,13 @@
     "seed": "ts-node prisma/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "db:backup": "node scripts/backup.mjs --trigger manual",
+    "db:restore": "node scripts/restore.mjs",
+    "db:verify-backup": "node scripts/verify-backup.mjs",
+    "db:restore-curriculum": "node scripts/restore-curriculum.mjs",
+    "db:maintenance": "node scripts/db-maintenance.mjs",
+    "db:indexes": "prisma db push"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",

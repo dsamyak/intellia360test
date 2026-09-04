@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 
 type HomepageLeaderboardEntry = {
-  userId: string;
+  // No userId: the public leaderboard does not expose account identifiers.
   name: string;
   avatar?: string | null;
   rank: number;
@@ -304,8 +304,11 @@ export default function HomePage() {
     try {
       setLeaderboardLoading(true);
 
+      // The endpoint sets Cache-Control (60s fresh, 5min stale-while-revalidate).
+      // "no-store" forced a database round-trip on every poll and from every
+      // anonymous visitor; "default" lets the browser and CDN absorb repeats.
       const response = await fetch("/api/student/leaderboard?limit=6", {
-        cache: "no-store",
+        cache: "default",
       });
 
       if (!response.ok) {
@@ -358,8 +361,10 @@ export default function HomePage() {
   useEffect(() => {
     fetchHomepageLeaderboard();
 
-    // Refresh periodically so homepage rankings stay current.
-    const interval = window.setInterval(fetchHomepageLeaderboard, 30000);
+    // Refresh periodically so homepage rankings stay current. The interval is
+    // aligned with the endpoint cache window — polling faster than the cache
+    // is fresh just re-reads the same response.
+    const interval = window.setInterval(fetchHomepageLeaderboard, 120000);
 
     return () => window.clearInterval(interval);
   }, [fetchHomepageLeaderboard]);
@@ -1650,7 +1655,7 @@ export default function HomePage() {
             ) : (
               leaderboardEntries.slice(0, 6).map((entry) => (
                 <div
-                  key={entry.userId}
+                  key={entry.rank}
                   className={`homepage-leaderboard-row ${entry.rank === 1
                     ? "rank-first"
                     : entry.rank === 2

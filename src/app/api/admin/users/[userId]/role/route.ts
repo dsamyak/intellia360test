@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { recordAudit } from "@/lib/audit";
 import type { AuthResponse, UserRole } from "@/types/auth";
 
 type Params = { params: Promise<{ userId: string }> };
@@ -96,6 +97,19 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     return u;
+  });
+
+  // A role change is the single highest-privilege mutation in the platform —
+  // it is what turns an ordinary account into an ADMIN or EDITOR.
+  await recordAudit({
+    actor: { userId: session.userId, email: session.email, role: session.role },
+    action: "user.role.change",
+    entityType: "User",
+    entityId: userId,
+    summary: `Changed role of ${target.email} from ${target.role} to ${role}`,
+    before: { role: target.role, requestedRole: target.requestedRole },
+    after:  { role: updated.role, requestedRole: updated.requestedRole },
+    request: req,
   });
 
   return NextResponse.json<AuthResponse<typeof updated>>(
