@@ -130,6 +130,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     if (!agreeToTerms) { setError("Please agree to the Terms of Service to continue."); return; }
+    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      setError("Password must be at least 8 characters and include a letter, a number, and a special character.");
+      return;
+    }
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
     setLoading(true);
     try {
@@ -140,7 +144,11 @@ export default function RegisterPage() {
       if (result.success) {
         setRegisteredEmail(email);
       } else {
-        setError(result.message);
+        // Surface the specific field error (e.g. "Password must contain at
+        // least one special character") instead of the generic top-level
+        // "Validation failed" message, which gives the user nothing to act on.
+        const detail = result.errors ? Object.values(result.errors).flat().join(" ") : "";
+        setError(detail || result.message);
       }
     } catch {
       setError("Something went wrong. Please try again.");
