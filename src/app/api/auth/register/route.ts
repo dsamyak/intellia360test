@@ -16,13 +16,37 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { RegisterSchema } from "@/lib/auth/validation";
+import { DEFAULT_ROLE } from "@/lib/auth/roles";
 import { hashPassword } from "@/lib/auth/hash";
 import { sendVerificationEmail } from "@/lib/auth/email";
 import { generateRawToken, hashToken, VERIFY_TOKEN_TTL_MS } from "@/lib/auth/token";
+import { checkRateLimit, rateLimitHeaders, getClientIp } from "@/lib/auth/rate-limit";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
 export async function POST(request: NextRequest) {
+  // ── IP rate limit ─────────────────────────────────────────────────────────
+  // 10 signups per hour per IP. Runs before any parsing or DB work so it
+  // cannot be bypassed, and so a script cannot use this endpoint to send
+  // verification emails to arbitrary addresses.
+  const ip = getClientIp(request);
+  const ipLimit = await checkRateLimit({
+    identifier: ip,
+    action: "register",
+    maxAttempts: 10,
+    windowMs: 60 * 60 * 1000, // 1 hour
+  });
+
+  if (ipLimit.limited) {
+    return NextResponse.json<AuthResponse>(
+      {
+        success: false,
+        message: `Too many sign-up attempts. Please try again in ${ipLimit.retryAfter} seconds.`,
+      },
+      { status: 429, headers: rateLimitHeaders(ipLimit.retryAfter, 10) }
+    );
+  }
+
   try {
     const body = await request.json();
 
@@ -70,31 +94,35 @@ export async function POST(request: NextRequest) {
           name,
           email,
           password: hashedPassword,
-          role: "STUDENT",           // ← always base plan
+          role: DEFAULT_ROLE,        // ← always base plan
           requestedRole: requestedRole ?? "STUDENT",
           emailVerified: false,
         },
       });
 
-      // Role-scoped profile
-      if (requestedRole === "TEACHER" || requestedRole === "SCHOOL") {
-        await tx.teacherProfile.create({ data: { userId: newUser.id, schoolName: school, subject } });
-      } else if (requestedRole === "EDITOR") {
-        // No profile required
-      } else {
-        // STUDENT / PARENT
-        const studentGrade = grade || "grade1";
+      // ── Profiles ────────────────────────────────────────────────────────
+      // The account is created as STUDENT no matter what was requested, so a
+      // studentProfile is ALWAYS required — every student-facing page and API
+      // reads it. Keying this off `requestedRole` left TEACHER / SCHOOL /
+      // EDITOR sign-ups as STUDENT-role accounts with no studentProfile,
+      // which broke their dashboard the moment they logged in.
+      await tx.studentProfile.create({
+        data: {
+          userId: newUser.id,
+          grade: grade || "grade1",
+          school,
+          xpPoints: 0,
+          learningGems: 0,
+          streakDays: 1,
+          lastActiveDate: new Date(),
+        },
+      });
 
-        await tx.studentProfile.create({
-          data: {
-            userId: newUser.id,
-            grade: studentGrade,
-            school,
-            xpPoints: 0,
-            learningGems: 0,
-            streakDays: 1,
-            lastActiveDate: new Date(),
-          },
+      // Teaching intent additionally keeps the school / subject hints the user
+      // typed, so an admin upgrading them to TEACHER or SCHOOL keeps the data.
+      if (requestedRole === "TEACHER" || requestedRole === "SCHOOL") {
+        await tx.teacherProfile.create({
+          data: { userId: newUser.id, schoolName: school, subject },
         });
       }
 
@@ -105,22 +133,32 @@ export async function POST(request: NextRequest) {
       return newUser.id;
     });
 
-    // ── Send verification email (fire-and-forget style but still await) ─────
+    // ── Send verification email ─────────────────────────────────────────────
     // We do NOT issue a session cookie here — the user must verify first.
+    // A delivery failure does not roll the account back (the user can ask for
+    // a resend), but it IS reported so the UI stops telling people to check an
+    // inbox that will never receive anything.
+    let emailSent = true;
     try {
       await sendVerificationEmail(email, name, rawToken);
     } catch (emailErr) {
-      // Log but don't fail the registration — the user can request a resend.
-      console.error("[auth/register] verification email failed:", emailErr);
+      emailSent = false;
+      // Message only — never the token, the address, or the payload.
+      console.error(
+        "[auth/register] verification email failed:",
+        emailErr instanceof Error ? emailErr.message : "unknown error"
+      );
     }
 
-    return NextResponse.json<AuthResponse<{ userId: string }>>(
+    return NextResponse.json<AuthResponse<{ userId: string; emailSent: boolean }>>(
       {
         success: true,
-        message:
-          "Account created! Check your inbox for a verification link. " +
-          "Your account starts on the Student plan — an admin can upgrade your role once verified.",
-        data: { userId: createdUserId },
+        message: emailSent
+          ? "Account created! Check your inbox for a verification link. " +
+            "Your account starts on the Student plan — an admin can upgrade your role once verified."
+          : "Account created, but we could not send the verification email. " +
+            "Use the resend link below to try again.",
+        data: { userId: createdUserId, emailSent },
       },
       { status: 201 }
     );

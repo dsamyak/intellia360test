@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { dashboardFor } from "@/lib/auth/roles";
 import type { AuthUser, LoginInput, RegisterInput, UserRole } from "@/types/auth";
 
 // ─── Context Shape ────────────────────────────────────────────────────────────
@@ -11,22 +12,21 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading:       boolean;
   login:    (input: LoginInput)    => Promise<{ success: boolean; message: string; unverified?: boolean }>;
-  register: (input: RegisterInput) => Promise<{ success: boolean; message: string; errors?: Record<string, string[]> }>;
+  register: (input: RegisterInput) => Promise<RegisterResult>;
   logout:   ()                     => Promise<void>;
   hasRole:  (...roles: UserRole[]) => boolean;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getDashboardPath(role: UserRole): string {
-  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
-  if (role === "EDITOR")                       return "/editor/dashboard";
-  if (role === "ADMIN")                        return "/admin/dashboard";
-  // STUDENT, PARENT, and all unknown/base-plan roles land on the student dashboard
-  return "/student/dashboard";
+export interface RegisterResult {
+  success: boolean;
+  message: string;
+  /** Per-field validation errors keyed by form field name. */
+  errors?: Record<string, string[]>;
+  /** False when the account was created but the verification email bounced. */
+  emailSent?: boolean;
 }
+
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (json.success && json.data) {
       const authUser = json.data as AuthUser;
       setUser(authUser);
-      router.push(getDashboardPath(authUser.role));
+      router.push(dashboardFor(authUser.role));
     }
 
     return { success: json.success, message: json.message };
@@ -78,14 +78,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── Register ───────────────────────────────────────────────────────────────
   // After the new flow, register does NOT issue a session — it just queues a
   // verification email.  The page handles showing the confirmation UI.
-  const register = useCallback(async (input: RegisterInput) => {
+  const register = useCallback(async (input: RegisterInput): Promise<RegisterResult> => {
     const res  = await fetch("/api/auth/register", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify(input),
     });
     const json = await res.json();
-    return { success: json.success, message: json.message, errors: json.errors };
+    return {
+      success:   json.success,
+      message:   json.message,
+      errors:    json.errors,
+      emailSent: json.data?.emailSent,
+    };
   }, []);
 
   // ── Logout ─────────────────────────────────────────────────────────────────

@@ -3,18 +3,34 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { REGISTRABLE_ROLES, type RegistrableRole } from "@/lib/auth/roles";
 
 // ── Intent options (what the user plans to use Intellia360 as) ───────────────
-// ADMIN is intentionally excluded — admin role can only be granted by an
-// existing admin after registration.
-type RequestedRole = "STUDENT" | "PARENT" | "TEACHER" | "SCHOOL" | "EDITOR";
+// The values come from REGISTRABLE_ROLES so the strings posted to the API can
+// never drift from the Zod enum / Prisma `Role` enum. ADMIN is absent there,
+// so it can never appear here either — admin is granted by an admin only.
+const INTENT_PRESENTATION: Record<RegistrableRole, { label: string; icon: string; sub: string }> = {
+  STUDENT: { label: "Student", icon: "🎓",  sub: "I want to learn"          },
+  TEACHER: { label: "Teacher", icon: "👩‍🏫", sub: "I want to teach"          },
+  PARENT:  { label: "Parent",  icon: "👨‍👧", sub: "I want to track progress" },
+  SCHOOL:  { label: "School",  icon: "🏫",  sub: "I manage a school"        },
+  EDITOR:  { label: "Editor",  icon: "✏️",  sub: "I want to create content" },
+};
 
-const INTENT_OPTIONS: { value: RequestedRole; label: string; icon: string; sub: string }[] = [
-  { value: "STUDENT", label: "Student", icon: "🎓",  sub: "I want to learn"         },
-  { value: "TEACHER", label: "Teacher", icon: "👩‍🏫", sub: "I want to teach"         },
-  { value: "PARENT",  label: "Parent",  icon: "👨‍👧", sub: "I want to track progress" },
-  { value: "SCHOOL",  label: "School",  icon: "🏫",  sub: "I manage a school"        },
-  { value: "EDITOR",  label: "Editor",  icon: "✏️",  sub: "I want to create content" },
+const INTENT_ORDER: RegistrableRole[] = ["STUDENT", "TEACHER", "PARENT", "SCHOOL", "EDITOR"];
+
+const INTENT_OPTIONS = INTENT_ORDER.filter((r) => REGISTRABLE_ROLES.includes(r)).map((value) => ({
+  value,
+  ...INTENT_PRESENTATION[value],
+}));
+
+// Mirrors the server rules in src/lib/auth/validation.ts so the user sees the
+// exact requirement before submitting rather than after a round trip.
+const PASSWORD_RULES: { test: (v: string) => boolean; message: string }[] = [
+  { test: (v) => v.length >= 8,          message: "Password must be at least 8 characters" },
+  { test: (v) => /[A-Za-z]/.test(v),     message: "Password must contain at least one letter" },
+  { test: (v) => /[0-9]/.test(v),        message: "Password must contain at least one number" },
+  { test: (v) => /[^A-Za-z0-9]/.test(v), message: "Password must contain at least one special character" },
 ];
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -113,7 +129,7 @@ function AppleIcon() {
 export default function RegisterPage() {
   const { register } = useAuth();
 
-  const [requestedRole, setRequestedRole] = useState<RequestedRole>("STUDENT");
+  const [requestedRole, setRequestedRole] = useState<RegistrableRole>("STUDENT");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -123,32 +139,67 @@ export default function RegisterPage() {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Per-field messages keyed by the API's field names, so each input can show
+  // its own reason instead of one undifferentiated "Validation failed".
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(true);
+
+  const fieldError = (field: string) => fieldErrors[field]?.[0];
+
+  /** Client-side mirror of the server schema. Returns per-field messages. */
+  function validate(): Record<string, string[]> {
+    const errors: Record<string, string[]> = {};
+
+    if (name.trim().length < 2) {
+      errors.name = ["Full name must be at least 2 characters"];
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.email = ["Enter a valid email address"];
+    }
+
+    const failed = PASSWORD_RULES.filter((r) => !r.test(password)).map((r) => r.message);
+    if (failed.length) errors.password = failed;
+
+    if (password !== confirmPassword) {
+      errors.confirmPassword = ["Passwords do not match"];
+    }
+    if (!agreeToTerms) {
+      errors.agreeToTerms = ["You must agree to the Terms of Service"];
+    }
+    return errors;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!agreeToTerms) { setError("Please agree to the Terms of Service to continue."); return; }
-    if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-      setError("Password must be at least 8 characters and include a letter, a number, and a special character.");
+    setFieldErrors({});
+
+    const clientErrors = validate();
+    if (Object.keys(clientErrors).length > 0) {
+      setFieldErrors(clientErrors);
+      setError("Please check the highlighted fields below.");
       return;
     }
-    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+
     setLoading(true);
     try {
       const result = await register({
-        name, email, password,
+        name: name.trim(), email: email.trim(), password,
         confirmPassword, requestedRole, agreeToTerms,
       });
       if (result.success) {
-        setRegisteredEmail(email);
+        setEmailSent(result.emailSent !== false);
+        setRegisteredEmail(email.trim());
+      } else if (result.errors && Object.keys(result.errors).length > 0) {
+        // The API returns { message, errors: { field: [reason] } }. Attach each
+        // reason to its input — showing only the top-level "Validation failed"
+        // left the user with nothing to act on.
+        setFieldErrors(result.errors);
+        setError("Please check the highlighted fields below.");
       } else {
-        // Surface the specific field error (e.g. "Password must contain at
-        // least one special character") instead of the generic top-level
-        // "Validation failed" message, which gives the user nothing to act on.
-        const detail = result.errors ? Object.values(result.errors).flat().join(" ") : "";
-        setError(detail || result.message);
+        setError(result.message);
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -171,21 +222,33 @@ export default function RegisterPage() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 24px" }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "48px 44px", maxWidth: 480, width: "100%", boxShadow: "0 8px 40px rgba(30,27,75,.10)", textAlign: "center" }}>
             <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(249,115,22,.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", margin: "0 auto 24px", border: "2px solid rgba(249,115,22,.20)" }}>
-              📬
+              {emailSent ? "📬" : "⚠️"}
             </div>
             <h1 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e1b4b", margin: "0 0 10px" }}>
-              Check your inbox!
+              {emailSent ? "Check your inbox!" : "Account created"}
             </h1>
             <p style={{ fontSize: "0.93rem", color: "#4b5563", lineHeight: 1.65, margin: "0 0 10px" }}>
-              We&apos;ve sent a verification link to
+              {emailSent
+                ? "We've sent a verification link to"
+                : "Your account was created, but we could not deliver the verification email to"}
             </p>
             <p style={{ fontSize: "1rem", fontWeight: 700, color: "#f97316", margin: "0 0 20px" }}>
               {registeredEmail}
             </p>
             <p style={{ fontSize: "0.88rem", color: "#6b7280", lineHeight: 1.65, margin: "0 0 28px" }}>
-              Click the link in that email to activate your account.
-              The link expires after <strong>24 hours</strong>.
-              Check your spam folder if you don&apos;t see it.
+              {emailSent ? (
+                <>
+                  Click the link in that email to activate your account.
+                  The link expires after <strong>24 hours</strong>.
+                  Check your spam folder if you don&apos;t see it.
+                </>
+              ) : (
+                <>
+                  You must verify your email before you can log in.
+                  Use <strong>Resend verification email</strong> below, and if it keeps
+                  failing, contact an administrator.
+                </>
+              )}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <Link href="/resend-verification" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 24px", background: "linear-gradient(135deg,#f97316,#ea580c)", color: "#fff", borderRadius: 12, textDecoration: "none", fontWeight: 700, fontSize: ".9rem" }}>
@@ -269,17 +332,31 @@ export default function RegisterPage() {
                 <label className="auth-field-label" htmlFor="reg-name">Full Name</label>
                 <div className="auth-input-wrap">
                   <span className="auth-input-icon"><PersonIcon /></span>
-                  <input id="reg-name" type="text" className="auth-input" placeholder="Enter your full name"
+                  <input id="reg-name" type="text"
+                    className={`auth-input${fieldError("name") ? " has-error" : ""}`}
+                    placeholder="Enter your full name"
+                    aria-invalid={!!fieldError("name")}
+                    aria-describedby={fieldError("name") ? "reg-name-error" : undefined}
                     value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
                 </div>
+                {fieldError("name") && (
+                  <span className="auth-field-error" id="reg-name-error">{fieldError("name")}</span>
+                )}
               </div>
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="reg-email">Email Address</label>
                 <div className="auth-input-wrap">
                   <span className="auth-input-icon"><MailIcon /></span>
-                  <input id="reg-email" type="email" className="auth-input" placeholder="Enter your email"
+                  <input id="reg-email" type="email"
+                    className={`auth-input${fieldError("email") ? " has-error" : ""}`}
+                    placeholder="Enter your email"
+                    aria-invalid={!!fieldError("email")}
+                    aria-describedby={fieldError("email") ? "reg-email-error" : undefined}
                     value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                 </div>
+                {fieldError("email") && (
+                  <span className="auth-field-error" id="reg-email-error">{fieldError("email")}</span>
+                )}
               </div>
             </div>
 
@@ -289,7 +366,10 @@ export default function RegisterPage() {
               <div className="auth-input-wrap">
                 <span className="auth-input-icon"><LockIcon /></span>
                 <input id="reg-password" type={showPassword ? "text" : "password"}
-                  className="auth-input has-right-icon" placeholder="Create a strong password"
+                  className={`auth-input has-right-icon${fieldError("password") ? " has-error" : ""}`}
+                  placeholder="Create a strong password"
+                  aria-invalid={!!fieldError("password")}
+                  aria-describedby={fieldErrors.password ? "reg-password-error" : "reg-password-hint"}
                   value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" />
                 <button type="button" className="auth-input-right-btn"
                   onClick={() => setShowPassword((s) => !s)}
@@ -297,10 +377,18 @@ export default function RegisterPage() {
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
-              <span className="auth-input-hint">
-                <ShieldCheckIcon />
-                Use 8+ characters with a mix of letters, numbers &amp; symbols
-              </span>
+              {fieldErrors.password ? (
+                <span className="auth-field-error" id="reg-password-error">
+                  {fieldErrors.password.map((m) => (
+                    <span key={m} style={{ display: "block" }}>{m}</span>
+                  ))}
+                </span>
+              ) : (
+                <span className="auth-input-hint" id="reg-password-hint">
+                  <ShieldCheckIcon />
+                  At least 8 characters, including a letter, a number and a symbol
+                </span>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -309,7 +397,10 @@ export default function RegisterPage() {
               <div className="auth-input-wrap">
                 <span className="auth-input-icon"><LockIcon /></span>
                 <input id="reg-confirm" type={showConfirm ? "text" : "password"}
-                  className="auth-input has-right-icon" placeholder="Confirm your password"
+                  className={`auth-input has-right-icon${fieldError("confirmPassword") ? " has-error" : ""}`}
+                  placeholder="Confirm your password"
+                  aria-invalid={!!fieldError("confirmPassword")}
+                  aria-describedby={fieldError("confirmPassword") ? "reg-confirm-error" : undefined}
                   value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
                 <button type="button" className="auth-input-right-btn"
                   onClick={() => setShowConfirm((s) => !s)}
@@ -317,6 +408,9 @@ export default function RegisterPage() {
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
+              {fieldError("confirmPassword") && (
+                <span className="auth-field-error" id="reg-confirm-error">{fieldError("confirmPassword")}</span>
+              )}
             </div>
 
             {/* Terms checkbox */}
@@ -328,6 +422,9 @@ export default function RegisterPage() {
               {" "}and{" "}
               <Link href="/privacy" style={{ color: "#f97316", fontWeight: 600 }}>Privacy Policy</Link>
             </label>
+            {fieldError("agreeToTerms") && (
+              <span className="auth-field-error">{fieldError("agreeToTerms")}</span>
+            )}
 
             {/* Submit */}
             <button type="submit" id="register-submit" className="auth-submit-btn" disabled={loading}>

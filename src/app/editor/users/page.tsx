@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { ALL_ROLES } from "@/lib/auth/roles";
 
 interface UserRow { id: string; name: string; email: string; role: string; createdAt: string; }
 
-const ROLES = ["ADMIN","STUDENT","PARENT","TEACHER","SCHOOL","EDITOR"];
+const ROLES: readonly string[] = ALL_ROLES;
 const ROLE_COLORS: Record<string,string> = {
   STUDENT: "#3b82f6", TEACHER: "#10b981", EDITOR: "#7c3aed",
   ADMIN: "#f97316", PARENT: "#06b6d4", SCHOOL: "#ec4899",
