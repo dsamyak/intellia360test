@@ -1489,3 +1489,10 @@
     font-size: 0.72rem;
   }
 }
+/* Invalid field highlight — pairs with .auth-field-error under the input. */
+.auth-input.has-error,
+.auth-input.has-error:focus {
+  border-color: #ef4444;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+}

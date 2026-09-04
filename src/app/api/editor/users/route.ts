@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
 import { hashPassword } from "@/lib/auth/hash";
+import { PasswordSchema } from "@/lib/auth/validation";
+import { ALL_ROLES } from "@/lib/auth/roles";
 import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
@@ -65,11 +67,14 @@ export async function GET(request: NextRequest) {
   );
 }
 
+// Accounts created here go through the same rules as self-registration, so an
+// editor-created account cannot end up with a weaker password or a
+// non-normalised email that its owner can then never log in with.
 const CreateUserSchema = z.object({
-  name:     z.string().min(2),
-  email:    z.string().email(),
-  password: z.string().min(8),
-  role:     z.enum(["ADMIN","STUDENT","PARENT","TEACHER","SCHOOL","EDITOR"]),
+  name:     z.string().trim().min(2),
+  email:    z.string().trim().toLowerCase().email(),
+  password: PasswordSchema,
+  role:     z.enum(ALL_ROLES),
 });
 
 export async function POST(request: NextRequest) {
