@@ -66,19 +66,19 @@ const steps = [
   },
   {
     number: "02",
-    image: "/assets/home/story-3d.png",
+    image: "/assets/home/story.png",
     title: "Story",
     text: "Learn the concept through engaging stories, explanations and visual examples.",
   },
   {
     number: "03",
-    image: "/assets/home/simulate-3d.png",
+    image: "/assets/home/simulate.png",
     title: "Simulate",
     text: "Explore the concept through interactive visuals and hands-on simulations.",
   },
   {
     number: "04",
-    image: "/assets/home/play-3d.png",
+    image: "/assets/home/play.png",
     title: "Play",
     text: "Apply what you learned through games, challenges, quizzes and activities.",
   },
