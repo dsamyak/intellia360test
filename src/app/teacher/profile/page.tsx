@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation";
+
+/** Legacy scaffold route — profile fields live on the settings page. */
 export default function TeacherProfilePage() {
-  return (
-    <div>
-      {/* Teacher Profile Scaffold */}
-    </div>
-  );
+  redirect("/teacher/settings");
 }
