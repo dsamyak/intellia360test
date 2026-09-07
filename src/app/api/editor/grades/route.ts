@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
+import { mirrorCurriculumWrite, storePath } from "@/lib/content/curriculum-store";
+import { recordAudit } from "@/lib/audit";
 import type { AuthResponse } from "@/types/auth";
 
 const DATA_ROOT = path.join(process.cwd(), "src", "data", "grades");
@@ -71,7 +73,7 @@ const EMPTY_CURRICULUM = (gradeId: string) => ({
 });
 
 export async function POST(request: NextRequest) {
-  const { errorResponse } = await requireEditorSession();
+  const { session, errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
   const body = await request.json().catch(() => ({}));
@@ -94,11 +96,28 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const curriculum = EMPTY_CURRICULUM(gradeId);
+
   fs.mkdirSync(lessonsDir, { recursive: true });
-  fs.writeFileSync(
-    path.join(gradeDir, "curriculum.json"),
-    JSON.stringify(EMPTY_CURRICULUM(gradeId), null, 2)
-  );
+  fs.writeFileSync(path.join(gradeDir, "curriculum.json"), JSON.stringify(curriculum, null, 2));
+
+  await mirrorCurriculumWrite({
+    path: storePath(gradeId, "curriculum.json"),
+    gradeId,
+    kind: "curriculum",
+    content: curriculum,
+    updatedBy: session.userId,
+  });
+
+  await recordAudit({
+    actor: { userId: session.userId, email: session.email, role: session.role },
+    action: "grade.create",
+    entityType: "CurriculumGrade",
+    entityId: gradeId,
+    summary: `Created grade ${gradeId}`,
+    after: { gradeId },
+    request,
+  });
 
   return NextResponse.json<AuthResponse<{ id: string }>>(
     { success: true, message: `${gradeId} created`, data: { id: gradeId } },

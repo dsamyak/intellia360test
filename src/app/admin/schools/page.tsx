@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, {
   ColumnDef,
 } from "@/components/admin/ReusableTable";
-import { mockSchools, SchoolRow } from "@/data/admin/tables";
+import { fetchSchools, createSchool, updateSchool, deleteSchool, SchoolRow } from "@/data/admin/tables";
 import {
   Building2,
   CheckCircle2,
@@ -13,7 +13,7 @@ import {
 } from "@/components/admin/icons";
 
 /* ─── Onboard School Modal ─────────────────────────────────────────────────── */
-function OnboardSchoolModal({ onClose }: { onClose: () => void }) {
+function OnboardSchoolModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({ name: "", location: "", adminName: "", adminEmail: "", plan: "Basic" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -25,9 +25,10 @@ function OnboardSchoolModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     if (!form.name.trim() || !form.adminEmail.trim()) { setError("School name and admin email are required."); return; }
     setSaving(true); setError("");
-    // In production: POST to /api/admin/schools — for now we simulate success
-    await new Promise(r => setTimeout(r, 800));
-    setSaving(false); setSaved(true);
+    const result = await createSchool(form);
+    setSaving(false);
+    if (result.success) { setSaved(true); onCreated(); }
+    else { setError(result.message); }
   }
 
   const f = (k: keyof typeof form, label: string, type = "text", placeholder = "") => (
@@ -82,34 +83,128 @@ function OnboardSchoolModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ─── Edit School Modal ────────────────────────────────────────────────────── */
+function EditSchoolModal({ school, onClose, onSaved }: { school: SchoolRow; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    name: school.name,
+    location: school.location === "—" ? "" : school.location,
+    plan: school.plan,
+    status: school.status.toUpperCase() as "ACTIVE" | "PENDING" | "INACTIVE",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const PLANS = ["Basic", "Standard", "Premium", "Enterprise"];
+  const STATUSES: Array<"ACTIVE" | "PENDING" | "INACTIVE"> = ["ACTIVE", "PENDING", "INACTIVE"];
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) { setError("School name is required."); return; }
+    setSaving(true); setError("");
+    const result = await updateSchool(school.id, form);
+    setSaving(false);
+    if (result.success) { onSaved(); onClose(); }
+    else { setError(result.message); }
+  }
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:460, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+          <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Edit School</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+        </div>
+        {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>School Name *</label>
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Location</label>
+            <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Subscription Plan</label>
+            <select value={form.plan} onChange={e => setForm(p => ({ ...p, plan: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+              {PLANS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Status</label>
+            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as typeof form.status }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+              {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
+            </select>
+          </div>
+          <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+            <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+            <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminSchoolsPage() {
   const [showOnboardModal, setShowOnboardModal] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<SchoolRow | null>(null);
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const handleDeleteSchool = async (school: SchoolRow) => {
+    if (!window.confirm(`Delete ${school.name}? This cannot be undone.`)) return;
+    const result = await deleteSchool(school.id);
+    if (result.success) loadSchools();
+    else window.alert(result.message);
+  };
+
+  const loadSchools = () => {
+    setLoading(true);
+    fetchSchools().then((rows) => { setSchools(rows); setLoading(false); });
+  };
+
+  useEffect(() => { loadSchools(); }, []);
+
+  // Quick Action links arrive as /admin/schools?new=1 and open this page's own onboard modal.
+  useEffect(() => {
+    // One-time deep-link handoff on mount, not a render-driven update.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (new URLSearchParams(window.location.search).get("new") === "1") setShowOnboardModal(true);
+  }, []);
+
   /* =========================================
      Dynamic School Statistics
   ========================================= */
 
   const schoolStats = useMemo(() => {
-    const totalSchools = mockSchools.length;
+    const totalSchools = schools.length;
 
-    const activeSchools = mockSchools.filter(
+    const activeSchools = schools.filter(
       (school) => school.status === "Active"
     ).length;
 
-    const pendingSchools = mockSchools.filter(
+    const pendingSchools = schools.filter(
       (school) => school.status === "Pending"
     ).length;
 
-    const inactiveSchools = mockSchools.filter(
+    const inactiveSchools = schools.filter(
       (school) => school.status === "Inactive"
     ).length;
 
-    const totalTeachers = mockSchools.reduce(
+    const totalTeachers = schools.reduce(
       (total, school) =>
         total + Number(school.teachersCount || 0),
       0
     );
 
-    const totalStudents = mockSchools.reduce(
+    const totalStudents = schools.reduce(
       (total, school) =>
         total + Number(school.studentsCount || 0),
       0
@@ -129,7 +224,7 @@ export default function AdminSchoolsPage() {
       totalStudents,
       activeRate,
     };
-  }, []);
+  }, [schools]);
 
   /* =========================================
      Schools Table Columns
@@ -210,30 +305,47 @@ export default function AdminSchoolsPage() {
     },
   ];
 
+  const schoolRowActions = [
+    { label: "Edit", onClick: (row: SchoolRow) => setEditingSchool(row) },
+    { label: "Delete", danger: true, onClick: handleDeleteSchool },
+  ];
+
   /* =========================================
      Page
   ========================================= */
 
   return (
     <AdminLayout>
-      {showOnboardModal && <OnboardSchoolModal onClose={() => setShowOnboardModal(false)} />}
-      <div className="space-y-6">
+      {showOnboardModal && (
+        <OnboardSchoolModal
+          onClose={() => setShowOnboardModal(false)}
+          onCreated={loadSchools}
+        />
+      )}
+      {editingSchool && (
+        <EditSchoolModal
+          school={editingSchool}
+          onClose={() => setEditingSchool(null)}
+          onSaved={loadSchools}
+        />
+      )}
+      <div className="admin-schools-page">
 
         {/* =====================================
             Page Header
         ===================================== */}
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="admin-page-header">
           <div>
-            <div className="text-sm font-medium text-orange-500">
+            <div className="admin-breadcrumb">
               Admin / Schools
             </div>
 
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="admin-page-title">
               Schools
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="admin-page-subtitle">
               Manage registered schools, subscriptions and
               verification status.
             </p>
@@ -244,141 +356,96 @@ export default function AdminSchoolsPage() {
             Statistics Cards
         ===================================== */}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="school-stats-grid">
 
           {/* Total Schools */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+          <div className="school-stat-card">
+            <div className="school-stat-icon orange">
               <Building2 className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Total Schools
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.totalSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-slate-500">
-                Registered institutions
-              </div>
+            <div className="school-stat-content">
+              <span>Total Schools</span>
+              <strong>{schoolStats.totalSchools.toLocaleString()}</strong>
+              <small>Registered institutions</small>
             </div>
           </div>
 
           {/* Active Schools */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <div className="school-stat-card">
+            <div className="school-stat-icon green">
               <CheckCircle2 className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Active Schools
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.activeSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-emerald-600">
-                Currently active
-              </div>
+            <div className="school-stat-content">
+              <span>Active Schools</span>
+              <strong>{schoolStats.activeSchools.toLocaleString()}</strong>
+              <small className="success-text">Currently active</small>
             </div>
           </div>
 
           {/* Pending Verification */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <div className="school-stat-card">
+            <div className="school-stat-icon amber">
               <Clock className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Pending Verification
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.pendingSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-amber-600">
-                Needs review
-              </div>
+            <div className="school-stat-content">
+              <span>Pending Verification</span>
+              <strong>{schoolStats.pendingSchools.toLocaleString()}</strong>
+              <small>Needs review</small>
             </div>
           </div>
 
           {/* Total Students */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+          <div className="school-stat-card">
+            <div className="school-stat-icon blue">
               <span className="text-xl">🎓</span>
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Total Students
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.totalStudents.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-slate-500">
-                Across all schools
-              </div>
+            <div className="school-stat-content">
+              <span>Total Students</span>
+              <strong>{schoolStats.totalStudents.toLocaleString()}</strong>
+              <small>Across all schools</small>
             </div>
           </div>
-        </div>
-
-        {/* =====================================
-            Additional Overview
-        ===================================== */}
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
           {/* Teachers */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Total Teachers
+          <div className="school-stat-card">
+            <div className="school-stat-icon purple">
+              <Building2 className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-slate-900">
-              {schoolStats.totalTeachers.toLocaleString()}
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              Across registered schools
+            <div className="school-stat-content">
+              <span>Total Teachers</span>
+              <strong>{schoolStats.totalTeachers.toLocaleString()}</strong>
+              <small>Across registered schools</small>
             </div>
           </div>
 
           {/* Inactive */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Inactive Schools
+          <div className="school-stat-card">
+            <div className="school-stat-icon slate">
+              <Clock className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-slate-900">
-              {schoolStats.inactiveSchools.toLocaleString()}
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              Currently inactive
+            <div className="school-stat-content">
+              <span>Inactive Schools</span>
+              <strong>{schoolStats.inactiveSchools.toLocaleString()}</strong>
+              <small>Currently inactive</small>
             </div>
           </div>
 
           {/* Active Rate */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Active Rate
+          <div className="school-stat-card">
+            <div className="school-stat-icon green">
+              <CheckCircle2 className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-emerald-600">
-              {schoolStats.activeRate}%
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              School activation rate
+            <div className="school-stat-content">
+              <span>Active Rate</span>
+              <strong className="success-text">{schoolStats.activeRate}%</strong>
+              <small>School activation rate</small>
             </div>
           </div>
         </div>
@@ -389,12 +456,13 @@ export default function AdminSchoolsPage() {
 
         <ReusableTable
           title="Registered Schools Directory"
-          subtitle="Manage and view operational status for all onboarded institutions."
-          data={mockSchools}
+          subtitle={loading ? "Loading schools…" : "Manage and view operational status for all onboarded institutions."}
+          data={schools}
           columns={schoolColumns}
           searchPlaceholder="Search school by name, code or city..."
           primaryActionLabel="Onboard New School"
           onPrimaryAction={() => setShowOnboardModal(true)}
+          rowActions={schoolRowActions}
         />
 
       </div>

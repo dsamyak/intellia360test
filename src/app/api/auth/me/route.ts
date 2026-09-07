@@ -17,7 +17,9 @@ export async function GET() {
       where: { id: payload.sub },
     });
 
-    if (!dbUser) {
+    // A session cookie outlives deactivation, so the account state is
+    // re-checked on every session resolve rather than only at login.
+    if (!dbUser || dbUser.deletedAt !== null) {
       return NextResponse.json<AuthResponse>(
         { success: false, message: "User not found" },
         { status: 401 }

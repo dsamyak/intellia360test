@@ -96,7 +96,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 6. Email verification gate ─────────────────────────────────────────
+    // ── 6. Deactivated-account gate ────────────────────────────────────────
+    // Placed after the password comparison so a wrong password and a
+    // deactivated account are indistinguishable to an unauthenticated caller.
+    if (dbUser.deletedAt !== null) {
+      return NextResponse.json<AuthResponse>(
+        {
+          success: false,
+          message: "This account has been deactivated. Please contact an administrator.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // ── 7. Email verification gate ─────────────────────────────────────────
     if (!dbUser.emailVerified) {
       return NextResponse.json<AuthResponse>(
         {
@@ -110,7 +123,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── 7. Issue session ───────────────────────────────────────────────────
+    // ── 8. Issue session ───────────────────────────────────────────────────
     const user: AuthUser = {
       id: dbUser.id,
       name: dbUser.name,

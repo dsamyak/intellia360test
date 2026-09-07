@@ -1,66 +1,77 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { recentActivities, ActivityItem } from "@/data/admin/activity";
-import { Building2, UserPlus, BookPlus, CreditCard, FileCheck, ArrowRight } from "@/components/admin/icons";
+import type { AdminActivityEntry } from "@/data/admin/useAdminDashboard";
+import { formatRelativeTime } from "@/data/admin/useAdminDashboard";
+import {
+  UserPlus,
+  Building2,
+  BookPlus,
+  FolderKanban,
+  CreditCard,
+  Activity,
+  ArrowRight,
+} from "@/components/admin/icons";
 
-const iconMap: Record<string, React.ReactNode> = {
-  Building2: <Building2 className="w-2.5 h-2.5 text-orange-600" />,
-  UserPlus: <UserPlus className="w-2.5 h-2.5 text-rose-600" />,
-  BookPlus: <BookPlus className="w-2.5 h-2.5 text-purple-600" />,
-  CreditCard: <CreditCard className="w-2.5 h-2.5 text-emerald-600" />,
-  FileCheck: <FileCheck className="w-2.5 h-2.5 text-blue-600" />,
+const kindMeta: Record<
+  AdminActivityEntry["kind"],
+  { Icon: React.ComponentType<{ className?: string }>; tone: string }
+> = {
+  user: { Icon: UserPlus, tone: "violet" },
+  school: { Icon: Building2, tone: "amber" },
+  course: { Icon: BookPlus, tone: "emerald" },
+  content: { Icon: FolderKanban, tone: "blue" },
+  payment: { Icon: CreditCard, tone: "rose" },
 };
 
 interface ActivityCardProps {
-  initialActivities?: ActivityItem[];
-  isLoading?: boolean;
+  activity: AdminActivityEntry[];
 }
 
-export default function ActivityCard({ initialActivities = recentActivities, isLoading: externalLoading = false }: ActivityCardProps) {
-  const [activities] = useState<ActivityItem[]>(initialActivities);
-  const [isLoading] = useState<boolean>(externalLoading);
-
+export default function ActivityCard({ activity }: ActivityCardProps) {
   return (
-    <div className="admin-card">
-      <div className="admin-card-header mb-3">
-        <h3 className="admin-card-title">Recent Activities</h3>
-        <Link href="/admin/analytics" className="admin-link-action">
-          View All <ArrowRight className="w-3 h-3" />
+    <section className="admin-card admin-activity-card">
+      <header className="admin-card-header">
+        <h3 className="admin-card-title">Recent Activity</h3>
+        <Link href="/admin/reports" className="admin-link-action">
+          View all <ArrowRight className="w-3.5 h-3.5" />
         </Link>
-      </div>
+      </header>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-10">
-          <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-        </div>
-      ) : activities.length === 0 ? (
-        <div className="text-center py-8 text-xs text-slate-400">
-          No recent activities found.
+      {activity.length === 0 ? (
+        <div className="admin-empty-state">
+          <Activity className="w-6 h-6" />
+          <p className="admin-empty-title">Nothing has happened yet</p>
+          <p className="admin-empty-text">
+            Registrations, new courses and payments will show up here.
+          </p>
         </div>
       ) : (
-        <div className="relative pl-3.5 border-l border-slate-100 flex flex-col gap-3.5 mt-2">
-          {activities.map((act: ActivityItem) => (
-            <div key={act.id} className="relative flex flex-col gap-0.5">
-              {/* Timeline Dot Marker with Icon */}
-              <div
-                className="absolute -left-[24px] top-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 border-white shadow-sm"
-                style={{ backgroundColor: act.iconBg }}
-              >
-                {iconMap[act.icon] || <Building2 className="w-2.5 h-2.5 text-orange-600" />}
-              </div>
+        <ul className="admin-activity-list">
+          {activity.map((entry) => {
+            const { Icon, tone } = kindMeta[entry.kind];
+            return (
+              <li key={entry.id}>
+                <Link href={entry.href} className="admin-activity-row">
+                  <span className={`admin-activity-icon tone-${tone}`}>
+                    <Icon className="w-4 h-4" />
+                  </span>
 
-              {/* Context & Meta Row */}
-              <div className="flex justify-between items-baseline gap-1.5">
-                <span className="text-[11px] font-bold text-slate-800 truncate">{act.title}</span>
-                <span className="text-[9px] font-semibold text-slate-400 shrink-0">{act.timestamp}</span>
-              </div>
-              <div className="text-[10px] text-slate-500 truncate">{act.subtitle}</div>
-            </div>
-          ))}
-        </div>
+                  <span className="admin-activity-body">
+                    <span className="admin-activity-title">{entry.title}</span>
+                    <span className="admin-activity-subtitle">{entry.subtitle}</span>
+                  </span>
+
+                  <time className="admin-activity-time" dateTime={entry.at}>
+                    {formatRelativeTime(entry.at)}
+                  </time>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </section>
   );
 }

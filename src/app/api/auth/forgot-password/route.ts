@@ -67,10 +67,12 @@ export async function POST(request: NextRequest) {
 
     const user = await db.user.findUnique({
       where:  { email },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, deletedAt: true },
     });
 
-    if (!user) return genericResponse();
+    // Deactivated accounts get the same generic response as unknown emails —
+    // no reset mail is sent, and the caller learns nothing either way.
+    if (!user || user.deletedAt !== null) return genericResponse();
 
     // Invalidate all existing unused reset tokens for this user
     await db.passwordResetToken.updateMany({

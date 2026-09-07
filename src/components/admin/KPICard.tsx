@@ -1,74 +1,118 @@
 "use client";
 
 import React from "react";
-import { KpiStat } from "@/data/admin/dashboard";
-import { useCountUp } from "@/data/admin/useAdminDashboardData";
-import { formatKpiValue } from "@/data/admin/dashboard";
+import Link from "next/link";
+import type { AdminKpi } from "@/data/admin/useAdminDashboard";
+import { formatCount, useCountUp } from "@/data/admin/useAdminDashboard";
 import {
-  Building2,
-  GraduationCap,
   Users,
-  BookOpenCheck,
+  GraduationCap,
+  BookOpen,
   ClipboardCheck,
-  IndianRupee,
+  MessageSquare,
+  UserCheck,
   TrendingUp,
   TrendingDown,
 } from "@/components/admin/icons";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Building2: Building2,
-  GraduationCap: GraduationCap,
-  Users: Users,
-  BookOpenCheck: BookOpenCheck,
-  ClipboardCheck: ClipboardCheck,
-  IndianRupee: IndianRupee,
-};
-
-// Clean custom mappings for colors to guarantee correctness in plain CSS environment
-const colorStyles: Record<string, { bg: string; text: string }> = {
-  orange: { bg: "rgba(249, 115, 22, 0.08)", text: "#ea580c" },
-  amber: { bg: "rgba(245, 158, 11, 0.08)", text: "#d97706" },
-  blue: { bg: "rgba(59, 130, 246, 0.08)", text: "#2563eb" },
-  purple: { bg: "rgba(139, 92, 246, 0.08)", text: "#7c3aed" },
-  emerald: { bg: "rgba(16, 185, 129, 0.08)", text: "#059669" },
-  rose: { bg: "rgba(244, 63, 94, 0.08)", text: "#e11d48" },
+  Users,
+  GraduationCap,
+  BookOpen,
+  ClipboardCheck,
+  MessageSquare,
+  UserCheck,
 };
 
 interface KPICardProps {
-  stat: KpiStat;
+  kpi: AdminKpi;
+  /** Label of the window this KPI is compared against, e.g. "1 Apr – 30 Apr". */
+  comparisonLabel: string;
 }
 
-export default function KPICard({ stat }: KPICardProps) {
-  const shownValue = useCountUp(stat.value);
-  const isUp = stat.trend === "up";
-  const colors = colorStyles[stat.color] || colorStyles.orange;
-  const IconComponent = iconMap[stat.icon] || Building2;
+/** Normalises a series into an SVG path + matching area polygon. */
+function buildSparkline(series: number[], width: number, height: number) {
+  if (series.length < 2) return null;
+
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+
+  // A flat line carries no information — a metric that never moved (or is still
+  // at zero) is better shown with no sparkline at all.
+  if (min === max) return null;
+
+  const span = max - min || 1;
+  const stepX = width / (series.length - 1);
+
+  const points = series.map((value, index) => {
+    const x = index * stepX;
+    const y = height - ((value - min) / span) * (height - 4) - 2;
+    return { x, y };
+  });
+
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const area = `${line} L ${width} ${height} L 0 ${height} Z`;
+
+  return { line, area };
+}
+
+export default function KPICard({ kpi, comparisonLabel }: KPICardProps) {
+  const shownValue = useCountUp(kpi.value);
+  const Icon = iconMap[kpi.icon] ?? Users;
+  const spark = buildSparkline(kpi.series, 120, 30);
+  const gradientId = `kpi-spark-${kpi.id}`;
+
+  const hasGrowth = kpi.growthPercent !== null;
+  const isUp = (kpi.growthPercent ?? 0) >= 0;
 
   return (
-    <div className="stat-card">
-      <div className="stat-card-header">
-        <div
-          className="stat-icon-box"
-          style={{ backgroundColor: colors.bg, color: colors.text }}
-        >
-          <IconComponent className="w-5 h-5" />
-        </div>
-        <span
-          className="stat-card-growth"
-          style={{
-            color: isUp ? "#10b981" : "#ef4444",
-            backgroundColor: isUp ? "rgba(46, 98, 81, 0.08)" : "rgba(239, 68, 68, 0.08)",
-          }}
-        >
-          {isUp ? <TrendingUp className="w-3 h-3 shrink-0" /> : <TrendingDown className="w-3 h-3 shrink-0" />}
-          <span className="ml-0.5">{stat.growth.toFixed(1)}%</span>
+    <Link href={kpi.href} className={`stat-card tone-${kpi.color}${spark ? " has-spark" : ""}`}>
+      <div className="stat-card-top">
+        <span className="stat-icon-box">
+          <Icon className="w-5 h-5" />
         </span>
+
+        <div className="stat-card-heading">
+          <span className="stat-card-title">{kpi.title}</span>
+          <span className="stat-card-value">{formatCount(shownValue)}</span>
+        </div>
       </div>
-      <div className="stat-card-title">{stat.title}</div>
-      <div className="stat-card-value">
-        {formatKpiValue({ value: shownValue, prefix: stat.prefix, suffix: stat.suffix })}
+
+      <div className="stat-card-footer">
+        {hasGrowth ? (
+          <>
+            <span className={`stat-card-growth${isUp ? " is-up" : " is-down"}`}>
+              {isUp ? (
+                <TrendingUp className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5" />
+              )}
+              {Math.abs(kpi.growthPercent ?? 0)}%
+            </span>
+            <span className="stat-card-timeframe">vs {comparisonLabel}</span>
+          </>
+        ) : (
+          <span className="stat-card-timeframe">No prior period to compare</span>
+        )}
       </div>
-      <div className="stat-card-timeframe">{stat.timeframe}</div>
-    </div>
+
+      {spark && (
+        <svg
+          className="stat-card-spark"
+          viewBox="0 0 120 30"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={spark.area} fill={`url(#${gradientId})`} />
+          <path d={spark.line} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </Link>
   );
 }

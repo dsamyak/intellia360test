@@ -30,13 +30,22 @@ export default function AdminReportsPage() {
      Download Action
   ========================================= */
 
+  const downloadCsv = async (type: string, filename: string) => {
+    const res = await fetch(`/api/admin/reports/export?type=${type}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const handleDownload = (reportId: string) => {
     setSelectedReport(reportId);
-
-    console.log(`Download requested for report: ${reportId}`);
-
-    // Backend / actual PDF or CSV download
-    // can be connected later.
+    downloadCsv(reportId, `${reportId}.csv`);
   };
 
   return (
@@ -66,9 +75,7 @@ export default function AdminReportsPage() {
           <button
             type="button"
             className="admin-primary-button"
-            onClick={() => {
-              console.log("Export All Summary Reports");
-            }}
+            onClick={() => downloadCsv("all", "admin-reports-all.csv")}
           >
             <Download className="h-4 w-4" />
             Export All Reports

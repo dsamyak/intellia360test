@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, { ColumnDef } from "@/components/admin/ReusableTable";
-import { mockCourses, CourseRow } from "@/data/admin/tables";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, CourseRow } from "@/data/admin/tables";
 import { BookOpen, Star, Users } from "@/components/admin/icons";
 
 /* ─── Create Course Modal ───────────────────────────────────────────────────── */
-function CreateCourseModal({ onClose }: { onClose: () => void }) {
+function CreateCourseModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState({ title: "", subject: "", grade: "grade1", description: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -19,9 +19,10 @@ function CreateCourseModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     if (!form.title.trim()) { setError("Course title is required."); return; }
     setSaving(true); setError("");
-    // In production: POST to /api/editor/courses or equivalent
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false); setSaved(true);
+    const result = await createCourse(form);
+    setSaving(false);
+    if (result.success) { setSaved(true); onCreated(); }
+    else { setError(result.message); }
   }
 
   const f = (k: keyof typeof form, label: string, type = "text", placeholder = "") => (
@@ -79,30 +80,130 @@ function CreateCourseModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ─── Edit Course Modal ─────────────────────────────────────────────────────── */
+function EditCourseModal({ course, onClose, onSaved }: { course: CourseRow; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    title: course.title,
+    subject: course.subject === "—" ? "" : course.subject,
+    grade: course.grade,
+    rating: String(course.rating),
+    status: course.status.toUpperCase() as "PUBLISHED" | "DRAFT",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const GRADES = ["grade1","grade2","grade3","grade4","grade5","grade6","grade7","grade8","grade9","grade10"];
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim()) { setError("Course title is required."); return; }
+    setSaving(true); setError("");
+    const result = await updateCourse(course.id, { ...form, rating: Number(form.rating) || 0 });
+    setSaving(false);
+    if (result.success) { onSaved(); onClose(); }
+    else { setError(result.message); }
+  }
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:500, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+          <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Edit Course</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+        </div>
+        {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Course Title *</label>
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Subject</label>
+            <input value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Grade Level</label>
+            <select value={form.grade} onChange={e => setForm(p => ({ ...p, grade: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+              {GRADES.map(g => <option key={g} value={g}>{g.replace("grade","Grade ")}</option>)}
+            </select>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Rating (0-5)</label>
+            <input type="number" min={0} max={5} step={0.1} value={form.rating} onChange={e => setForm(p => ({ ...p, rating: e.target.value }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+            <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>Status</label>
+            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as typeof form.status }))}
+              style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none", background:"#fff" }}>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </div>
+          <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+            <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+            <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminCoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<CourseRow | null>(null);
+  const [courses, setCourses] = useState<CourseRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const handleDeleteCourse = async (course: CourseRow) => {
+    if (!window.confirm(`Delete ${course.title}? This cannot be undone.`)) return;
+    const result = await deleteCourse(course.id);
+    if (result.success) loadCourses();
+    else window.alert(result.message);
+  };
+
+  const loadCourses = () => {
+    setLoading(true);
+    fetchCourses().then((rows) => { setCourses(rows); setLoading(false); });
+  };
+
+  useEffect(() => { loadCourses(); }, []);
+
+  // Quick Action links arrive as /admin/courses?new=1 and open this page's own create modal.
+  useEffect(() => {
+    // One-time deep-link handoff on mount, not a render-driven update.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (new URLSearchParams(window.location.search).get("new") === "1") setShowCreateModal(true);
+  }, []);
+
   /* =========================================
      Dynamic Course Statistics
   ========================================= */
 
   const courseStats = useMemo(() => {
-    const totalCourses = mockCourses.length;
+    const totalCourses = courses.length;
 
-    const publishedCourses = mockCourses.filter(
+    const publishedCourses = courses.filter(
       (course) => course.status === "Published"
     ).length;
 
-    const draftCourses = mockCourses.filter(
+    const draftCourses = courses.filter(
       (course) => course.status !== "Published"
     ).length;
 
-    const totalLessons = mockCourses.reduce(
+    const totalLessons = courses.reduce(
       (total, course) =>
         total + Number(course.lessonsCount || 0),
       0
     );
 
-    const totalEnrollments = mockCourses.reduce(
+    const totalEnrollments = courses.reduce(
       (total, course) =>
         total + Number(course.enrolledStudents || 0),
       0
@@ -110,7 +211,7 @@ export default function AdminCoursesPage() {
 
     const averageRating =
       totalCourses > 0
-        ? mockCourses.reduce(
+        ? courses.reduce(
           (total, course) =>
             total + Number(course.rating || 0),
           0
@@ -125,7 +226,7 @@ export default function AdminCoursesPage() {
       totalEnrollments,
       averageRating,
     };
-  }, []);
+  }, [courses]);
 
   /* =========================================
      Course Table Columns
@@ -204,9 +305,30 @@ export default function AdminCoursesPage() {
     },
   ];
 
+  const courseRowActions = [
+    { label: "Edit", onClick: (row: CourseRow) => setEditingCourse(row) },
+    {
+      label: "Delete",
+      danger: true,
+      onClick: handleDeleteCourse,
+    },
+  ];
+
   return (
     <AdminLayout>
-      {showCreateModal && <CreateCourseModal onClose={() => setShowCreateModal(false)} />}
+      {showCreateModal && (
+        <CreateCourseModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={loadCourses}
+        />
+      )}
+      {editingCourse && (
+        <EditCourseModal
+          course={editingCourse}
+          onClose={() => setEditingCourse(null)}
+          onSaved={loadCourses}
+        />
+      )}
       <div className="admin-courses-page">
 
         {/* =====================================
@@ -425,12 +547,13 @@ export default function AdminCoursesPage() {
         <div className="course-directory-card">
           <ReusableTable
             title="Curriculum & Course Catalog"
-            subtitle="Manage learning paths, grade levels, interactive modules, enrollments and published courses."
-            data={mockCourses}
+            subtitle={loading ? "Loading courses…" : "Manage learning paths, grade levels, interactive modules, enrollments and published courses."}
+            data={courses}
             columns={courseColumns}
             searchPlaceholder="Search courses by title, subject or grade..."
             primaryActionLabel="Create New Course"
             onPrimaryAction={() => setShowCreateModal(true)}
+            rowActions={courseRowActions}
           />
         </div>
       </div>

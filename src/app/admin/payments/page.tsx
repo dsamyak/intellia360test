@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReusableTable, {
   ColumnDef,
 } from "@/components/admin/ReusableTable";
 import ChartCard from "@/components/admin/ChartCard";
+import { fetchPayments, createPayment, PaymentRow } from "@/data/admin/tables";
 import {
   IndianRupee,
   CreditCard,
   Clock,
   CheckCircle2,
 } from "@/components/admin/icons";
-
-type PaymentStatus = "Completed" | "Pending" | "Failed";
 
 type Payment = {
   id: string;
@@ -23,13 +22,79 @@ type Payment = {
   amount: number;
   date: string;
   method: string;
-  status: PaymentStatus;
+  status: "Completed" | "Pending" | "Refunded";
 };
 
+function toPayment(row: PaymentRow): Payment {
+  return { ...row, amount: Number(row.amount) };
+}
+
+/* ─── Generate Invoice Modal ────────────────────────────────────────────────── */
+function GenerateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [form, setForm] = useState({ payerName: "", schoolOrUser: "", amount: "", method: "UPI", status: "PENDING" as const });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.payerName.trim() || !form.amount.trim()) { setError("Payer name and amount are required."); return; }
+    setSaving(true); setError("");
+    const result = await createPayment({
+      payerName: form.payerName,
+      schoolOrUser: form.schoolOrUser || undefined,
+      amount: Number(form.amount) || 0,
+      method: form.method,
+      status: form.status,
+    });
+    setSaving(false);
+    if (result.success) { onCreated(); onClose(); }
+    else { setError(result.message); }
+  }
+
+  const f = (k: keyof typeof form, label: string, type = "text") => (
+    <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+      <label style={{ fontSize:12, fontWeight:600, color:"#475569" }}>{label}</label>
+      <input type={type} style={{ padding:"9px 12px", borderRadius:8, border:"1.5px solid #e2e8f0", fontSize:13, outline:"none" }}
+        value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} />
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:9999 }} onClick={onClose}>
+      <div style={{ background:"#fff", borderRadius:20, padding:32, width:460, maxWidth:"calc(100vw - 32px)", boxShadow:"0 20px 60px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+          <h2 style={{ fontSize:20, fontWeight:800, color:"#1e1b4b", margin:0 }}>Generate Invoice</h2>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:18, cursor:"pointer", color:"#94a3b8" }}>✕</button>
+        </div>
+        {error && <p style={{ fontSize:12, color:"#dc2626", marginBottom:12 }}>⚠️ {error}</p>}
+        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+          {f("payerName", "Payer Name *")}
+          {f("schoolOrUser", "School / User")}
+          {f("amount", "Amount (₹) *", "number")}
+          {f("method", "Payment Method")}
+          <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+            <button type="button" onClick={onClose} style={{ padding:"9px 18px", border:"1.5px solid #e2e8f0", borderRadius:10, background:"#fff", fontSize:13, fontWeight:600, cursor:"pointer", color:"#475569" }}>Cancel</button>
+            <button type="submit" disabled={saving} style={{ padding:"9px 20px", border:"none", borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", opacity:saving ? .6 : 1 }}>
+              {saving ? "Generating…" : "Generate Invoice"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPaymentsPage() {
-  // Starts completely empty.
-  // Data can later come from API/backend.
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+  const loadPayments = () => {
+    setLoading(true);
+    fetchPayments().then((rows) => { setPayments(rows.map(toPayment)); setLoading(false); });
+  };
+
+  useEffect(() => { loadPayments(); }, []);
 
   /* =========================
      DYNAMIC PAYMENT STATISTICS
@@ -132,11 +197,17 @@ export default function AdminPaymentsPage() {
   ========================= */
 
   const handleGenerateInvoice = () => {
-    console.log("Generate Invoice");
+    setShowInvoiceModal(true);
   };
 
   return (
     <AdminLayout>
+      {showInvoiceModal && (
+        <GenerateInvoiceModal
+          onClose={() => setShowInvoiceModal(false)}
+          onCreated={loadPayments}
+        />
+      )}
       <div className="space-y-6">
 
         {/* =========================
@@ -317,7 +388,7 @@ export default function AdminPaymentsPage() {
 
           <ReusableTable
             title="Transaction History & Billing Logs"
-            subtitle="View payments, invoice status, UPI transactions and school subscription renewals."
+            subtitle={loading ? "Loading transactions…" : "View payments, invoice status, UPI transactions and school subscription renewals."}
             data={payments}
             columns={paymentColumns}
             searchPlaceholder="Search by transaction ID, school or method..."

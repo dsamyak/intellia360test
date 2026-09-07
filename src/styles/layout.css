@@ -4751,12 +4751,22 @@
 .db-health-status {
   font-size: .64rem;
   font-weight: 800;
+  color: var(--color-success);
 }
 
 .db-health-ms {
   color: var(--color-text-muted);
   font-size: .62rem;
   white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOTTOM ROW: top list + recent activity + quick actions
+   ══════════════════════════════════════════════════════════════ */
+.db-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 14px;
 }
 
 /* ─── Chapter list ─── */
