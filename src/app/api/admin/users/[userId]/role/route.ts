@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
+import { ALL_ROLES } from "@/lib/auth/roles";
 import { db } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import type { AuthResponse, UserRole } from "@/types/auth";
@@ -19,7 +20,7 @@ import type { AuthResponse, UserRole } from "@/types/auth";
 type Params = { params: Promise<{ userId: string }> };
 
 const RoleChangeSchema = z.object({
-  role: z.enum(["ADMIN", "STUDENT", "PARENT", "TEACHER", "SCHOOL", "EDITOR"]),
+  role: z.enum(ALL_ROLES),
   reason: z.string().max(500).optional(), // optional audit note
 });
 

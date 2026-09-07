@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { dashboardFor } from "@/lib/auth/roles";
+import type { UserRole } from "@/types/auth";
 
 const rawSecret = process.env.AUTH_JWT_SECRET;
 if (!rawSecret || rawSecret.trim().length < 32) {
@@ -12,12 +14,10 @@ const secret = new TextEncoder().encode(rawSecret);
 
 const SESSION_COOKIE = "intellia_session";
 
-type Role = "ADMIN" | "STUDENT" | "PARENT" | "TEACHER" | "SCHOOL" | "EDITOR";
-
 interface JWTPayload {
   sub:   string;
   email: string;
-  role:  Role;
+  role:  UserRole;
   name:  string;
 }
 
@@ -48,13 +48,6 @@ function matches(pathname: string, prefixes: string[]): boolean {
   return prefixes.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
-}
-
-function dashboardFor(role: Role): string {
-  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
-  if (role === "EDITOR")                       return "/editor/dashboard";
-  if (role === "ADMIN")                        return "/admin/dashboard";
-  return "/student/dashboard";
 }
 
 export async function proxy(request: NextRequest) {

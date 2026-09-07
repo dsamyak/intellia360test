@@ -4,7 +4,7 @@ import type { JWTPayload, UserRole } from "@/types/auth";
 import type { AuthResponse } from "@/types/auth";
 
 /** Roles allowed to access student-facing API routes. */
-const STUDENT_ROLES: UserRole[] = ["STUDENT", "PARENT", "ADMIN"];
+const STUDENT_ROLES: readonly UserRole[] = ["STUDENT", "PARENT", "ADMIN"];
 
 export interface StudentSession {
   userId: string;

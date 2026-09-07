@@ -7,7 +7,10 @@ import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
 const ResendSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  // Same trim + lowercase normalisation as registration, otherwise a
+  // mixed-case address never matches the stored row and the user silently
+  // stops receiving verification links.
+  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
 });
 
 // Generic — anti-enumeration: always the same response regardless of outcome.
