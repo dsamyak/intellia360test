@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 
 type HomepageLeaderboardEntry = {
-  userId: string;
+  // No userId: the public leaderboard does not expose account identifiers.
   name: string;
   avatar?: string | null;
   rank: number;
@@ -66,19 +66,19 @@ const steps = [
   },
   {
     number: "02",
-    image: "/assets/home/story-3d.png",
+    image: "/assets/home/story.png",
     title: "Story",
     text: "Learn the concept through engaging stories, explanations and visual examples.",
   },
   {
     number: "03",
-    image: "/assets/home/simulate-3d.png",
+    image: "/assets/home/simulate.png",
     title: "Simulate",
     text: "Explore the concept through interactive visuals and hands-on simulations.",
   },
   {
     number: "04",
-    image: "/assets/home/play-3d.png",
+    image: "/assets/home/play.png",
     title: "Play",
     text: "Apply what you learned through games, challenges, quizzes and activities.",
   },
@@ -285,6 +285,130 @@ const audiences = [
 ============================================================ */
 
 /* ============================================================
+   EXPERIENCE VIDEO ROW
+   - 3 separate videos
+   - Autoplay muted
+   - Click video/card to toggle sound
+   - Keeps every video inside a fixed video card
+============================================================ */
+
+type ExperienceVideoItem = {
+  title: string;
+  label: string;
+  text: string;
+  points: string[];
+  video: string;
+};
+
+function ExperienceVideoRow({
+  item,
+  index,
+}: {
+  item: ExperienceVideoItem;
+  index: number;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [soundOn, setSoundOn] = useState(false);
+
+  const toggleVideoSound = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (video.muted) {
+        video.muted = false;
+        video.volume = 1;
+        setSoundOn(true);
+        await video.play();
+      } else {
+        video.muted = true;
+        setSoundOn(false);
+      }
+    } catch (error) {
+      console.error("[Experience Video] Unable to toggle sound:", error);
+    }
+  };
+
+  const handleVideoKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      void toggleVideoSound();
+    }
+  };
+
+  const rewardXP = [120, 180, 250][index] ?? 120;
+  const stage = ["EXPLORE", "PRACTICE", "MASTER"][index] ?? "LEARN";
+
+  return (
+    <article className={`experience-quest-card ${index % 2 === 0 ? "content-left" : "video-left"}`}>
+      <div className="experience-quest-copy">
+        <div className="experience-quest-topline">
+          <span className="experience-quest-number">{String(index + 1).padStart(2, "0")}</span>
+          <span className="experience-quest-stage">{stage} QUEST</span>
+          <span className="experience-quest-xp">+{rewardXP} XP</span>
+        </div>
+
+        <span className="experience-label">{item.label}</span>
+        <h3>{item.title}</h3>
+        <p>{item.text}</p>
+
+        <div className="experience-reward-row">
+          <span className="experience-reward-dot" aria-hidden="true" />
+          <span>Complete this learning challenge to level up your skills.</span>
+        </div>
+
+        <ul>
+          {item.points.map((point) => (
+            <li key={point}>
+              <span className="experience-check" aria-hidden="true">✓</span>
+              <span className="experience-point-text">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div
+        className={`experience-quest-video ${soundOn ? "sound-active" : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label={`${item.title}. Click to ${soundOn ? "mute" : "turn on sound"}`}
+        onClick={() => void toggleVideoSound()}
+        onKeyDown={handleVideoKeyDown}
+      >
+        <video
+          ref={videoRef}
+          className="experience-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+        >
+          <source src={item.video} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        <div className="experience-video-overlay" aria-hidden="true" />
+
+        <div className="experience-video-badge">
+          <span className="experience-video-badge-icon">▶</span>
+          <span>{soundOn ? "Sound On" : "Preview Quest"}</span>
+        </div>
+
+        <div className="experience-video-progress" aria-hidden="true">
+          <span />
+        </div>
+
+        <div className="experience-sound-control">
+          <span className="experience-sound-icon" aria-hidden="true">{soundOn ? "ON" : "OFF"}</span>
+          <span>{soundOn ? "Sound On" : "Click for Sound"}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* ============================================================
    PAGE
 ============================================================ */
 
@@ -304,8 +428,11 @@ export default function HomePage() {
     try {
       setLeaderboardLoading(true);
 
+      // The endpoint sets Cache-Control (60s fresh, 5min stale-while-revalidate).
+      // "no-store" forced a database round-trip on every poll and from every
+      // anonymous visitor; "default" lets the browser and CDN absorb repeats.
       const response = await fetch("/api/student/leaderboard?limit=6", {
-        cache: "no-store",
+        cache: "default",
       });
 
       if (!response.ok) {
@@ -358,8 +485,10 @@ export default function HomePage() {
   useEffect(() => {
     fetchHomepageLeaderboard();
 
-    // Refresh periodically so homepage rankings stay current.
-    const interval = window.setInterval(fetchHomepageLeaderboard, 30000);
+    // Refresh periodically so homepage rankings stay current. The interval is
+    // aligned with the endpoint cache window — polling faster than the cache
+    // is fresh just re-reads the same response.
+    const interval = window.setInterval(fetchHomepageLeaderboard, 120000);
 
     return () => window.clearInterval(interval);
   }, [fetchHomepageLeaderboard]);
@@ -401,7 +530,6 @@ export default function HomePage() {
                 className="home-logo-image"
               />
             </Link>
-
 
             {/* ==================================================
           NAVIGATION
@@ -825,92 +953,148 @@ export default function HomePage() {
     HERO SECTION
 ====================================================== */}
 
-      <section className="hero-section">
-
+      <section className="hero-section" aria-labelledby="home-hero-title">
         <div className="home-container hero-grid">
 
-          {/* =========================
-        LEFT CONTENT
-    ========================= */}
-
+          {/* ==================================================
+              HERO CONTENT
+          ================================================== */}
           <div className="hero-content">
 
             <div className="hero-eyebrow">
-              Play. Learn. Evolve
+              <span className="hero-eyebrow-dot" aria-hidden="true" />
+              PLAY • LEARN • LEVEL UP
             </div>
 
-            <h1>
-              Intelligence Through
+            <h1 id="home-hero-title">
+              Turn Learning Into
               <br />
-              <span>Exploration.</span>
+              <span>an Adventure.</span>
             </h1>
 
-            <div className="hero-underline" />
+            <p className="hero-description">
+              Explore interactive mathematics, complete challenges, earn XP,
+              build streaks and unlock achievements as you learn.
+            </p>
 
-            <Link
-              href="/login"
-              className="hero-course-btn"
-            >
-              Explore Course Packages
-            </Link>
+            <div className="hero-actions">
+              <Link href="/login" className="hero-primary">
+                Start Your Quest
+                <span aria-hidden="true">→</span>
+              </Link>
 
-            {/* RATING CARD */}
+              <Link href="/login" className="hero-secondary">
+                Explore Courses
+              </Link>
+            </div>
 
-            <div className="hero-rating-card">
-
-              <div className="rating-score">
-                4.85
-              </div>
-
-              <div className="rating-content">
-
-                <strong>
-                  Average Rating
-                </strong>
-
+            {/* Gamification feature strip */}
+            <div className="hero-gamification-strip" aria-label="Gamification features">
+              <div className="hero-game-stat">
+                <span className="hero-game-icon hero-game-icon-xp" aria-hidden="true">XP</span>
                 <span>
-                  183,406 Learner reviews
+                  <strong>Earn XP</strong>
+                  <small>For every challenge</small>
                 </span>
-
               </div>
 
+              <div className="hero-game-divider" aria-hidden="true" />
+
+              <div className="hero-game-stat">
+                <span className="hero-game-icon hero-game-icon-streak" aria-hidden="true">7</span>
+                <span>
+                  <strong>Build Streaks</strong>
+                  <small>Keep learning daily</small>
+                </span>
+              </div>
+
+              <div className="hero-game-divider" aria-hidden="true" />
+
+              <div className="hero-game-stat">
+                <span className="hero-game-icon hero-game-icon-badge" aria-hidden="true">★</span>
+                <span>
+                  <strong>Unlock Badges</strong>
+                  <small>Celebrate milestones</small>
+                </span>
+              </div>
             </div>
 
           </div>
-          {/* Right Hero Video */}
-          <div className="hero-video-area">
-            <div className="hero-video-card">
-              <video
-                className="mascot-hero-video"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                onClick={(e) => {
-                  const video = e.currentTarget;
 
-                  if (video.muted) {
-                    video.muted = false;
-                    video.volume = 1;
-                    video.play();
-                  } else {
-                    video.muted = true;
-                  }
-                }}
-                aria-label="Intellia360 mascot introduction video"
-              >
-                <source
-                  src="/assets/home/mascot_intro.mp4"
-                  type="video/mp4"
-                />
-                Your browser does not support the video tag.
-              </video>
+          {/* ==================================================
+              GAMIFIED MASCOT / QUEST CARD
+          ================================================== */}
+          <div className="hero-video-area">
+
+            <div className="hero-quest-card">
+
+              <div className="hero-quest-topline">
+                <span className="hero-quest-status">
+                  <span className="hero-status-dot" aria-hidden="true" />
+                  LEARNING QUEST
+                </span>
+                <span className="hero-quest-level">LEVEL UP</span>
+              </div>
+
+              <div className="hero-video-card">
+                <video
+                  className="mascot-hero-video"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onClick={(e) => {
+                    const video = e.currentTarget;
+
+                    if (video.muted) {
+                      video.muted = false;
+                      video.volume = 1;
+                      void video.play();
+                    } else {
+                      video.muted = true;
+                    }
+                  }}
+                  aria-label="Intellia360 mascot introduction video"
+                >
+                  <source
+                    src="/assets/home/mascot_intro.mp4"
+                    type="video/mp4"
+                  />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              <div className="hero-quest-footer">
+                <div className="hero-quest-copy">
+                  <strong>Your next challenge awaits.</strong>
+                  <span>Learn a concept • Complete a challenge • Level up</span>
+                </div>
+
+                <span className="hero-quest-arrow" aria-hidden="true">→</span>
+              </div>
+
             </div>
+
+            <div className="hero-floating-card hero-floating-xp" aria-hidden="true">
+              <span className="hero-floating-icon">XP</span>
+              <span>
+                <strong>Earn XP</strong>
+                <small>Learn & progress</small>
+              </span>
+            </div>
+
+            <div className="hero-floating-card hero-floating-badge" aria-hidden="true">
+              <span className="hero-floating-icon">★</span>
+              <span>
+                <strong>Badges</strong>
+                <small>Unlock achievements</small>
+              </span>
+            </div>
+
           </div>
 
         </div>
-
       </section>
       {/* ======================================================
           FEATURES
@@ -920,17 +1104,15 @@ export default function HomePage() {
     WHY INTELLIA360
 ====================================================== */}
 
-      <section
-        className="features-section"
-        id="learning"
-      >
+      {/* ======================================================
+    WHY INTELLIA360 — COMPACT PRODUCT VISUALS
+    Keep the existing section background/layout.
+====================================================== */}
+      <section className="features-section" id="learning">
         <div className="home-container">
 
           <div className="section-heading">
-
-            <span className="section-eyebrow">
-              WHY INTELLIA360?
-            </span>
+            <span className="section-eyebrow">WHY INTELLIA360?</span>
 
             <h2>
               Learning That Feels Like
@@ -940,50 +1122,103 @@ export default function HomePage() {
             <p>
               Everything students need to learn, practice, play and grow.
             </p>
-
           </div>
 
+          <div className="features-grid features-grid-product">
 
-          <div className="features-grid">
-
-            {features.map((feature) => (
-
-              <div
-                className="feature-item"
+            {features.map((feature, index) => (
+              <article
+                className={`feature-item feature-product-card feature-product-${index + 1}`}
                 key={feature.title}
               >
+                {/* Small CSS-built product visual — no external image/AI asset */}
+                <div className="feature-product-visual" aria-hidden="true">
+                  {index === 0 && (
+                    <div className="feature-visual-path">
+                      <span className="path-node path-node-main" />
+                      <span className="path-line path-line-one" />
+                      <span className="path-node path-node-two" />
+                      <span className="path-line path-line-two" />
+                      <span className="path-node path-node-three" />
+                      <span className="path-target" />
+                    </div>
+                  )}
 
+                  {index === 1 && (
+                    <div className="feature-visual-xp">
+                      <span className="xp-level">LEVEL 07</span>
+                      <strong>+240 XP</strong>
+                      <span className="xp-track">
+                        <span />
+                      </span>
+                      <small>Challenge complete</small>
+                    </div>
+                  )}
 
+                  {index === 2 && (
+                    <div className="feature-visual-lesson">
+                      <span className="lesson-window-top">
+                        <i /><i /><i />
+                      </span>
+                      <span className="lesson-play">›</span>
+                      <span className="lesson-line lesson-line-one" />
+                      <span className="lesson-line lesson-line-two" />
+                    </div>
+                  )}
 
-                <div className="feature-content">
+                  {index === 3 && (
+                    <div className="feature-visual-level">
+                      <span className="level-ring">
+                        <b>08</b>
+                      </span>
+                      <span className="level-copy">
+                        <small>NEXT LEVEL</small>
+                        <strong>1,240 XP</strong>
+                      </span>
+                    </div>
+                  )}
 
-                  <h3>
-                    {feature.title}
-                  </h3>
+                  {index === 4 && (
+                    <div className="feature-visual-security">
+                      <span className="security-shield">
+                        <b />
+                      </span>
+                      <span className="security-status">
+                        <strong>Protected</strong>
+                        <small>Learning data</small>
+                      </span>
+                    </div>
+                  )}
 
-                  <p>
-                    {feature.text}
-                  </p>
-
+                  {index === 5 && (
+                    <div className="feature-visual-ai">
+                      <span className="ai-orbit ai-orbit-one" />
+                      <span className="ai-orbit ai-orbit-two" />
+                      <span className="ai-core">AI</span>
+                      <span className="ai-message ai-message-one">Hint</span>
+                      <span className="ai-message ai-message-two">Explain</span>
+                    </div>
+                  )}
                 </div>
 
-              </div>
+                <div className="feature-content">
+                  <span className="feature-product-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
 
+                  <h3>{feature.title}</h3>
+                  <p>{feature.text}</p>
+                </div>
+
+                <span className="feature-product-arrow" aria-hidden="true">↗</span>
+              </article>
             ))}
 
           </div>
-
         </div>
 
-        {/* Decorative paper planes */}
-        <div className="feature-plane feature-plane-left">
-          ➤
-        </div>
-
-        <div className="feature-plane feature-plane-right">
-          ➤
-        </div>
-
+        <div className="feature-plane feature-plane-left" aria-hidden="true">➤</div>
+        <div className="feature-plane feature-plane-right" aria-hidden="true">➤</div>
       </section>
 
       {/* ======================================================
@@ -1296,95 +1531,99 @@ export default function HomePage() {
           SHOWCASE
       ====================================================== */}
 
-      <section className="showcase-section experience-section" id="experience">
+      {/* ======================================================
+          EXPERIENCE INTELLIA360 — COMPACT GAMIFIED SHOWCASE
+      ====================================================== */}
+      <section
+        className="showcase-section experience-section experience-compact-section"
+        id="experience"
+        aria-labelledby="experience-title"
+      >
         <div className="home-container">
-          <div className="section-heading">
-            <span className="section-eyebrow">EXPERIENCE INTELLIA360</span>
-            <h2>See <span>Intellia360</span> in Action</h2>
-            <p>Explore how interactive lessons, gamified practice and AI-powered guidance make learning more engaging.</p>
+          <div className="experience-compact-head">
+            <div>
+              <div className="hero-eyebrow experience-compact-eyebrow">
+                <span className="hero-eyebrow-dot" aria-hidden="true" />
+                EXPERIENCE INTELLIA360
+              </div>
+              <h2 id="experience-title">
+                Learn by <span>Exploring.</span>
+              </h2>
+              <p>
+                Short, visual learning quests that make every concept easier to understand.
+              </p>
+            </div>
+            <div className="experience-level-pill">
+              <strong>03</strong>
+              <span>Learning Quests</span>
+            </div>
           </div>
-          <div className="experience-list">
+
+          <div className="experience-compact-grid">
             {[
               {
-                title: "Learn Through Interactive Experiences",
-                label: "01 • EXPLORE",
-                text: "Students discover concepts through visual lessons, stories and hands-on activities that make difficult ideas easier to understand.",
-                points: [
-                  "Visual concept explanations",
-                  "Interactive activities",
-                  "Learn by exploring",
-                ],
+                number: "01",
+                label: "EXPLORE",
+                title: "Visual Math",
+                text: "Discover concepts through animation and examples.",
+                video: "/assets/home/mascot_pytha.mp4",
+                xp: "+120 XP",
               },
               {
-                title: "Practice That Feels Like Play",
-                label: "02 • PRACTICE",
-                text: "Turn practice into a motivating challenge with games, quizzes, XP and rewards that encourage students to keep improving.",
-                points: [
-                  "Games & challenges",
-                  "XP, levels and rewards",
-                  "Instant practice feedback",
-                ],
+                number: "02",
+                label: "PRACTICE",
+                title: "HCF Challenge",
+                text: "Practice numbers and strengthen problem-solving skills.",
+                video: "/assets/home/mascot_hcf.mp4",
+                xp: "+180 XP",
               },
               {
-                title: "AI That Helps Every Learner Grow",
-                label: "03 • IMPROVE",
-                text: "Intellia360 turns learning activity into useful insights so students can improve and adults can understand progress clearly.",
-                points: [
-                  "Progress insights",
-                  "Learning-gap detection",
-                  "Personalized support",
-                ],
+                number: "03",
+                label: "MASTER",
+                title: "Integration",
+                text: "Build confidence with guided visual examples.",
+                video: "/assets/home/mascot_integration.mp4",
+                xp: "+250 XP",
               },
-            ].map((item, index) => (
-              <article
-                className={`experience-row ${index % 2 === 0 ? "content-left" : "video-left"
-                  }`}
-                key={item.title}
-              >
-                {/* Content */}
-                <div className="experience-copy">
-                  <span className="experience-label">
-                    {item.label}
-                  </span>
-
-                  <h3>{item.title}</h3>
-
-                  <p>{item.text}</p>
-
-                  <ul>
-                    {item.points.map((point) => (
-                      <li key={point}>
-                        <span>✓</span>
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Video */}
-                <div className="experience-video-card">
+            ].map((item) => (
+              <article className="experience-compact-card" key={item.number}>
+                <div className="experience-compact-video-wrap">
                   <video
-                    className="experience-video"
+                    className="experience-compact-video"
                     autoPlay
                     loop
                     muted
                     playsInline
-                    preload="metadata"
-                    aria-label={`${item.title} demonstration`}
+                    preload="auto"
+                    aria-label={`${item.title} learning preview`}
                   >
-                    <source
-                      src="/assets/home/mascot_intro.mp4"
-                      type="video/mp4"
-                    />
+                    <source src={item.video} type="video/mp4" />
                   </video>
+                  <span className="experience-compact-number">{item.number}</span>
+                  <span className="experience-compact-xp">{item.xp}</span>
+                  <span className="experience-compact-play" aria-hidden="true">▶</span>
+                </div>
+
+                <div className="experience-compact-copy">
+                  <span className="experience-compact-label">{item.label}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
                 </div>
               </article>
             ))}
           </div>
+
+          <div className="experience-compact-footer">
+            <span className="experience-footer-line" aria-hidden="true" />
+            <span>Explore</span>
+            <span>→</span>
+            <span>Practice</span>
+            <span>→</span>
+            <strong>Master</strong>
+            <span className="experience-footer-line" aria-hidden="true" />
+          </div>
         </div>
       </section>
-
-
       {/* ======================================================
           GAMIFIED STATS
       ====================================================== */}
@@ -1650,7 +1889,7 @@ export default function HomePage() {
             ) : (
               leaderboardEntries.slice(0, 6).map((entry) => (
                 <div
-                  key={entry.userId}
+                  key={entry.rank}
                   className={`homepage-leaderboard-row ${entry.rank === 1
                     ? "rank-first"
                     : entry.rank === 2

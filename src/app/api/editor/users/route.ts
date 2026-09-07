@@ -30,6 +30,9 @@ export async function GET(request: NextRequest) {
   const q     = searchParams.get("q")    ?? "";
 
   const where = {
+    // Deactivated accounts are hidden here; admins manage them through
+    // /api/admin/users?includeDeleted=true.
+    deletedAt: null,
     ...(role ? { role: role as never } : {}),
     ...(q ? {
       OR: [

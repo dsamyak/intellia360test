@@ -19,3 +19,7 @@ build
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database backups — archives contain full production data
+backups/
+*.ndjson.gz

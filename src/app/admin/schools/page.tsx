@@ -329,23 +329,23 @@ export default function AdminSchoolsPage() {
           onSaved={loadSchools}
         />
       )}
-      <div className="space-y-6">
+      <div className="admin-schools-page">
 
         {/* =====================================
             Page Header
         ===================================== */}
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="admin-page-header">
           <div>
-            <div className="text-sm font-medium text-orange-500">
+            <div className="admin-breadcrumb">
               Admin / Schools
             </div>
 
-            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="admin-page-title">
               Schools
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="admin-page-subtitle">
               Manage registered schools, subscriptions and
               verification status.
             </p>
@@ -356,141 +356,96 @@ export default function AdminSchoolsPage() {
             Statistics Cards
         ===================================== */}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="school-stats-grid">
 
           {/* Total Schools */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+          <div className="school-stat-card">
+            <div className="school-stat-icon orange">
               <Building2 className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Total Schools
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.totalSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-slate-500">
-                Registered institutions
-              </div>
+            <div className="school-stat-content">
+              <span>Total Schools</span>
+              <strong>{schoolStats.totalSchools.toLocaleString()}</strong>
+              <small>Registered institutions</small>
             </div>
           </div>
 
           {/* Active Schools */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <div className="school-stat-card">
+            <div className="school-stat-icon green">
               <CheckCircle2 className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Active Schools
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.activeSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-emerald-600">
-                Currently active
-              </div>
+            <div className="school-stat-content">
+              <span>Active Schools</span>
+              <strong>{schoolStats.activeSchools.toLocaleString()}</strong>
+              <small className="success-text">Currently active</small>
             </div>
           </div>
 
           {/* Pending Verification */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+          <div className="school-stat-card">
+            <div className="school-stat-icon amber">
               <Clock className="h-6 w-6" />
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Pending Verification
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.pendingSchools.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-amber-600">
-                Needs review
-              </div>
+            <div className="school-stat-content">
+              <span>Pending Verification</span>
+              <strong>{schoolStats.pendingSchools.toLocaleString()}</strong>
+              <small>Needs review</small>
             </div>
           </div>
 
           {/* Total Students */}
-          <div className="admin-card flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+          <div className="school-stat-card">
+            <div className="school-stat-icon blue">
               <span className="text-xl">🎓</span>
             </div>
 
-            <div>
-              <div className="text-xs font-semibold text-slate-500">
-                Total Students
-              </div>
-
-              <div className="text-2xl font-extrabold text-slate-900">
-                {schoolStats.totalStudents.toLocaleString()}
-              </div>
-
-              <div className="text-xs text-slate-500">
-                Across all schools
-              </div>
+            <div className="school-stat-content">
+              <span>Total Students</span>
+              <strong>{schoolStats.totalStudents.toLocaleString()}</strong>
+              <small>Across all schools</small>
             </div>
           </div>
-        </div>
-
-        {/* =====================================
-            Additional Overview
-        ===================================== */}
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
           {/* Teachers */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Total Teachers
+          <div className="school-stat-card">
+            <div className="school-stat-icon purple">
+              <Building2 className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-slate-900">
-              {schoolStats.totalTeachers.toLocaleString()}
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              Across registered schools
+            <div className="school-stat-content">
+              <span>Total Teachers</span>
+              <strong>{schoolStats.totalTeachers.toLocaleString()}</strong>
+              <small>Across registered schools</small>
             </div>
           </div>
 
           {/* Inactive */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Inactive Schools
+          <div className="school-stat-card">
+            <div className="school-stat-icon slate">
+              <Clock className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-slate-900">
-              {schoolStats.inactiveSchools.toLocaleString()}
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              Currently inactive
+            <div className="school-stat-content">
+              <span>Inactive Schools</span>
+              <strong>{schoolStats.inactiveSchools.toLocaleString()}</strong>
+              <small>Currently inactive</small>
             </div>
           </div>
 
           {/* Active Rate */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-medium text-slate-500">
-              Active Rate
+          <div className="school-stat-card">
+            <div className="school-stat-icon green">
+              <CheckCircle2 className="h-6 w-6" />
             </div>
 
-            <div className="mt-2 text-2xl font-bold text-emerald-600">
-              {schoolStats.activeRate}%
-            </div>
-
-            <div className="mt-1 text-xs text-slate-500">
-              School activation rate
+            <div className="school-stat-content">
+              <span>Active Rate</span>
+              <strong className="success-text">{schoolStats.activeRate}%</strong>
+              <small>School activation rate</small>
             </div>
           </div>
         </div>

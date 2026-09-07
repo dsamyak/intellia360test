@@ -260,7 +260,7 @@ export default function LeaderboardPage() {
 
                 return (
                   <div
-                    key={entry.userId}
+                    key={entry.rank}
                     className={`sl-row ${entry.isCurrentUser ? "current-user" : ""}`}
                   >
                     {/* Rank */}

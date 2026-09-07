@@ -6,12 +6,26 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
+import {
+  assertGradeId,
+  assertLessonId,
+  mirrorCurriculumWrite,
+  resolveInStore,
+  storePath,
+  UnsafePathError,
+} from "@/lib/content/curriculum-store";
+import { recordAudit } from "@/lib/audit";
 import type { AuthResponse } from "@/types/auth";
 
-const DATA_ROOT = path.join(process.cwd(), "src", "data", "grades");
-
 function lessonsDir(gradeId: string) {
-  return path.join(DATA_ROOT, gradeId, "lessons");
+  return resolveInStore(gradeId, "lessons");
+}
+
+function badPath(err: unknown) {
+  return NextResponse.json<AuthResponse>(
+    { success: false, message: err instanceof UnsafePathError ? err.message : "Invalid path" },
+    { status: 400 }
+  );
 }
 
 export interface LessonSummary {
@@ -31,8 +45,14 @@ export async function GET(
   const { errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  const { gradeId } = await params;
-  const dir = lessonsDir(gradeId);
+  let gradeId: string;
+  let dir: string;
+  try {
+    gradeId = assertGradeId((await params).gradeId);
+    dir = lessonsDir(gradeId);
+  } catch (err) {
+    return badPath(err);
+  }
 
   if (!fs.existsSync(dir)) {
     return NextResponse.json<AuthResponse<LessonSummary[]>>(
@@ -70,20 +90,34 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ gradeId: string }> }
 ) {
-  const { errorResponse } = await requireEditorSession();
+  const { session, errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  const { gradeId } = await params;
-  const dir = lessonsDir(gradeId);
+  let gradeId: string;
+  let dir: string;
+  try {
+    gradeId = assertGradeId((await params).gradeId);
+    dir = lessonsDir(gradeId);
+  } catch (err) {
+    return badPath(err);
+  }
 
   const body = await request.json().catch(() => ({}));
-  const lessonId: string = (body.id ?? "").trim().toLowerCase().replace(/\s+/g, "-");
+  const rawId: string = (body.id ?? "").trim().toLowerCase().replace(/\s+/g, "-");
 
-  if (!lessonId) {
+  if (!rawId) {
     return NextResponse.json<AuthResponse>(
       { success: false, message: "id is required" },
       { status: 422 }
     );
+  }
+
+  // The slug becomes a filename, so it gets the same validation as a route param.
+  let lessonId: string;
+  try {
+    lessonId = assertLessonId(rawId);
+  } catch (err) {
+    return badPath(err);
   }
 
   const filePath = path.join(dir, `${lessonId}.json`);
@@ -119,6 +153,25 @@ export async function POST(
   };
 
   fs.writeFileSync(filePath, JSON.stringify(lesson, null, 2));
+
+  await mirrorCurriculumWrite({
+    path: storePath(gradeId, "lessons", `${lessonId}.json`),
+    gradeId,
+    kind: "lesson",
+    lessonId,
+    content: lesson,
+    updatedBy: session.userId,
+  });
+
+  await recordAudit({
+    actor: { userId: session.userId, email: session.email, role: session.role },
+    action: "lesson.create",
+    entityType: "CurriculumDocument",
+    entityId: storePath(gradeId, "lessons", `${lessonId}.json`),
+    summary: `Created lesson ${lessonId} (${gradeId})`,
+    after: lesson,
+    request,
+  });
 
   return NextResponse.json<AuthResponse<typeof lesson>>(
     { success: true, message: "Lesson created", data: lesson },
