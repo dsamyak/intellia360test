@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation";
+
+/** Legacy scaffold route — lesson planning is handled by the AI assistant. */
 export default function TeacherAIPlannerPage() {
-  return (
-    <div>
-      {/* Teacher AI Lesson Planner Scaffold */}
-    </div>
-  );
+  redirect("/teacher/ai-assistant");
 }
