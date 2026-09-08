@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { notArchived } from "@/lib/db-filters";
 import { recordAudit } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 import type { AuthResponse } from "@/types/auth";
@@ -37,7 +38,8 @@ export async function GET(request: NextRequest) {
   const includeArchived = searchParams.get("includeArchived") === "true";
 
   const where: Prisma.ContentResourceWhereInput = {
-    ...(includeArchived ? {} : { archivedAt: null }),
+    // notArchived() rather than `archivedAt: null` — see src/lib/db-filters.ts.
+    ...(includeArchived ? {} : { AND: [notArchived()] }),
     ...(category ? { category } : {}),
     ...(q
       ? {
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
   // The same title in the same category is almost always a double-submitted
   // form rather than a genuinely distinct resource.
   const duplicate = await db.contentResource.findFirst({
-    where: { category, title: { equals: title, mode: "insensitive" }, archivedAt: null },
+    where: { category, title: { equals: title, mode: "insensitive" }, AND: [notArchived()] },
     select: { id: true },
   });
 

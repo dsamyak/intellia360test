@@ -4074,22 +4074,11 @@ a {
     white-space: nowrap;
 }
 
-.home-logo::before {
-    content: "";
-    display: inline-block;
-
-    width: 8px;
-    height: 8px;
-
-    margin-right: 3px;
-
-    border-radius: 50%;
-    background: #ff8a00;
-
-    vertical-align: top;
-
-    box-shadow: 0 0 12px rgba(255, 138, 0, 0.6);
-}
+/* The orange bullet that used to sit here belonged to the text-based wordmark
+ * this block still styles (.home-logo span, font-size/letter-spacing above).
+ * .home-logo now wraps an <Image>, so the dot rendered as a loose orange
+ * speck floating to the left of the logo and pushed it off the page gutter.
+ * Removed — the mark in the artwork already carries the brand. */
 
 .home-logo span,
 .footer-logo span {
@@ -11579,11 +11568,28 @@ a {
     box-sizing: border-box !important;
 }
 
+/* Logo geometry.
+ *
+ * The artwork is a 1024x1024 canvas whose wordmark only occupies the middle
+ * band — x 10.3%-89.4%, y 29.4%-76.5% — so roughly half the file is
+ * transparent padding. `contain` therefore fitted the whole square into the
+ * box and drew the mark at the height of the box while leaving the rest of a
+ * 250px-wide slot empty: an 88px-tall logo with 3.5px of clearance in a 96px
+ * header, then ~160px of dead space before the nav, while the Login button
+ * beside it sat with 26px of clearance. That mismatch is what made the header
+ * look unevenly padded.
+ *
+ * `cover` crops the transparent margin instead of scaling it, so the box is
+ * the mark. At a 0.55 height:width ratio the visible window spans 23.9%-78.9%
+ * of the artwork, clearing the wordmark's 29.4%-76.5% on both sides, and
+ * `object-position` centres on the mark's own midpoint (53%) rather than the
+ * canvas's. 110x60 puts the mark at ~87x52 — in proportion with the 44px
+ * Login button and the 40px icon buttons, with even 18px clearance. */
 .home-page .home-logo {
-    width: 250px !important;
-    min-width: 250px !important;
-    height: 96px !important;
-    flex: 0 0 250px !important;
+    width: 110px !important;
+    min-width: 110px !important;
+    height: 60px !important;
+    flex: 0 0 110px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
@@ -11592,13 +11598,13 @@ a {
 }
 
 .home-page .home-logo-image {
-    width: 250px !important;
-    max-width: 250px !important;
-    height: auto !important;
-    max-height: 88px !important;
+    width: 110px !important;
+    max-width: 110px !important;
+    height: 60px !important;
+    max-height: 60px !important;
     display: block !important;
-    object-fit: contain !important;
-    object-position: left center !important;
+    object-fit: cover !important;
+    object-position: center 53% !important;
 }
 
 .home-page .desktop-nav,
@@ -11727,16 +11733,19 @@ a {
     }
 
     .home-page .home-logo {
-        width: 215px !important;
-        min-width: 215px !important;
-        height: 90px !important;
-        flex-basis: 215px !important;
+        width: 104px !important;
+        min-width: 104px !important;
+        height: 57px !important;
+        flex-basis: 104px !important;
     }
 
+    /* Width and height move together so the cover crop keeps the wordmark
+       whole — see the base rule for the 0.55 ratio. */
     .home-page .home-logo-image {
-        width: 215px !important;
-        max-width: 215px !important;
-        max-height: 82px !important;
+        width: 104px !important;
+        max-width: 104px !important;
+        height: 57px !important;
+        max-height: 57px !important;
     }
 }
 
@@ -11755,16 +11764,19 @@ a {
     }
 
     .home-page .home-logo {
-        width: 175px !important;
-        min-width: 175px !important;
-        height: 82px !important;
-        flex-basis: 175px !important;
+        width: 98px !important;
+        min-width: 98px !important;
+        height: 54px !important;
+        flex-basis: 98px !important;
     }
 
+    /* Width and height move together so the cover crop keeps the wordmark
+       whole — see the base rule for the 0.55 ratio. */
     .home-page .home-logo-image {
-        width: 175px !important;
-        max-width: 175px !important;
-        max-height: 74px !important;
+        width: 98px !important;
+        max-width: 98px !important;
+        height: 54px !important;
+        max-height: 54px !important;
     }
 }
 
@@ -11783,16 +11795,19 @@ a {
     }
 
     .home-page .home-logo {
-        width: 150px !important;
-        min-width: 150px !important;
-        height: 76px !important;
-        flex-basis: 150px !important;
+        width: 92px !important;
+        min-width: 92px !important;
+        height: 50px !important;
+        flex-basis: 92px !important;
     }
 
+    /* Width and height move together so the cover crop keeps the wordmark
+       whole — see the base rule for the 0.55 ratio. */
     .home-page .home-logo-image {
-        width: 150px !important;
-        max-width: 150px !important;
-        max-height: 68px !important;
+        width: 92px !important;
+        max-width: 92px !important;
+        height: 50px !important;
+        max-height: 50px !important;
     }
 
     .home-page .hero-video-area {
@@ -11826,16 +11841,19 @@ a {
     }
 
     .home-page .home-logo {
-        width: 130px !important;
-        min-width: 130px !important;
-        height: 72px !important;
-        flex-basis: 130px !important;
+        width: 84px !important;
+        min-width: 84px !important;
+        height: 46px !important;
+        flex-basis: 84px !important;
     }
 
+    /* Width and height move together so the cover crop keeps the wordmark
+       whole — see the base rule for the 0.55 ratio. */
     .home-page .home-logo-image {
-        width: 130px !important;
-        max-width: 130px !important;
-        max-height: 64px !important;
+        width: 84px !important;
+        max-width: 84px !important;
+        height: 46px !important;
+        max-height: 46px !important;
     }
 }
 

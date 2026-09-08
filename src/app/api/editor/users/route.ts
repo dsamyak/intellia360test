@@ -9,6 +9,7 @@ import { hashPassword } from "@/lib/auth/hash";
 import { PasswordSchema } from "@/lib/auth/validation";
 import { ALL_ROLES } from "@/lib/auth/roles";
 import { db } from "@/lib/db";
+import { notDeleted } from "@/lib/db-filters";
 import type { AuthResponse } from "@/types/auth";
 
 export interface UserRow {
@@ -31,8 +32,9 @@ export async function GET(request: NextRequest) {
 
   const where = {
     // Deactivated accounts are hidden here; admins manage them through
-    // /api/admin/users?includeDeleted=true.
-    deletedAt: null,
+    // /api/admin/users?includeDeleted=true. notDeleted() rather than
+    // `deletedAt: null` — see src/lib/db-filters.ts.
+    AND: [notDeleted()],
     ...(role ? { role: role as never } : {}),
     ...(q ? {
       OR: [

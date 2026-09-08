@@ -1,5 +1,38 @@
+import path from 'node:path';
+import { config } from 'dotenv';
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+
+// ── Environment ──────────────────────────────────────────────────────────────
+// `npm run seed` shells out to ts-node, which loads no env file of its own.
+// The only reason this used to work at all was that Prisma Client quietly reads
+// `.env` when it is constructed — and `.env` is gitignored, so a fresh clone
+// has only `.env.example`. Developers put their real credentials in `.env.local`
+// (the file Next.js reads), that file was never loaded here, DATABASE_URL came
+// back undefined and the seed died before its first query.
+//
+// Load both explicitly, in Next.js' own precedence: `.env` first, then
+// `.env.local` overriding it. Both `npm run seed` and `prisma db seed` run from
+// the project root, so the files are resolved against process.cwd(); if that
+// ever is not the case the guard below names the exact paths it tried.
+// (`__dirname` is deliberately not used — ts-node parses this file as an ES
+// module, where it is not defined.)
+const projectRoot = process.cwd();
+const envPath = path.join(projectRoot, '.env');
+const envLocalPath = path.join(projectRoot, '.env.local');
+
+config({ path: envPath });
+config({ path: envLocalPath, override: true });
+
+if (!process.env.DATABASE_URL) {
+  console.error(
+    '❌ DATABASE_URL is not set.\n' +
+      `   Looked in ${envPath} and ${envLocalPath}.\n` +
+      '   Copy .env.example to .env.local, fill in DATABASE_URL, then re-run `npm run seed`\n' +
+      '   from the project root.'
+  );
+  process.exit(1);
+}
 
 const prisma = new PrismaClient();
 

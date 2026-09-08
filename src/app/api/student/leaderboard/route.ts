@@ -26,6 +26,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { notDeleted } from "@/lib/db-filters";
 import type { AuthResponse } from "@/types/auth";
 
 const DEFAULT_LIMIT = 50;
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
     // Deactivated accounts drop off the board; their profile rows are retained.
     const where = {
       ...(grade ? { grade } : {}),
-      user: { role: "STUDENT" as const, deletedAt: null },
+      user: { role: "STUDENT" as const, AND: [notDeleted()] },
     };
 
     const [profiles, total] = await Promise.all([

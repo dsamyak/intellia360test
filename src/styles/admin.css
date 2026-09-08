@@ -468,10 +468,26 @@
   min-width: 0;
 }
 
+/* The brand mark is a transparent PNG whose wordmark is drawn in near-black
+ * navy (≈ rgb(11,39,84)) — made for light surfaces, where it scores 14.7:1.
+ * Against this sidebar's #1d2049 → #14152e gradient it measures 1.06:1, i.e.
+ * effectively invisible, which is what made the Admin Module logo unreadable.
+ *
+ * Seating it on a light plate keeps the brand's real colours (recolouring the
+ * mark with a filter would throw away the orange in the "360") and takes the
+ * mark well past the 3:1 non-text contrast threshold. */
 .admin-sidebar-logo-img {
+  /* The source is a 1:1 canvas with deep transparent margins, so `contain`
+   * rendered a near-square plate that was mostly empty. `cover` trims those
+   * margins and leaves a brand chip sized to the wordmark itself. */
   width: 132px;
-  height: auto;
-  object-fit: contain;
+  height: 74px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 
 .admin-sidebar-brand-sub {
@@ -485,6 +501,8 @@
 
 .admin-sidebar.is-collapsed .admin-sidebar-logo-img {
   width: 52px;
+  height: 52px;
+  border-radius: 10px;
 }
 
 .admin-sidebar.is-collapsed .admin-sidebar-brand-sub,
