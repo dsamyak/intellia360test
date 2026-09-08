@@ -1,5 +1,6 @@
 "use client";
 
+import { getRows } from "@/data/admin/tables";
 import React, { useEffect, useMemo, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import {
@@ -25,10 +26,7 @@ type ContentItem = {
 };
 
 async function fetchContentItems(): Promise<ContentItem[]> {
-  const res = await fetch("/api/admin/content");
-  const json = await res.json();
-  if (!json.success) return [];
-  return json.data as ContentItem[];
+  return getRows<ContentItem>("/api/admin/content", "load content");
 }
 
 type CategoryConfig = {

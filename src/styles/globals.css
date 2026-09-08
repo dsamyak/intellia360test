@@ -3,26 +3,53 @@
 @import "./teacher.css";
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* These are base styles and must live in `@layer base`.
+ *
+ * Unlayered rules beat every layered rule no matter how specific, so while this
+ * block sat outside a layer it silently overrode Tailwind's `@layer utilities`
+ * across the whole app: `* { margin:0; padding:0 }` cancelled every padding and
+ * margin utility, `button { border:none; background:none }` cancelled every
+ * background and border utility on a <button>, and `a { color:inherit }`
+ * cancelled every text colour on a link.
+ * The Teacher Console is the section built on those utilities, so it rendered
+ * with no spacing at all — cards collapsed onto each other and the content sat
+ * underneath the fixed sidebar.
+ *
+ * Inside `@layer base` these rules still come after Tailwind's own preflight
+ * (same layer, later source order), so the reset behaviour is unchanged, but
+ * utilities now win over them the way Tailwind intends.
+ */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  min-height: 100vh;
+  /* The horizontal-overflow guard belongs on `html` alone. `overflow-x` on the
+   * <body> turns the body into its own scroll container, and a `position:
+   * sticky` descendant then resolves against that container instead of the
+   * viewport — so it never sticks. That is why the Teacher Console topbar
+   * (`sticky top-0`) scrolled away with the page. Clipping on `html` keeps the
+   * guard without trapping sticky positioning. */
+  html {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  html, body {
+    min-height: 100vh;
+  }
+
+  body {
+    color: var(--color-text-main);
+    background-color: var(--color-bg);
+    font-family: var(--font-family-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { cursor: pointer; border: none; background: none; font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
 }
-
-body {
-  color: var(--color-text-main);
-  background-color: var(--color-bg);
-  font-family: var(--font-family-primary);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
-}
-
-a { color: inherit; text-decoration: none; }
-button { cursor: pointer; border: none; background: none; font-family: inherit; }
-input, select, textarea { font-family: inherit; }
 
 /* ── Shell bases ─────────────────────────────────────────────────────────── */
 .student-shell,

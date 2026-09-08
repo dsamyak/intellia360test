@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { notArchived } from "@/lib/db-filters";
 import { computeSchoolCounts, normSchoolKey } from "@/lib/admin/school-stats";
 import { recordAudit } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
   // Filtering and paging happen in the database rather than in the browser,
   // so the payload no longer grows with the number of onboarded schools.
   const where: Prisma.SchoolWhereInput = {
-    ...(includeArchived ? {} : { archivedAt: null }),
+    // notArchived() rather than `archivedAt: null` — see src/lib/db-filters.ts.
+    ...(includeArchived ? {} : { AND: [notArchived()] }),
     ...(status === "ACTIVE" || status === "PENDING" || status === "INACTIVE" ? { status } : {}),
     ...(q
       ? {
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
   // teachers and students, so two rows with the same name would split one
   // school's roll-up in half. Re-onboarding an existing name is rejected.
   const duplicate = await db.school.findFirst({
-    where: { name: { equals: name, mode: "insensitive" }, archivedAt: null },
+    where: { name: { equals: name, mode: "insensitive" }, AND: [notArchived()] },
     select: { id: true, name: true },
   });
 

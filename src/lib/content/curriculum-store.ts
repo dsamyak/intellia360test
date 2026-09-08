@@ -25,6 +25,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { db } from "@/lib/db";
+import { notDeleted } from "@/lib/db-filters";
 
 export const CURRICULUM_ROOT = path.join(process.cwd(), "src", "data", "grades");
 
@@ -195,7 +196,7 @@ export async function mirrorCurriculumDelete(
   if (paths.length === 0) return;
   try {
     await db.curriculumDocument.updateMany({
-      where: { path: { in: paths }, deletedAt: null },
+      where: { path: { in: paths }, AND: [notDeleted()] },
       data: { deletedAt: new Date(), updatedBy: updatedBy ?? null },
     });
   } catch (err) {

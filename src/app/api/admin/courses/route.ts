@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { notArchived } from "@/lib/db-filters";
 import { countLessonsByGrade } from "@/lib/content/lesson-count";
 import { recordAudit } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
@@ -34,7 +35,8 @@ export async function GET(request: NextRequest) {
   // returned every course row on every request and left filtering to the
   // client, which grows linearly with the catalogue.
   const where: Prisma.CourseWhereInput = {
-    ...(includeArchived ? {} : { archivedAt: null }),
+    // notArchived() rather than `archivedAt: null` — see src/lib/db-filters.ts.
+    ...(includeArchived ? {} : { AND: [notArchived()] }),
     ...(grade ? { grade } : {}),
     ...(status === "PUBLISHED" || status === "DRAFT" ? { status } : {}),
     ...(q
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest) {
     where: {
       grade: result.data.grade,
       title: { equals: result.data.title, mode: "insensitive" },
-      archivedAt: null,
+      AND: [notArchived()],
     },
     select: { id: true, title: true },
   });
