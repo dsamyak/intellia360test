@@ -1521,3 +1521,37 @@
   background: #fff;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
 }
+
+/* ── Shared site chrome ──────────────────────────────────────────────────────
+ * The (auth) layout now renders the same SiteHeader and SiteFooter as the rest
+ * of the public site. Each page still contains its own nav and footer markup,
+ * so those are hidden here rather than deleted from six separate pages — the
+ * shared chrome is the single source of navigation.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+.auth-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f4ff;
+}
+
+.auth-page-wrapper .auth-nav,
+.auth-page-wrapper .auth-page-footer {
+  display: none;
+}
+
+/* The shell no longer owns the whole viewport — the header and footer sit
+ * above and below it — so it fills what is left instead of forcing 100vh and
+ * pushing the footer a screen further down. */
+.auth-page-wrapper .auth-shell {
+  flex: 1;
+  min-height: 0;
+  padding-block: 32px;
+}
+
+@media (max-width: 640px) {
+  .auth-page-wrapper .auth-shell {
+    padding-block: 20px;
+  }
+}

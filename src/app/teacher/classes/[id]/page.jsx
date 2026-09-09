@@ -12,7 +12,7 @@ import CreateAssignmentModal from "@/components/teacher/modals/CreateAssignmentM
 export default function ClassDetail() {
   const { id } = useParams();
   const router = useRouter();
-  const { classes, students, assignments } = useData();
+  const { classes, students, assignments, liveStats } = useData();
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState(null);
 
@@ -97,7 +97,12 @@ export default function ClassDetail() {
       </div>
 
       <AddStudentModal open={modal === "student"} onClose={() => setModal(null)} defaultClassId={id} />
-      <CreateAssignmentModal open={modal === "assignment"} onClose={() => setModal(null)} defaultClassId={id} />
+      <CreateAssignmentModal
+        open={modal === "assignment"}
+        onClose={() => setModal(null)}
+        classes={liveStats?.assignedClasses ?? []}
+        defaultClassId={id}
+      />
     </div>
   );
 }

@@ -94,9 +94,11 @@ export default function Sidebar() {
       href: "/student/assignments",
     },
     {
+      // The index, not a single hardcoded quiz id — that link was the reason
+      // the section appeared broken.
       label: "Quizzes",
       icon: "quizzes",
-      href: "/student/quiz/practice-1",
+      href: "/student/quiz",
     },
 
     {

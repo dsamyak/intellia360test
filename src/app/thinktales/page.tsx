@@ -2,24 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import {
-    FaFacebookF,
-    FaInstagram,
-    FaLinkedinIn,
-    FaYoutube,
-    FaBookOpen,
-    FaPlay,
-    FaStar,
-    FaTrophy,
-    FaRocket,
-    FaPuzzlePiece,
-    FaCheckCircle,
-    FaSearch,
-    FaCompass,
-    FaFire,
-    FaAward,
-} from "react-icons/fa";
+// FaLightbulb is defined locally further down this file, so it is not imported.
+import { FaBookOpen, FaPuzzlePiece, FaSearch, FaTrophy } from "react-icons/fa";
+import SiteHeader from "@/components/common/SiteHeader";
+import SiteFooter from "@/components/common/SiteFooter";
 
 import "./thinktales.css";
 
@@ -269,38 +255,7 @@ export default function ThinkTalesPage() {
             {/* ==================================================
                 HEADER
             ================================================== */}
-            <header className="thinktales-header">
-                <div className="thinktales-container">
-                    {/* LOGO */}
-                    <Link href="/" className="thinktales-logo">
-                        <img
-                            src="/assets/logo/intellia360-log.png"
-                            alt="Intellia360"
-                        />
-                    </Link>
-
-                    {/* NAVIGATION */}
-                    <nav>
-                        <Link href="/">Home</Link>
-                        <Link href="/courses">Courses</Link>
-                        <Link href="/thinktales" className="active">
-                            ThinkTales
-                        </Link>
-                        <Link href="/intelliaplay">IntelliaPlay</Link>
-                        <Link href="/schools">For Schools</Link>
-                    </nav>
-
-                    {/* ACTIONS */}
-                    <div className="thinktales-actions">
-                        <Link href="/login" className="login-btn">
-                            Login
-                        </Link>
-                        <Link href="/login" className="signup-btn">
-                            Get Started
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            <SiteHeader />
 
             {/* ==================================================
                 HERO SECTION
@@ -800,100 +755,7 @@ export default function ThinkTalesPage() {
             {/* ==================================================
                 FOOTER
             ================================================== */}
-            <footer className="site-footer" id="contact">
-                {/* LOGO */}
-                <div className="footer-logo">
-                    <Link href="/">
-                        <Image
-                            src="/assets/logo/intellia360-log.png"
-                            alt="Intellia360"
-                            width={190}
-                            height={80}
-                            className="footer-logo-image"
-                        />
-                    </Link>
-                </div>
-
-                {/* FOOTER NAVIGATION */}
-                <nav className="footer-nav">
-                    <Link href="/">Home</Link>
-                    <Link href="/courses">Math Program</Link>
-                    <Link href="/thinktales">ThinkTales</Link>
-                    <Link href="/intelliaplay">IntelliaPlay</Link>
-                    <Link href="/schools">Intellia360 For Schools</Link>
-                    <Link href="#about">About Us</Link>
-                    <Link href="#contact">Contact</Link>
-                </nav>
-
-                {/* SOCIAL ICONS */}
-                <div className="footer-social">
-                    <Link
-                        href="https://www.facebook.com/people/Intellia-360/61591746767595/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Facebook"
-                    >
-                        <FaFacebookF />
-                    </Link>
-                    <Link
-                        href="https://www.instagram.com/intellia360/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Instagram"
-                    >
-                        <FaInstagram />
-                    </Link>
-                    <Link
-                        href="https://www.linkedin.com/company/intellia360/posts/?feedView=all"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="LinkedIn"
-                    >
-                        <FaLinkedinIn />
-                    </Link>
-                    <Link
-                        href="https://www.youtube.com/@Intellia360"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="YouTube"
-                    >
-                        <FaYoutube />
-                    </Link>
-                </div>
-
-                {/* CUSTOMER SUPPORT */}
-                <div className="footer-support">
-                    <h3>Customer Support:</h3>
-                    <a href="mailto:contact@intellia360.com" className="footer-email">
-                        <span>✉</span> contact@intellia360.com
-                    </a>
-                </div>
-
-                {/* ADDRESS */}
-                <div className="footer-address">
-                    <span>Intellia360</span>
-                    <span>Pune, Maharashtra, India</span>
-                </div>
-
-                {/* BIG CTA */}
-                <div className="footer-cta">
-                    <h2>
-                        Learn Math the <br />
-                        <span>#Intellia360Way</span>
-                    </h2>
-                    <div className="footer-cta-box">
-                        <p>Hurry up!! Limited seats are available</p>
-                        <Link href="/login" className="footer-cta-button">
-                            Book A Free Math Class <span>→</span>
-                        </Link>
-                    </div>
-                </div>
-
-                {/* COPYRIGHT */}
-                <div className="footer-copyright">
-                    <p>© {new Date().getFullYear()} Intellia360. All rights reserved.</p>
-                </div>
-            </footer>
+            <SiteFooter />
         </main>
     );
 }
