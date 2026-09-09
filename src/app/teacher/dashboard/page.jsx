@@ -320,7 +320,11 @@ export default function Dashboard() {
       </div>
 
       <AddStudentModal open={modal === "student"} onClose={() => setModal(null)} />
-      <CreateAssignmentModal open={modal === "assignment"} onClose={() => setModal(null)} />
+      <CreateAssignmentModal
+        open={modal === "assignment"}
+        onClose={() => setModal(null)}
+        classes={liveStats?.assignedClasses ?? []}
+      />
       <CreateLessonModal open={modal === "lesson"} onClose={() => setModal(null)} onCreate={(l) => notify(`Lesson "${l.title}" created successfully!`)} />
     </div>
   );

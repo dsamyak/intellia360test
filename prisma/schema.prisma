@@ -233,7 +233,17 @@ model Assignment {
   status       AssignmentStatus       @default(ACTIVE)
   submissions  AssignmentSubmission[]
 
+  // Detail the teacher enters on creation and the student console renders.
+  // All optional: rows written before these existed simply have no key, and
+  // MongoDB stores nothing for them.
+  description    String?
+  type           String?              // Homework | Worksheet | Quiz | Practice | Project
+  points         Int?
+  totalQuestions Int?
+
   @@index([classId])
+  // The student console lists "my class's assignments, soonest due first".
+  @@index([classId, dueDate])
   @@map("assignments")
 }
 

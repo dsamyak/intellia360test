@@ -1,4 +1,24 @@
 /* =========================================================
+   SHARED SITE CHROME
+   ---------------------------------------------------------
+   SiteHeader and SiteFooter are used on the auth pages and every other
+   public route, not just the home page. Almost every header and footer
+   rule in this file is written as `.home-page .header-…`, so those
+   components carry `home-page` as a scope hook.
+
+   This neutralises the parts of `.home-page` that only make sense on a
+   full page — the viewport-height floor and the page background — so the
+   chrome behaves as chrome wherever it is mounted. One rule, rather than
+   rewriting sixty descendant selectors.
+   ========================================================= */
+
+.site-chrome.home-page {
+    min-height: 0;
+    background: none;
+    overflow-x: visible;
+}
+
+/* =========================================================
    INTELLIA360 HOMEPAGE
 ========================================================= */
 
@@ -7371,13 +7391,25 @@ a {
     text-decoration: none;
 }
 
+/* The brand asset is a 1:1 canvas that is mostly transparent padding, and the
+ * JSX declares it 190x80. With `height: auto` the browser used the attribute
+ * ratio until the file loaded, then switched to the natural 1:1 — so the footer
+ * logo silently doubled in height on load. Fixed height plus the same cover
+ * crop the header uses: one size, before and after loading. */
+/* The wordmark is near-black navy (approx rgb(11,39,84)), so against the
+ * footer's #0f172a it scores about 1.2:1 — the same invisibility the Admin
+ * sidebar had. It sits on a light plate here for the same reason: a filter
+ * recolour would throw away the orange in the "360". */
 .footer-logo-image {
-    width: 190px;
-    height: auto;
-    object-fit: contain;
-
-    /* logo image ke around extra white/black issue avoid */
+    width: 145px;
+    height: 80px;
+    object-fit: cover;
+    object-position: center 53%;
     display: block;
+
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0;
 }
 
 
@@ -7701,7 +7733,8 @@ a {
     }
 
     .footer-logo-image {
-        width: 155px;
+        width: 125px;
+        height: 69px;
     }
 
     .footer-nav {

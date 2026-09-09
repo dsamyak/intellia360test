@@ -414,10 +414,12 @@
    CHAPTER LIST
    ========================================================= */
 
+/* Chapter rows sat 48px in from a 200px sidebar, which left chapter names
+ * only 76px. Trim the indent; the rule still reads as a nesting cue. */
 .student-sidebar-submenu {
   position: relative;
-  margin: 7px 0 0 8px;
-  padding-left: 14px;
+  margin: 7px 0 0 2px;
+  padding-left: 8px;
   border-left: 1px solid #e1e4e8;
 }
 
@@ -431,7 +433,7 @@
   padding: 8px 9px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   border: 1px solid transparent;
   border-radius: 10px;
   color: #1a1a1a;
@@ -458,8 +460,8 @@
 }
 
 .student-sidebar-chapter-number {
-  width: 28px;
-  height: 28px;
+  width: 25px;
+  height: 25px;
   flex: 0 0 28px;
   display: grid;
   place-items: center;
@@ -480,14 +482,21 @@
   gap: 3px;
 }
 
+/* Chapter names are cut off for the same reason lesson titles were: a single
+ * nowrap line inside a 200px sidebar. "Numbers and Counting" had 74px to work
+ * with. Wrap it instead, so the full name is always readable. */
 .student-sidebar-chapter-title {
   overflow: hidden;
   color: #171717;
   font-size: 13px;
   font-weight: 750;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  /* No line clamp: chapter names are a small, fixed set authored per grade,
+   * so there is no runaway case to defend against — and a clamp here just
+   * reintroduces the truncation this rule exists to remove. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .student-sidebar-chapter-meta {
@@ -507,10 +516,13 @@
    TOPICS
    ========================================================= */
 
+/* The indent stack consumed about 36px of a 260px sidebar before a single
+ * character was drawn. Tightened so the topic rows get that width back; the
+ * connector below moves with it, so the hierarchy still reads. */
 .student-sidebar-topic-list {
   position: relative;
-  margin: 1px 0 5px 19px;
-  padding-left: 17px;
+  margin: 1px 0 5px 10px;
+  padding-left: 12px;
   border-left: 1px dashed #d9dce0;
 }
 
@@ -519,8 +531,8 @@
   min-height: 38px;
   padding: 7px 8px 7px 6px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 7px;
   border-radius: 9px;
   color: #555a61;
   text-decoration: none;
@@ -540,7 +552,7 @@
 
 .student-sidebar-topic-line {
   position: absolute;
-  left: -18px;
+  left: -13px;
   top: 50%;
   width: 15px;
   height: 1px;
@@ -551,6 +563,7 @@
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
+  margin-top: 1px;
   display: grid;
   place-items: center;
   border: 1px solid #cfd3d8;
@@ -595,17 +608,46 @@
   text-decoration: none;
 }
 
+/* Lesson titles run long — "Introduction to Multiplication and Division" needs
+ * about 237px, and the widest track this sidebar can offer is roughly 200px, so
+ * a single `nowrap` line could never fit them: every topic was ellipsised and
+ * the active row (which also carries the CURRENT pill) was cut to about 86px,
+ * roughly half the title. Wrap instead, clamped at three lines, which fits
+ * every title in this curriculum at the sidebar's 200px width (the longest,
+ * "Introduction to Multiplication and Division", needs four) while still
+ * bounding the row height. */
 .student-sidebar-topic-title {
   min-width: 0;
   flex: 1;
   overflow: hidden;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+
+/* Only the active row carries this pill, and inline it left the title just 39px
+ * of a 200px sidebar — against 90px on every other row. Letting the active row
+ * wrap drops the pill onto its own line beneath the title, which then gets the
+ * same 90px as its neighbours. Scoped to `.active` so no other row changes. */
+.student-sidebar-topic.active {
+  flex-wrap: wrap;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-title {
+  flex: 1 1 calc(100% - 25px);
 }
 
 .student-sidebar-topic-current {
   flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 3px;
+  margin-left: 25px;
   padding: 3px 5px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 5px;

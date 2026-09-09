@@ -21,6 +21,22 @@ if (!process.env.DATABASE_URL) {
   );
   process.exit(1);
 }
+
+// ── Platform super-admin ─────────────────────────────────────────────────────
+// The owner's account, not a demo login: it must come back as ADMIN every time
+// the database is reseeded. The email is a plain default so a fresh clone seeds
+// the right owner with no setup; the password is read from the environment so no
+// admin credential is ever committed to the repository.
+//
+// Set ADMIN_PASSWORD in .env.local (gitignored). Without it the seed falls back
+// to the shared demo password and says so, which is fine for a throwaway demo
+// database and wrong for anything else.
+const DEMO_PASSWORD = 'Password123!';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim() || 'intelliasg@gmail.com';
+const ADMIN_NAME = process.env.ADMIN_NAME?.trim() || 'Platform Admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEMO_PASSWORD;
+const ADMIN_PASSWORD_FROM_ENV = Boolean(process.env.ADMIN_PASSWORD);
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -39,22 +55,28 @@ async function main() {
   await prisma.teacherProfile.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash('Password123!', 12);
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
+  const adminPasswordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
 
   // ── 0. Create the platform super-admin ────────────────────────────────────
   // This is the ONLY user seeded with role=ADMIN.
   // All other roles must be assigned by this admin via the admin panel.
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@intellia.dev',
-      name: 'Platform Admin',
-      password: passwordHash,          // Password123! — same as all demo accounts
+      email: ADMIN_EMAIL,
+      name: ADMIN_NAME,
+      password: adminPasswordHash,
       role: Role.ADMIN,
       emailVerified: true,
       // requestedRole intentionally omitted — admin is not a "requested" role
     },
   });
-  console.log('  ✓ Admin:   admin@intellia.dev  / Password123!');
+  console.log(
+    `  ✓ Admin:   ${ADMIN_EMAIL}  / ` +
+      (ADMIN_PASSWORD_FROM_ENV
+        ? '(from ADMIN_PASSWORD)'
+        : `${DEMO_PASSWORD}  ⚠ ADMIN_PASSWORD not set — using the demo password`)
+  );
 
   // 1. Create Demo Teacher
   const teacherUser = await prisma.user.create({
@@ -249,9 +271,14 @@ async function main() {
   });
 
   console.log('✅ Database seeded successfully!');
-  console.log('  ✓ Admin:   admin@intellia.dev    / Password123!');
-  console.log('  ✓ Teacher: teacher@intellia.dev  / Password123!');
-  console.log('  ✓ Students: alex, maya, ethan, sophia @intellia.dev / Password123!');
+  console.log(
+    `  ✓ Admin:   ${ADMIN_EMAIL}` +
+      (ADMIN_PASSWORD_FROM_ENV
+        ? '  / (from ADMIN_PASSWORD)'
+        : `  / ${DEMO_PASSWORD}  ⚠ set ADMIN_PASSWORD in .env.local`)
+  );
+  console.log(`  ✓ Teacher: teacher@intellia.dev  / ${DEMO_PASSWORD}`);
+  console.log(`  ✓ Students: alex, maya, ethan, sophia @intellia.dev / ${DEMO_PASSWORD}`);
 }
 
 main()
