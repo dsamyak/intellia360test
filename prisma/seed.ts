@@ -2,21 +2,9 @@ import path from 'node:path';
 import { config } from 'dotenv';
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-
 // ── Environment ──────────────────────────────────────────────────────────────
-// `npm run seed` shells out to ts-node, which loads no env file of its own.
-// The only reason this used to work at all was that Prisma Client quietly reads
-// `.env` when it is constructed — and `.env` is gitignored, so a fresh clone
-// has only `.env.example`. Developers put their real credentials in `.env.local`
-// (the file Next.js reads), that file was never loaded here, DATABASE_URL came
-// back undefined and the seed died before its first query.
-//
-// Load both explicitly, in Next.js' own precedence: `.env` first, then
-// `.env.local` overriding it. Both `npm run seed` and `prisma db seed` run from
-// the project root, so the files are resolved against process.cwd(); if that
-// ever is not the case the guard below names the exact paths it tried.
-// (`__dirname` is deliberately not used — ts-node parses this file as an ES
-// module, where it is not defined.)
+// Load .env first, then .env.local so local credentials override defaults.
+// The guard below gives a clear error when DATABASE_URL is missing.
 const projectRoot = process.cwd();
 const envPath = path.join(projectRoot, '.env');
 const envLocalPath = path.join(projectRoot, '.env.local');
@@ -27,9 +15,9 @@ config({ path: envLocalPath, override: true });
 if (!process.env.DATABASE_URL) {
   console.error(
     '❌ DATABASE_URL is not set.\n' +
-      `   Looked in ${envPath} and ${envLocalPath}.\n` +
-      '   Copy .env.example to .env.local, fill in DATABASE_URL, then re-run `npm run seed`\n' +
-      '   from the project root.'
+    `   Looked in ${envPath} and ${envLocalPath}.\n` +
+    '   Copy .env.example to .env.local, fill in DATABASE_URL, then re-run `npm run seed`\n' +
+    '   from the project root.'
   );
   process.exit(1);
 }
@@ -75,10 +63,10 @@ async function main() {
   // All other roles must be assigned by this admin via the admin panel.
   const admin = await prisma.user.create({
     data: {
-      email:         ADMIN_EMAIL,
-      name:          ADMIN_NAME,
-      password:      adminPasswordHash,
-      role:          Role.ADMIN,
+      email: ADMIN_EMAIL,
+      name: ADMIN_NAME,
+      password: adminPasswordHash,
+      role: Role.ADMIN,
       emailVerified: true,
       // requestedRole intentionally omitted — admin is not a "requested" role
     },
@@ -93,10 +81,10 @@ async function main() {
   // 1. Create Demo Teacher
   const teacherUser = await prisma.user.create({
     data: {
-      email:         'teacher@intellia.dev',
-      name:          'Sarah Jenkins',
-      password:      passwordHash,
-      role:          Role.TEACHER,
+      email: 'teacher@intellia.dev',
+      name: 'Sarah Jenkins',
+      password: passwordHash,
+      role: Role.TEACHER,
       requestedRole: Role.TEACHER,
       emailVerified: true,
       teacherProfile: {
@@ -168,10 +156,10 @@ async function main() {
   for (const sData of studentDataList) {
     const studentUser = await prisma.user.create({
       data: {
-        email:         sData.email,
-        name:          sData.name,
-        password:      passwordHash,
-        role:          Role.STUDENT,
+        email: sData.email,
+        name: sData.name,
+        password: passwordHash,
+        role: Role.STUDENT,
         requestedRole: Role.STUDENT,
         emailVerified: true,
         studentProfile: {
