@@ -85,19 +85,34 @@ DATABASE_URL="mongodb://root:example@localhost:27017/intellia360?authSource=admi
 
 ## Project structure
 
+This is a **single Next.js application**. There is no separate front-end project,
+no second `package.json`, and no second dev server — every role’s UI is a route
+group inside `src/app`.
+
 ```
 src/
   app/
     (auth)/          # Login, register, forgot/reset password pages
     api/auth/        # Next.js Route Handlers — auth API (login, register, reset, etc.)
+    api/teacher/     # Teacher API (GET /api/teacher/me)
     student/         # Student-facing pages (dashboard, courses, leaderboard, …)
-    teacher/         # Teacher-facing pages (dashboard, classes, analytics, …)
-  components/        # Shared React components
-  context/           # React context providers (StudentContext)
-  data/              # Static curriculum JSON per grade
+    teacher/         # Teacher Console — see below
+  components/
+    teacher/         # Teacher Console shell, UI kit and modals
+  context/
+    AuthContext.tsx         # Session shared by the whole app
+    StudentContext.tsx
+    TeacherDataContext.jsx  # Teacher Console data layer
+  data/
+    teacher/         # Teacher Console seed data
+    grades/          # Static curriculum JSON per grade
   lib/
     auth/            # JWT helpers, bcrypt hashing, email, Zod validation schemas
+    teacher/         # Teacher Console helpers (SSR-safe useLocalStorage)
     db.ts            # Prisma client singleton
+  styles/
+    globals.css      # Tailwind entry — imports variables.css and teacher.css
+    teacher.css      # Teacher Console design tokens (@theme) + component classes
   types/             # Shared TypeScript types
   proxy.ts           # Next.js middleware — auth guards & role-based redirects
 
@@ -105,6 +120,46 @@ prisma/
   schema.prisma      # MongoDB data models (User, StudentProfile, progress, etc.)
   seed.ts            # Database seed script
 ```
+
+---
+
+## Teacher Console
+
+Reached at **`/teacher`** (which redirects to `/teacher/dashboard`). Signing in
+as a `TEACHER` or `SCHOOL` account lands there automatically — `dashboardFor()`
+in `src/lib/auth/roles.ts` decides, and `src/proxy.ts` guards the routes.
+
+| Route | Page |
+|---|---|
+| `/teacher/dashboard` | Command centre — class snapshot, engagement chart, AI quick actions, top performers |
+| `/teacher/classes` | Roster cards with live average progress |
+| `/teacher/classes/[id]` | One class — full roster, assignments, quick actions |
+| `/teacher/students` | Searchable directory with a student profile drawer |
+| `/teacher/lessons` | Curriculum browser by grade/chapter, with lesson creation |
+| `/teacher/assignments` | Kanban board (Not Started → In Progress → Completed / Overdue) |
+| `/teacher/reports` | Completion/engagement trends, per-class comparison, at-risk list |
+| `/teacher/attendance` | Mark present/late/absent per class per day |
+| `/teacher/rewards` | Badge catalog, XP/coin rules, class leaderboard |
+| `/teacher/messages` | Threaded inbox with reply |
+| `/teacher/ai-assistant` | Chat grounded in the live class data |
+| `/teacher/resources` | Shared teaching materials |
+| `/teacher/settings` | Profile, notification preferences, account |
+
+`/teacher/analytics`, `/teacher/ai-planner` and `/teacher/profile` are kept as
+redirects to `/teacher/reports`, `/teacher/ai-assistant` and `/teacher/settings`
+so older links keep working.
+
+**Data.** Identity comes from `AuthContext` (the real session) and roster
+figures from `GET /api/teacher/me` when the signed-in teacher has classes in the
+database. Everything else — lessons, assignments, attendance, messages — is
+served by `TeacherDataContext` from `src/data/teacher/mockData.js` and persisted
+to `localStorage`, so the console is fully interactive before those endpoints
+exist. To move a section onto the API, replace the matching state in
+`TeacherDataContext.jsx` with fetches; the context shape is what the pages use.
+
+**Design.** Fraunces (display) + Inter (UI) + JetBrains Mono (data), loaded via
+`next/font` in `src/app/teacher/layout.tsx`. Colours and the ledger-rule motif
+live in `src/styles/teacher.css` as Tailwind v4 `@theme` tokens.
 
 ---
 

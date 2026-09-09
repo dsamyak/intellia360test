@@ -1,7 +1,26 @@
+import path from 'node:path';
+import { config } from 'dotenv';
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { config } from 'dotenv';
-config({ path: '.env.local' });
+// ── Environment ──────────────────────────────────────────────────────────────
+// Load .env first, then .env.local so local credentials override defaults.
+// The guard below gives a clear error when DATABASE_URL is missing.
+const projectRoot = process.cwd();
+const envPath = path.join(projectRoot, '.env');
+const envLocalPath = path.join(projectRoot, '.env.local');
+
+config({ path: envPath });
+config({ path: envLocalPath, override: true });
+
+if (!process.env.DATABASE_URL) {
+  console.error(
+    '❌ DATABASE_URL is not set.\n' +
+    `   Looked in ${envPath} and ${envLocalPath}.\n` +
+    '   Copy .env.example to .env.local, fill in DATABASE_URL, then re-run `npm run seed`\n' +
+    '   from the project root.'
+  );
+  process.exit(1);
+}
 const prisma = new PrismaClient();
 
 async function main() {

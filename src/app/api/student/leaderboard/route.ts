@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { notDeleted } from "@/lib/db-filters";
 import type { AuthResponse } from "@/types/auth";
 
 const DEFAULT_LIMIT = 50;
@@ -52,11 +53,11 @@ export async function GET(request: NextRequest) {
       ? DEFAULT_LIMIT
       : Math.min(Math.max(1, limitParam), MAX_LIMIT);
 
-    // StudentProfile already represents student accounts.
-    // No authentication or User role/deletedAt filter is required
-    // for the public homepage leaderboard.
+    // StudentProfile represents student accounts. Keep the explicit
+    // student + notDeleted filter so deleted/non-student users are excluded.
     const where = {
       ...(grade ? { grade } : {}),
+      user: { role: "STUDENT" as const, AND: [notDeleted()] },
     };
 
     const [profiles, total] = await Promise.all([
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
 
       db.studentProfile.count({ where }),
     ]);
+
     const entries: LeaderboardEntry[] = profiles.map(
       (profile, index) => ({
         rank: index + 1,
@@ -92,9 +94,6 @@ export async function GET(request: NextRequest) {
         xpPoints: profile.xpPoints,
         learningGems: profile.learningGems,
         streakDays: profile.streakDays,
-
-        // This is a public homepage leaderboard,
-        // so no current-user session is checked.
         isCurrentUser: false,
       })
     );

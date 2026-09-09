@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { notDeleted, hasRequestedRole } from "@/lib/db-filters";
 import { Role } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
@@ -94,7 +95,10 @@ export async function GET(request: NextRequest) {
   const includeDeleted = searchParams.get("includeDeleted") === "true";
 
   const where: Prisma.UserWhereInput = {
-    ...(includeDeleted ? {} : { deletedAt: null }),
+    // `notDeleted()` rather than `deletedAt: null` — see src/lib/db-filters.ts:
+    // documents that never had the key written are not matched by a null filter,
+    // which made this endpoint return an empty list for every real account.
+    ...(includeDeleted ? {} : { AND: [notDeleted()] }),
     ...(role ? { role } : {}),
     ...(q ? {
       OR: [
@@ -112,7 +116,7 @@ export async function GET(request: NextRequest) {
   // all — a small subset — then compare and paginate over the true result set.
   if (pending) {
     const candidates = await db.user.findMany({
-      where: { ...where, NOT: { requestedRole: null } },
+      where: { ...where, ...hasRequestedRole() },
       select: ROW_SELECT,
       orderBy: { createdAt: "desc" },
     });

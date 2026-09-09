@@ -3,7 +3,13 @@ import { LoginSchema } from "@/lib/auth/validation";
 import { verifyPassword } from "@/lib/auth/hash";
 import { signToken } from "@/lib/auth/jwt";
 import { setSessionCookie } from "@/lib/auth/session";
-import { checkRateLimit, rateLimitHeaders, getClientIp } from "@/lib/auth/rate-limit";
+import {
+  peekRateLimit,
+  recordFailedAttempt,
+  resetRateLimit,
+  rateLimitHeaders,
+  getClientIp,
+} from "@/lib/auth/rate-limit";
 import { db } from "@/lib/db";
 import type { AuthResponse, AuthUser } from "@/types/auth";
 
@@ -16,17 +22,24 @@ import type { AuthResponse, AuthUser } from "@/types/auth";
 const TIMING_GUARD_HASH =
   "$2b$12$.YdZj6pg0sawy3cr.nmHWuzXNK1JGdw7hXywGMt6Pu1A6q.X0yfLO";
 
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const IP_MAX_FAILURES = 10;
+const EMAIL_MAX_FAILURES = 5;
+
 export async function POST(request: NextRequest) {
   // ── 1. IP-based rate limit ─────────────────────────────────────────────────
-  // 10 attempts per 15-minute window per IP address.
-  // This runs before any DB user lookup so it can't be bypassed.
+  // 10 FAILED attempts per 15-minute window per IP address.
+  // Peek only: the budget is spent in step 5 and solely on a failure, so a
+  // school or office behind one NAT is not locked out by its own successful
+  // sign-ins. This runs before any DB user lookup so it can't be bypassed.
   const ip = getClientIp(request);
-  const ipLimit = await checkRateLimit({
+  const ipLimitOpts = {
     identifier: ip,
     action: "login",
-    maxAttempts: 10,
-    windowMs: 15 * 60 * 1000, // 15 minutes
-  });
+    maxAttempts: IP_MAX_FAILURES,
+    windowMs: WINDOW_MS,
+  };
+  const ipLimit = await peekRateLimit(ipLimitOpts);
 
   if (ipLimit.limited) {
     return NextResponse.json<AuthResponse>(
@@ -34,7 +47,7 @@ export async function POST(request: NextRequest) {
         success: false,
         message: `Too many login attempts. Please try again in ${ipLimit.retryAfter} seconds.`,
       },
-      { status: 429, headers: rateLimitHeaders(ipLimit.retryAfter, 10) }
+      { status: 429, headers: rateLimitHeaders(ipLimit.retryAfter, IP_MAX_FAILURES) }
     );
   }
 
@@ -57,13 +70,16 @@ export async function POST(request: NextRequest) {
     const { emailOrUsername, password, rememberMe } = result.data;
 
     // ── 3. Per-email rate limit (secondary, account-level) ─────────────────
-    // 5 failed attempts per 15-minute window per email address.
-    const emailLimit = await checkRateLimit({
+    // 5 FAILED attempts per 15-minute window per email address. Peek only —
+    // spending the budget here counted every correct sign-in against the
+    // account and locked out users whose password was never wrong.
+    const emailLimitOpts = {
       identifier: emailOrUsername,
       action: "login_email",
-      maxAttempts: 5,
-      windowMs: 15 * 60 * 1000,
-    });
+      maxAttempts: EMAIL_MAX_FAILURES,
+      windowMs: WINDOW_MS,
+    };
+    const emailLimit = await peekRateLimit(emailLimitOpts);
 
     if (emailLimit.limited) {
       return NextResponse.json<AuthResponse>(
@@ -71,7 +87,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: `Too many attempts for this account. Try again in ${emailLimit.retryAfter} seconds.`,
         },
-        { status: 429, headers: rateLimitHeaders(emailLimit.retryAfter, 5) }
+        { status: 429, headers: rateLimitHeaders(emailLimit.retryAfter, EMAIL_MAX_FAILURES) }
       );
     }
 
@@ -90,6 +106,14 @@ export async function POST(request: NextRequest) {
     );
 
     if (!dbUser || !passwordMatch) {
+      // The only place the rate-limit budget is spent. Both counters move
+      // together so a single wrong password costs one IP attempt and one
+      // account attempt, and nothing else in this route costs anything.
+      await Promise.all([
+        recordFailedAttempt(ipLimitOpts),
+        recordFailedAttempt(emailLimitOpts),
+      ]);
+
       return NextResponse.json<AuthResponse>(
         { success: false, message: "Invalid email or password" },
         { status: 401 }
@@ -124,6 +148,12 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 8. Issue session ───────────────────────────────────────────────────
+    // The credential was correct, so clear this account's failure counter —
+    // a run of typos must not keep counting against a user who then got it
+    // right. The per-IP counter is deliberately left to decay on its own so a
+    // valid login cannot be used to wipe an attacker's failure history.
+    await resetRateLimit(emailOrUsername, "login_email");
+
     const user: AuthUser = {
       id: dbUser.id,
       name: dbUser.name,

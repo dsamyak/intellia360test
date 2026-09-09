@@ -3,6 +3,71 @@
    Backed by real DB-backed Admin APIs.
 ============================================================ */
 
+/* ------------------------------------------------------------
+   Request plumbing
+
+   Every table page loads with the same shape:
+
+     fetchX().then((rows) => { setRows(rows); setLoading(false); });
+
+   — with no `.catch()`. So anything that made the request *reject*
+   (a 500 that returns an HTML error page, so `res.json()` throws on
+   "<!DOCTYPE", or the network dropping) left the promise rejected,
+   `setLoading(false)` never ran, and the screen sat on "Loading…"
+   for good. Reads therefore resolve here rather than reject, and
+   report the reason to the console instead of vanishing.
+
+   `cache: "no-store"` matches useAdminDashboard: these lists are
+   re-fetched right after a create/edit/delete, and must never come
+   back from the HTTP cache without the row that was just written.
+------------------------------------------------------------ */
+
+/** Reads a list endpoint. Resolves to [] on any failure — never rejects. */
+export async function getRows<T>(url: string, label: string): Promise<T[]> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok || !json?.success) {
+      console.error(
+        `[admin] ${label} failed (${res.status}):`,
+        json?.message ?? res.statusText
+      );
+      return [];
+    }
+    return Array.isArray(json.data) ? (json.data as T[]) : [];
+  } catch (err) {
+    console.error(`[admin] ${label} request failed:`, err);
+    return [];
+  }
+}
+
+/** Sends a mutation. Always resolves to a result the caller can show. */
+async function sendMutation(
+  url: string,
+  init: RequestInit,
+  fallbackMessage: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const res = await fetch(url, init);
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok || !json?.success) {
+      return { success: false, message: json?.message ?? `${fallbackMessage} (${res.status})` };
+    }
+    return { success: true, message: json.message ?? "Done." };
+  } catch (err) {
+    console.error(`[admin] ${fallbackMessage}:`, err);
+    return { success: false, message: fallbackMessage };
+  }
+}
+
+const jsonBody = (method: string, body: unknown): RequestInit => ({
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
 interface ApiSchool {
   id: string; name: string; code: string; location: string | null;
   teachersCount: number; studentsCount: number; plan: string; status: string;
@@ -44,10 +109,8 @@ function titleCaseStatus(status: string): "Active" | "Pending" | "Inactive" {
 }
 
 export async function fetchSchools(): Promise<SchoolRow[]> {
-  const res = await fetch("/api/admin/schools");
-  const json = await res.json();
-  if (!json.success) return [];
-  return (json.data as ApiSchool[]).map((s) => ({
+  const rows = await getRows<ApiSchool>("/api/admin/schools", "load schools");
+  return rows.map((s) => ({
     id: s.id,
     name: s.name,
     code: s.code,
@@ -66,32 +129,18 @@ export async function createSchool(input: {
   adminEmail: string;
   plan?: string;
 }): Promise<{ success: boolean; message: string }> {
-  const res = await fetch("/api/admin/schools", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to onboard school." };
+  return sendMutation("/api/admin/schools", jsonBody("POST", input), "Failed to onboard school.");
 }
 
 export async function updateSchool(
   id: string,
   input: Partial<{ name: string; location: string; adminName: string; adminEmail: string; plan: string; status: "ACTIVE" | "PENDING" | "INACTIVE" }>
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/schools/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to update school." };
+  return sendMutation(`/api/admin/schools/${id}`, jsonBody("PATCH", input), "Failed to update school.");
 }
 
 export async function deleteSchool(id: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/schools/${id}`, { method: "DELETE" });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to delete school." };
+  return sendMutation(`/api/admin/schools/${id}`, { method: "DELETE" }, "Failed to delete school.");
 }
 
 /* ============================================================
@@ -109,10 +158,8 @@ export interface TeacherRow {
 }
 
 export async function fetchTeachers(): Promise<TeacherRow[]> {
-  const res = await fetch("/api/admin/users?role=TEACHER&limit=100");
-  const json = await res.json();
-  if (!json.success) return [];
-  return (json.data as ApiUser[]).map((u) => ({
+  const rows = await getRows<ApiUser>("/api/admin/users?role=TEACHER&limit=100", "load teachers");
+  return rows.map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,
@@ -128,19 +175,11 @@ export async function fetchTeachers(): Promise<TeacherRow[]> {
 ============================================================ */
 
 export async function updateUserName(id: string, name: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/users/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to update account." };
+  return sendMutation(`/api/admin/users/${id}`, jsonBody("PATCH", { name }), "Failed to update account.");
 }
 
 export async function deleteUser(id: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to delete account." };
+  return sendMutation(`/api/admin/users/${id}`, { method: "DELETE" }, "Failed to delete account.");
 }
 
 /* ============================================================
@@ -159,11 +198,9 @@ export interface StudentRow {
 }
 
 export async function fetchStudents(): Promise<StudentRow[]> {
-  const res = await fetch("/api/admin/users?role=STUDENT&limit=100");
-  const json = await res.json();
-  if (!json.success) return [];
+  const rows = await getRows<ApiUser>("/api/admin/users?role=STUDENT&limit=100", "load students");
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-  return (json.data as ApiUser[]).map((u) => {
+  return rows.map((u) => {
     const lastActiveDate = u.lastActiveDate ? new Date(u.lastActiveDate) : null;
     const isActive = !!lastActiveDate && Date.now() - lastActiveDate.getTime() < THIRTY_DAYS_MS;
     return {
@@ -195,10 +232,8 @@ export interface CourseRow {
 }
 
 export async function fetchCourses(): Promise<CourseRow[]> {
-  const res = await fetch("/api/admin/courses");
-  const json = await res.json();
-  if (!json.success) return [];
-  return (json.data as ApiCourse[]).map((c) => ({
+  const rows = await getRows<ApiCourse>("/api/admin/courses", "load courses");
+  return rows.map((c) => ({
     id: c.id,
     title: c.title,
     subject: c.subject ?? "—",
@@ -216,32 +251,18 @@ export async function createCourse(input: {
   grade: string;
   description?: string;
 }): Promise<{ success: boolean; message: string }> {
-  const res = await fetch("/api/admin/courses", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to create course." };
+  return sendMutation("/api/admin/courses", jsonBody("POST", input), "Failed to create course.");
 }
 
 export async function updateCourse(
   id: string,
   input: Partial<{ title: string; subject: string; grade: string; description: string; rating: number; status: "PUBLISHED" | "DRAFT" }>
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/courses/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to update course." };
+  return sendMutation(`/api/admin/courses/${id}`, jsonBody("PATCH", input), "Failed to update course.");
 }
 
 export async function deleteCourse(id: string): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`/api/admin/courses/${id}`, { method: "DELETE" });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to delete course." };
+  return sendMutation(`/api/admin/courses/${id}`, { method: "DELETE" }, "Failed to delete course.");
 }
 
 /* ============================================================
@@ -260,10 +281,8 @@ export interface PaymentRow {
 }
 
 export async function fetchPayments(): Promise<PaymentRow[]> {
-  const res = await fetch("/api/admin/payments");
-  const json = await res.json();
-  if (!json.success) return [];
-  return (json.data as ApiPayment[]).map((p) => ({
+  const rows = await getRows<ApiPayment>("/api/admin/payments", "load payments");
+  return rows.map((p) => ({
     id: p.id,
     transactionId: p.transactionId,
     payerName: p.payerName,
@@ -285,11 +304,5 @@ export async function createPayment(input: {
   method?: string;
   status?: "COMPLETED" | "PENDING" | "REFUNDED";
 }): Promise<{ success: boolean; message: string }> {
-  const res = await fetch("/api/admin/payments", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  const json = await res.json();
-  return { success: !!json.success, message: json.message ?? "Failed to generate invoice." };
+  return sendMutation("/api/admin/payments", jsonBody("POST", input), "Failed to generate invoice.");
 }
