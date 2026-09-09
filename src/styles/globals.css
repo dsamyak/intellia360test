@@ -2,38 +2,40 @@
 @import "./variables.css";
 @import "./teacher.css";
 
-/* ── Reset ───────────────────────────────────────────────────────────────── */
-/* These are base styles and must live in `@layer base`.
- *
- * Unlayered rules beat every layered rule no matter how specific, so while this
- * block sat outside a layer it silently overrode Tailwind's `@layer utilities`
- * across the whole app: `* { margin:0; padding:0 }` cancelled every padding and
- * margin utility, `button { border:none; background:none }` cancelled every
- * background and border utility on a <button>, and `a { color:inherit }`
- * cancelled every text colour on a link.
- * The Teacher Console is the section built on those utilities, so it rendered
- * with no spacing at all — cards collapsed onto each other and the content sat
- * underneath the fixed sidebar.
- *
- * Inside `@layer base` these rules still come after Tailwind's own preflight
- * (same layer, later source order), so the reset behaviour is unchanged, but
- * utilities now win over them the way Tailwind intends.
+/* ================================================================
+   Intellia360 — Global CSS
+   Global/base rules only. Page and component layout belong in
+   their respective page/layout stylesheets.
+   ================================================================= */
+
+/*
+ * Keep the reset inside Tailwind's base layer so Tailwind utilities
+ * can still override base defaults. This is especially important for
+ * Teacher Console buttons, spacing and text utilities.
  */
 @layer base {
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* The horizontal-overflow guard belongs on `html` alone. `overflow-x` on the
-   * <body> turns the body into its own scroll container, and a `position:
-   * sticky` descendant then resolves against that container instead of the
-   * viewport — so it never sticks. That is why the Teacher Console topbar
-   * (`sticky top-0`) scrolled away with the page. Clipping on `html` keeps the
-   * guard without trapping sticky positioning. */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+   * Keep horizontal-overflow protection on html only. Applying
+   * overflow-x to body can interfere with sticky descendants.
+   */
   html {
+    width: 100%;
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  html, body {
+  html,
+  body {
+    width: 100%;
     min-height: 100vh;
   }
 
@@ -46,46 +48,147 @@
     line-height: 1.5;
   }
 
-  a { color: inherit; text-decoration: none; }
-  button { cursor: pointer; border: none; background: none; font-family: inherit; }
-  input, select, textarea { font-family: inherit; }
+  /*
+   * Prevent media from creating horizontal overflow.
+   */
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+
+  img,
+  video {
+    height: auto;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
 }
 
-/* ── Shell bases ─────────────────────────────────────────────────────────── */
+/* ================================================================
+   Shell bases
+   ================================================================= */
+
 .student-shell,
 .teacher-shell {
+  width: 100%;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-pill); }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+/* ================================================================
+   Scrollbar
+   ================================================================= */
 
-/* ── Utilities ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ================================================================
+   Utilities
+   ================================================================= */
+
 .sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-/* ── Animations ──────────────────────────────────────────────────────────── */
+.text-wrap-safe,
+.student-shell h1,
+.student-shell h2,
+.student-shell h3,
+.student-shell h4,
+.student-shell p {
+  overflow-wrap: anywhere;
+}
+
+/* ================================================================
+   Common animations
+   ================================================================= */
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes slideUpPopup {
-  from { opacity: 0; transform: translateY(12px) scale(.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
+
 @keyframes pulse-ring {
-  0%   { transform: scale(.8); opacity: 1; }
-  100% { transform: scale(2); opacity: 0; }
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
+
 @keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
 }

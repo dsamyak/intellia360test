@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useStudentContext } from "@/context/StudentContext";
-import "@/styles/notifications.css";
+import "./notification.css";
 
 export type NotificationType =
   | "achievement"
@@ -181,6 +181,18 @@ export default function StudentNotificationsPage() {
     fetchNotifications();
   };
 
+  const unreadPercent =
+    notifications.length > 0
+      ? Math.round((counts.unread / notifications.length) * 100)
+      : 0;
+
+  const typeCounts = useMemo(() => {
+    return notifications.reduce<Record<string, number>>((acc, item) => {
+      acc[item.type] = (acc[item.type] || 0) + 1;
+      return acc;
+    }, {});
+  }, [notifications]);
+
   return (
     <div className="student-notifications-container">
       {/* ═════════════════════════════════════════════
@@ -241,7 +253,53 @@ export default function StudentNotificationsPage() {
       </div>
 
       {/* ═════════════════════════════════════════════
-          2. FILTER TABS
+          2. NOTIFICATION COMMAND CENTER
+      ═════════════════════════════════════════════ */}
+      <section className="sn-command-grid">
+        <div className="sn-command-card sn-command-main">
+          <div className="sn-command-orb" aria-hidden="true">
+            <div className="sn-command-orb-core">
+              <span>{counts.unread}</span>
+            </div>
+            <div className="sn-command-orbit orbit-a" />
+            <div className="sn-command-orbit orbit-b" />
+          </div>
+          <div className="sn-command-copy">
+            <span className="sn-section-kicker">Learning signal</span>
+            <h2>{counts.unread > 0 ? "You have new updates" : "You're all caught up"}</h2>
+            <p>
+              {counts.unread > 0
+                ? `${counts.unread} notification${counts.unread === 1 ? "" : "s"} are waiting for your attention.`
+                : "Your notification center is clear. Keep learning to unlock new updates."}
+            </p>
+            <div className="sn-command-progress">
+              <span style={{ width: `${100 - unreadPercent}%` }} />
+            </div>
+            <small>{100 - unreadPercent}% of your feed is already read</small>
+          </div>
+        </div>
+
+        <div className="sn-mini-stat sn-mini-purple">
+          <span className="sn-mini-icon">XP</span>
+          <div>
+            <small>Achievements</small>
+            <strong>{typeCounts.achievement || 0}</strong>
+            <span>milestones</span>
+          </div>
+        </div>
+
+        <div className="sn-mini-stat sn-mini-orange">
+          <span className="sn-mini-icon">QZ</span>
+          <div>
+            <small>Quiz Updates</small>
+            <strong>{typeCounts.quiz || 0}</strong>
+            <span>notifications</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ═════════════════════════════════════════════
+          3. FILTER TABS
       ═════════════════════════════════════════════ */}
       <div className="sn-tabs-container">
         <div className="sn-tabs-list">
@@ -261,9 +319,8 @@ export default function StudentNotificationsPage() {
           >
             <span>Unread</span>
             <span
-              className={`sn-tab-pill ${
-                counts.unread > 0 ? "unread-highlight" : ""
-              }`}
+              className={`sn-tab-pill ${counts.unread > 0 ? "unread-highlight" : ""
+                }`}
             >
               {counts.unread}
             </span>
@@ -294,7 +351,7 @@ export default function StudentNotificationsPage() {
       </div>
 
       {/* ═════════════════════════════════════════════
-          3. NOTIFICATIONS FEED PANEL
+          4. NOTIFICATIONS FEED PANEL
       ═════════════════════════════════════════════ */}
       <div className="sn-feed-panel">
         <div className="sn-feed-header">
@@ -304,14 +361,7 @@ export default function StudentNotificationsPage() {
           {activeTab !== "all" && (
             <button
               type="button"
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "#2563eb",
-                fontSize: "0.76rem",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
+              className="sn-clear-filter"
               onClick={() => setActiveTab("all")}
             >
               Clear filter
@@ -367,7 +417,7 @@ export default function StudentNotificationsPage() {
             {filteredList.map((item) => (
               <div
                 key={item.id}
-                className={`sn-card ${!item.isRead ? "unread" : ""}`}
+                className={`sn-card sn-type-${item.type} ${!item.isRead ? "unread" : ""}`}
                 onClick={() => handleMarkAsRead(item.id)}
               >
                 {/* Category Icon */}
@@ -392,6 +442,9 @@ export default function StudentNotificationsPage() {
                   <p className="sn-card-description">{item.description}</p>
 
                   <div className="sn-card-footer">
+                    <span className="sn-card-type-label">
+                      {item.type.replace("_", " ")}
+                    </span>
                     {item.actionUrl && (
                       <Link
                         href={item.actionUrl}

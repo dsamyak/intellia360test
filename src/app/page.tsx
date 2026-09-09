@@ -431,7 +431,7 @@ export default function HomePage() {
       // The endpoint sets Cache-Control (60s fresh, 5min stale-while-revalidate).
       // "no-store" forced a database round-trip on every poll and from every
       // anonymous visitor; "default" lets the browser and CDN absorb repeats.
-      const response = await fetch("/api/student/leaderboard?limit=6", {
+      const response = await fetch("/api/student/leaderboard?limit=10", {
         cache: "default",
       });
 
@@ -443,7 +443,7 @@ export default function HomePage() {
 
       if (json?.success && json?.data) {
         setLeaderboardEntries(
-          Array.isArray(json.data.entries) ? json.data.entries.slice(0, 6) : []
+          Array.isArray(json.data.entries) ? json.data.entries.slice(0, 10) : []
         );
       } else {
         setLeaderboardEntries([]);
@@ -1887,7 +1887,7 @@ export default function HomePage() {
                 <span>No rankings available yet.</span>
               </div>
             ) : (
-              leaderboardEntries.slice(0, 6).map((entry) => (
+              leaderboardEntries.slice(0, 10).map((entry) => (
                 <div
                   key={entry.rank}
                   className={`homepage-leaderboard-row ${entry.rank === 1
