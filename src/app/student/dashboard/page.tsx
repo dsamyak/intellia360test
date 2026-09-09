@@ -5,6 +5,7 @@ import { useStudentContext } from "@/context/StudentContext";
 import HeroSectionContainer from "@/components/student/HeroSectionContainer";
 import type { DashboardHeroSlide } from "@/types/student";
 import BottomNavigationContainer from "@/components/student/BottomNavigationContainer";
+import "./dashboard.css";
 
 function StatCard({
   icon,
@@ -502,6 +503,7 @@ export default function StudentDashboardPage() {
 
       {/* 2. Key student stats */}
       <section
+        className="student-dashboard-stats-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
@@ -541,6 +543,7 @@ export default function StudentDashboardPage() {
 
       {/* 3. Continue learning + progress */}
       <section
+        className="student-dashboard-progress-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(0, 1.25fr) minmax(320px, .75fr)",
@@ -783,15 +786,15 @@ export default function StudentDashboardPage() {
                   <div
                     style={{
                       width: `${totalTopics
-                          ? Math.min(
-                            100,
-                            Math.round(
-                              (currentLessonCompletedTopics /
-                                totalTopics) *
-                              100
-                            )
+                        ? Math.min(
+                          100,
+                          Math.round(
+                            (currentLessonCompletedTopics /
+                              totalTopics) *
+                            100
                           )
-                          : 0
+                        )
+                        : 0
                         }%`,
                       height: "100%",
                       borderRadius: 99,
@@ -819,6 +822,7 @@ export default function StudentDashboardPage() {
 
       {/* 4. Most important area: Architecture / Video / EduNotes / Practice */}
       <section
+        className="student-dashboard-learning-hub"
         style={{
           marginTop: 18,
           background: "#fff",
@@ -949,6 +953,7 @@ export default function StudentDashboardPage() {
 
       {/* 5. Upcoming activities + achievements + learning summary */}
       <section
+        className="student-dashboard-bottom-grid"
         style={{
           display: "grid",
           gridTemplateColumns:

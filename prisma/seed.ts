@@ -1,6 +1,7 @@
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-
+import { config } from 'dotenv';
+config({ path: '.env.local' });
 const prisma = new PrismaClient();
 
 async function main() {
@@ -26,10 +27,10 @@ async function main() {
   // All other roles must be assigned by this admin via the admin panel.
   const admin = await prisma.user.create({
     data: {
-      email:         'admin@intellia.dev',
-      name:          'Platform Admin',
-      password:      passwordHash,          // Password123! — same as all demo accounts
-      role:          Role.ADMIN,
+      email: 'admin@intellia.dev',
+      name: 'Platform Admin',
+      password: passwordHash,          // Password123! — same as all demo accounts
+      role: Role.ADMIN,
       emailVerified: true,
       // requestedRole intentionally omitted — admin is not a "requested" role
     },
@@ -39,10 +40,10 @@ async function main() {
   // 1. Create Demo Teacher
   const teacherUser = await prisma.user.create({
     data: {
-      email:         'teacher@intellia.dev',
-      name:          'Sarah Jenkins',
-      password:      passwordHash,
-      role:          Role.TEACHER,
+      email: 'teacher@intellia.dev',
+      name: 'Sarah Jenkins',
+      password: passwordHash,
+      role: Role.TEACHER,
       requestedRole: Role.TEACHER,
       emailVerified: true,
       teacherProfile: {
@@ -114,10 +115,10 @@ async function main() {
   for (const sData of studentDataList) {
     const studentUser = await prisma.user.create({
       data: {
-        email:         sData.email,
-        name:          sData.name,
-        password:      passwordHash,
-        role:          Role.STUDENT,
+        email: sData.email,
+        name: sData.name,
+        password: passwordHash,
+        role: Role.STUDENT,
         requestedRole: Role.STUDENT,
         emailVerified: true,
         studentProfile: {

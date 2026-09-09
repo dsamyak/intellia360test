@@ -2044,3 +2044,352 @@
         scroll-behavior: auto !important;
     }
 }
+
+.student-sidebar-container {
+    background: #ffffff !important;
+    color: #111827 !important;
+    border-right: 1px solid #e5e7eb !important;
+}
+
+/* Lessons section */
+.student-sidebar-section {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.student-sidebar-section-title {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.student-sidebar-section-title:hover {
+    background: #f3f4f6;
+}
+
+.student-sidebar-section-title svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.student-sidebar-section-title .section-arrow {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.student-sidebar-section-title .section-arrow.open {
+    transform: rotate(90deg);
+}
+
+/* Chapter wrapper */
+.student-sidebar-chapter {
+    margin: 4px 0;
+}
+
+/* Chapter button */
+.student-sidebar-chapter-btn {
+    width: 100%;
+    min-height: 46px;
+    padding: 8px 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    background: #f8fafc;
+    color: #111827;
+
+    cursor: pointer;
+    text-align: left;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.student-sidebar-chapter-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.student-sidebar-chapter-btn:active {
+    transform: scale(0.99);
+}
+
+/* Chapter number */
+.student-sidebar-chapter-number {
+    width: 27px;
+    height: 27px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #111827;
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+/* Chapter information */
+.student-sidebar-chapter-info {
+    min-width: 0;
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.student-sidebar-chapter-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #111827;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.student-sidebar-chapter-meta {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* Chapter arrow */
+.student-sidebar-chapter-arrow {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+
+    color: #64748b;
+
+    transition: transform 0.2s ease;
+}
+
+.student-sidebar-chapter-arrow.open {
+    transform: rotate(90deg);
+}
+
+/* Topic list */
+.student-sidebar-topic-list {
+    position: relative;
+
+    margin: 2px 0 8px 22px;
+    padding: 5px 0 5px 18px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Connecting vertical line */
+.student-sidebar-topic-list::before {
+    content: "";
+
+    position: absolute;
+    left: 5px;
+    top: 0;
+    bottom: 0;
+
+    width: 2px;
+
+    background: #e2e8f0;
+    border-radius: 999px;
+}
+
+/* Topic */
+.student-sidebar-topic {
+    position: relative;
+
+    width: 100%;
+    min-height: 38px;
+    padding: 7px 9px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background: transparent;
+    color: #475569;
+
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.student-sidebar-topic:hover {
+    background: #f1f5f9;
+    color: #111827;
+}
+
+/* Topic connector dot */
+.student-sidebar-topic::before {
+    content: "";
+
+    position: absolute;
+    left: -17px;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #cbd5e1;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+/* Topic text */
+.student-sidebar-topic-title {
+    flex: 1;
+    min-width: 0;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Active topic */
+.student-sidebar-topic.active {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #c2410c;
+    font-weight: 700;
+}
+
+.student-sidebar-topic.active::before {
+    background: #f97316;
+    box-shadow: 0 0 0 2px #fed7aa;
+}
+
+/* Completed topic */
+.student-sidebar-topic.completed {
+    color: #15803d;
+}
+
+.student-sidebar-topic.completed::before {
+    background: #22c55e;
+    box-shadow: 0 0 0 2px #bbf7d0;
+}
+
+/* Locked topic */
+.student-sidebar-topic.locked {
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.student-sidebar-topic.locked::before {
+    background: #cbd5e1;
+}
+
+/* Completed check */
+.student-sidebar-topic-check {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #dcfce7;
+    color: #15803d;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* Lock */
+.student-sidebar-topic-lock {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+
+    color: #94a3b8;
+}
+
+/* =========================================================
+   NORMAL SIDEBAR NAV
+   ========================================================= */
+
+.student-sidebar-nav-item {
+    min-height: 48px !important;
+
+    color: #111827 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+
+    background: transparent !important;
+}
+
+.student-sidebar-nav-item:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+.student-sidebar-nav-item.active {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+    border-color: #fed7aa !important;
+
+    box-shadow: inset 3px 0 0 #f97316 !important;
+}
+
+.student-sidebar-nav-label {
+    font-size: 15px !important;
+}
+
+/* =========================================================
+   COLLAPSED SIDEBAR
+   ========================================================= */
+
+.student-sidebar-container.is-collapsed .student-sidebar-section-title {
+    justify-content: center;
+    padding: 0;
+}
+
+.student-sidebar-container.is-collapsed .student-sidebar-section-title span,
+.student-sidebar-container.is-collapsed .student-sidebar-chapter,
+.student-sidebar-container.is-collapsed .student-sidebar-topic-list {
+    display: none;
+}

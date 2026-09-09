@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useStudentContext } from "@/context/StudentContext";
 import { useAuth } from "@/context/AuthContext";
 import type { LeaderboardEntry, LeaderboardResponse, CurrentUserStats } from "@/app/api/student/leaderboard/route";
-import "@/styles/leaderboard.css";
+import "./leaderboard.css";
 
 const GRADE_OPTIONS = [
   { value: "", label: "All Grades" },
@@ -91,6 +91,8 @@ export default function LeaderboardPage() {
     currentUserStats?.learningGems !== undefined
       ? currentUserStats.learningGems
       : ctxGems;
+
+  const topThree = entries.slice(0, 3);
 
   return (
     <div className="student-leaderboard-container">
@@ -193,7 +195,70 @@ export default function LeaderboardPage() {
       </div>
 
       {/* ═════════════════════════════════════════════
-          4. LEADERBOARD LIST PANEL
+          4. TOP 3 GAMIFIED PODIUM
+      ═════════════════════════════════════════════ */}
+      {!isLoading && !error && topThree.length > 0 && (
+        <section className="sl-podium-section" aria-label="Top three students">
+          <div className="sl-podium-heading">
+            <div>
+              <span className="sl-section-kicker">Top performers</span>
+              <h2>Champions Arena</h2>
+            </div>
+            <span className="sl-podium-caption">Earn XP. Climb the ranks.</span>
+          </div>
+
+          <div className="sl-podium">
+            {[topThree[1], topThree[0], topThree[2]].filter(Boolean).map((entry, index) => {
+              const realRank = entry.rank;
+              const podiumClass =
+                realRank === 1 ? "podium-first" : realRank === 2 ? "podium-second" : "podium-third";
+
+              return (
+                <article key={`${entry.rank}-${index}`} className={`sl-podium-card ${podiumClass}`}>
+                  <div className="sl-podium-glow" />
+                  <div className="sl-podium-rank">
+                    {realRank === 1 ? "01" : realRank === 2 ? "02" : "03"}
+                  </div>
+
+                  <div className="sl-podium-avatar-wrap">
+                    {entry.avatar ? (
+                      <img
+                        src={entry.avatar}
+                        alt={entry.name}
+                        className="sl-podium-avatar"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="sl-podium-avatar-fallback">
+                        {entry.name ? entry.name.charAt(0).toUpperCase() : "S"}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="sl-podium-name">{entry.name}</div>
+                  <div className="sl-podium-grade">
+                    {GRADE_OPTIONS.find((g) => g.value === entry.grade)?.label || entry.grade.toUpperCase()}
+                  </div>
+
+                  <div className="sl-podium-xp">
+                    <span>XP</span>
+                    {entry.xpPoints.toLocaleString()}
+                  </div>
+
+                  <div className="sl-podium-base">
+                    <span>{realRank === 1 ? "CHAMPION" : realRank === 2 ? "RUNNER UP" : "TOP 3"}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ═════════════════════════════════════════════
+          5. LEADERBOARD LIST PANEL
       ═════════════════════════════════════════════ */}
       <div className="sl-table-panel">
         {isLoading ? (
@@ -266,15 +331,14 @@ export default function LeaderboardPage() {
                     {/* Rank */}
                     <div className="sl-col-rank">
                       <div
-                        className={`sl-rank-medal ${
-                          isTop1
-                            ? "rank-1"
-                            : isTop2
+                        className={`sl-rank-medal ${isTop1
+                          ? "rank-1"
+                          : isTop2
                             ? "rank-2"
                             : isTop3
-                            ? "rank-3"
-                            : "rank-other"
-                        }`}
+                              ? "rank-3"
+                              : "rank-other"
+                          }`}
                       >
                         {isTop1 ? "🥇" : isTop2 ? "🥈" : isTop3 ? "🥉" : `#${entry.rank}`}
                       </div>

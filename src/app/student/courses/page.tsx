@@ -34,16 +34,6 @@ interface CourseData {
   firstTopicId?: string;
 }
 
-const courseIcons = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-];
 
 function BookIcon() {
   return (
@@ -256,7 +246,7 @@ export default function StudentCoursesPage() {
 
   if (!typedCurriculum) {
     return (
-      <main className="courses-page">
+      <main className="courses-page courses-page-gamified">
         <div className="courses-loading">
           <div className="loading-orb" />
           <h2>Preparing your learning world...</h2>
@@ -282,7 +272,7 @@ export default function StudentCoursesPage() {
               YOUR LEARNING JOURNEY
             </span>
 
-            <h1>Courses</h1>
+            <h1 className="courses-page-title">Courses</h1>
 
             <p>
               Explore your curriculum, complete
@@ -441,7 +431,7 @@ export default function StudentCoursesPage() {
                 CURRICULUM
               </span>
 
-              <h2>Choose Your Quest</h2>
+              <h2 className="courses-section-title">Choose Your Quest</h2>
             </div>
 
             <span className="course-count">
@@ -455,11 +445,6 @@ export default function StudentCoursesPage() {
           <div className="course-grid">
             {courses.map(
               (course, index) => {
-                const iconNumber =
-                  courseIcons[
-                  index %
-                  courseIcons.length
-                  ];
 
                 const actionTopic =
                   course.topics.find(
@@ -492,10 +477,10 @@ export default function StudentCoursesPage() {
                       <div className="course-orbit orbit-two" />
 
                       <div className="course-cube">
-                        {iconNumber}
+                        {String(course.chapterNumber).padStart(2, "0")}
                       </div>
 
-                      <span className="course-chapter-number">
+                      <span className="course-chapter-number course-chapter-number-large">
                         CHAPTER{" "}
                         {course.chapterNumber}
                       </span>
@@ -520,7 +505,7 @@ export default function StudentCoursesPage() {
                         </span>
                       </div>
 
-                      <p className="course-description">
+                      <p className="course-description course-description-large">
                         {course.total}{" "}
                         {course.total === 1
                           ? "lesson"
@@ -574,7 +559,7 @@ export default function StudentCoursesPage() {
                                       : ""}
                                   </span>
 
-                                  <span>
+                                  <span className="course-topic-title">
                                     {
                                       topic.title
                                     }
@@ -641,7 +626,7 @@ export default function StudentCoursesPage() {
                 YOUR PROGRESS
               </span>
 
-              <h2>Learning Path</h2>
+              <h2 className="courses-path-title">Learning Path</h2>
             </div>
           </div>
 

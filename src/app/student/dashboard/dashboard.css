@@ -1,0 +1,119 @@
+/* Student Dashboard responsive layout helpers.
+   Keep this file beside dashboard/page.tsx. */
+
+.student-dashboard-page,
+.student-dashboard-page * {
+    min-width: 0;
+}
+
+.student-dashboard-page {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    overflow-x: clip;
+}
+
+.student-dashboard-stats-grid,
+.student-dashboard-progress-grid,
+.student-dashboard-learning-hub,
+.student-dashboard-bottom-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.student-dashboard-stats-grid>*,
+.student-dashboard-progress-grid>*,
+.student-dashboard-learning-hub>*,
+.student-dashboard-bottom-grid>* {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 1100px) {
+    .student-dashboard-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .student-dashboard-progress-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .student-dashboard-learning-hub>div:nth-child(2) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .student-dashboard-bottom-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .student-dashboard-bottom-grid> :last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .student-dashboard-page {
+        max-width: 100%;
+        padding-inline: 12px !important;
+    }
+
+    .student-dashboard-stats-grid,
+    .student-dashboard-progress-grid,
+    .student-dashboard-bottom-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .student-dashboard-learning-hub>div:nth-child(2) {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .student-dashboard-bottom-grid> :last-child {
+        grid-column: auto;
+    }
+
+    .student-dashboard-progress-grid>div>div:nth-child(2) {
+        flex-wrap: wrap;
+    }
+
+    .student-dashboard-page img,
+    .student-dashboard-page svg,
+    .student-dashboard-page video,
+    .student-dashboard-page iframe {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .student-dashboard-page {
+        padding-inline: 10px !important;
+    }
+
+    .student-dashboard-stats-grid,
+    .student-dashboard-progress-grid,
+    .student-dashboard-learning-hub,
+    .student-dashboard-bottom-grid {
+        gap: 12px !important;
+    }
+
+    .student-dashboard-progress-grid>div,
+    .student-dashboard-bottom-grid>div,
+    .student-dashboard-learning-hub {
+        padding: 14px !important;
+    }
+
+    .student-dashboard-progress-grid>div>div:nth-child(2) {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .student-dashboard-page {
+        padding-inline: 8px !important;
+    }
+
+    .student-dashboard-learning-hub {
+        border-radius: 16px !important;
+    }
+}

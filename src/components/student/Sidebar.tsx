@@ -16,7 +16,6 @@ type IconName =
   | "courses"
   | "assignments"
   | "quizzes"
-
   | "achievements"
   | "leaderboard"
   | "notifications"
@@ -181,6 +180,13 @@ export default function Sidebar() {
         className="student-sidebar-nav"
         aria-label="Student navigation"
       >
+        {!collapsed && (
+          <div className="student-sidebar-nav-heading">
+            <span>YOUR SPACE</span>
+            <i />
+          </div>
+        )}
+
         <div className="student-sidebar-nav-group">
           {navItems.map((item) => (
             <Link
@@ -188,11 +194,8 @@ export default function Sidebar() {
               href={item.href ?? "#"}
               className={`student-sidebar-nav-item ${isActive(item.href) ? "active" : ""
                 }`}
-              title={
-                collapsed
-                  ? item.label
-                  : undefined
-              }
+              title={collapsed ? item.label : undefined}
+              aria-current={isActive(item.href) ? "page" : undefined}
             >
               <span className="student-sidebar-nav-icon">
                 <SidebarIcon name={item.icon} />
@@ -204,12 +207,9 @@ export default function Sidebar() {
                 </span>
               )}
 
-              {item.label === "Notifications" &&
-                !collapsed && (
-                  <span className="student-sidebar-badge">
-                    3
-                  </span>
-                )}
+              {item.label === "Notifications" && !collapsed && (
+                <span className="student-sidebar-badge">NEW</span>
+              )}
             </Link>
           ))}
         </div>
@@ -218,6 +218,12 @@ export default function Sidebar() {
             LESSONS
         ========================================== */}
         <div className="student-sidebar-section">
+          {!collapsed && (
+            <div className="student-sidebar-section-label">
+              <span>LEARNING JOURNEY</span>
+            </div>
+          )}
+
           <button
             type="button"
             className={`student-sidebar-nav-item student-sidebar-expand-btn ${lessonsOpen ? "expanded" : ""
@@ -392,9 +398,8 @@ export default function Sidebar() {
                                             ? "locked"
                                             : ""
                                           }`}
-                                        title={
-                                          topic.title
-                                        }
+                                        title={topic.title}
+                                        aria-current={isActive ? "page" : undefined}
                                       >
                                         {/* Connecting line */}
                                         <span className="student-sidebar-topic-line" />
@@ -471,6 +476,10 @@ export default function Sidebar() {
                 Current Grade
               </span>
             </div>
+
+            <span className="student-sidebar-grade-count">
+              {completedLessons.length} done
+            </span>
           </div>
         </div>
       )}
@@ -492,12 +501,16 @@ function SidebarHeader({
   return (
     <div className="student-sidebar-header">
       {!collapsed && (
-        <div className="student-sidebar-brand">
+        <Link
+          href="/student/dashboard"
+          className="student-sidebar-brand"
+          aria-label="Student Dashboard"
+        >
+          <span className="student-sidebar-logo-mark">
+            <LogoCube />
+          </span>
 
-          <div className="student-sidebar-tagline">
-            Learn • Explore • Grow
-          </div>
-        </div>
+        </Link>
       )}
 
       <button
