@@ -20,12 +20,32 @@ export async function POST(_req: NextRequest) {
     );
   }
 
-  const password = await hashPassword("Password123!");
+  // Same identity the seed uses, from the same environment variables, so the
+  // two bootstrap paths can never disagree about who the platform admin is.
+  const adminEmail = process.env.ADMIN_EMAIL?.trim() || "intelliasg@gmail.com";
+  const adminName = process.env.ADMIN_NAME?.trim() || "Platform Admin";
+
+  // No fallback here. The seed may default to the shared demo password because
+  // it only ever runs against a local database; this endpoint is reachable on a
+  // deployed instance, so it refuses rather than create an admin whose password
+  // is published in the repository.
+  if (!process.env.ADMIN_PASSWORD) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          "ADMIN_PASSWORD is not set. Set it in the environment before bootstrapping an admin.",
+      },
+      { status: 500 }
+    );
+  }
+
+  const password = await hashPassword(process.env.ADMIN_PASSWORD);
 
   const admin = await db.user.create({
     data: {
-      email:         "admin@intellia.dev",
-      name:          "Platform Admin",
+      email:         adminEmail,
+      name:          adminName,
       password,
       role:          "ADMIN",
       emailVerified: true,
@@ -36,7 +56,7 @@ export async function POST(_req: NextRequest) {
   return NextResponse.json(
     {
       success: true,
-      message: "✅ Admin created. Login with admin@intellia.dev / Password123! — then DELETE this file.",
+      message: `✅ Admin created for ${adminEmail} with the configured ADMIN_PASSWORD — now DELETE this file.`,
       data:    admin,
     },
     { status: 201 }
