@@ -591,7 +591,7 @@ export default function HomePage() {
                   aria-label="Intellia360 mascot introduction video"
                 >
                   <source
-                    src="/assets/home/mascot_intro.mp4"
+                    src="/assets/home/mascot_home.mp4"
                     type="video/mp4"
                   />
                   Your browser does not support the video tag.
@@ -609,21 +609,9 @@ export default function HomePage() {
 
             </div>
 
-            <div className="hero-floating-card hero-floating-xp" aria-hidden="true">
-              <span className="hero-floating-icon">XP</span>
-              <span>
-                <strong>Earn XP</strong>
-                <small>Learn & progress</small>
-              </span>
-            </div>
 
-            <div className="hero-floating-card hero-floating-badge" aria-hidden="true">
-              <span className="hero-floating-icon">★</span>
-              <span>
-                <strong>Badges</strong>
-                <small>Unlock achievements</small>
-              </span>
-            </div>
+
+
 
           </div>
 

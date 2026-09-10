@@ -7,17 +7,7 @@ import {
 } from "react";
 import { useParams } from "next/navigation";
 
-/*
- * ============================================================
- * LESSON ARCHITECTURE URLS
- * ============================================================
- *
- * Each lesson has its own deployed architecture.
- *
- * The student stays inside Intellia.
- * The deployed architecture is loaded INSIDE this page
- * using an iframe.
- */
+
 
 const LESSON_ARCHITECTURE_URLS: Record<string, string> = {
   "counting-numbers-up-to-100":
