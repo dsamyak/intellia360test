@@ -2,354 +2,550 @@
 
 import {
     Suspense,
-    useEffect,
+    useMemo,
     useState,
 } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
-import {
-    useSearchParams,
-    useRouter,
-} from "next/navigation";
 
-import "./video.css";
+
+const LESSON_ARCHITECTURE_URLS: Record<string, string> = {
+    "counting-numbers-up-to-100":
+        "https://number-counting-gamma.vercel.app/",
+
+    "reading-and-writing-numbers":
+        "https://readingnumbers.vercel.app/",
+
+    "place-value-tens-and-ones":
+        "https://placetens.vercel.app/",
+};
+
 
 /*
  * ============================================================
- * YOUTUBE VIDEO
+ * LESSON CONTENT
  * ============================================================
- *
- * YouTube Embed URL:
- *
- * https://www.youtube.com/embed/cmfDZ3FXckY
- *
- * This video will play INSIDE the Intellia page.
- * It will NOT open YouTube in a new tab.
  */
 
-const YOUTUBE_VIDEO_URL =
-    "https://www.youtube.com/embed/cmfDZ3FXckY?si=5Wu6MZPIAJYeusOd";
+function StudentLessonContent() {
+    const params = useParams();
 
-
-function VideoContent() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-
-    const lessonId =
-        searchParams.get("lessonId");
+    const lessonId = Array.isArray(params.id)
+        ? params.id[0]
+        : params.id;
 
     const [isLoading, setIsLoading] =
         useState(true);
 
+    const [hasError, setHasError] =
+        useState(false);
+
 
     /*
-     * ---------------------------------------------------------
-     * LOADING FALLBACK
-     * ---------------------------------------------------------
+     * ----------------------------------------------------------
+     * FIND ARCHITECTURE URL
+     * ----------------------------------------------------------
      */
 
-    useEffect(() => {
-        setIsLoading(true);
+    const architectureUrl = useMemo(() => {
+        if (!lessonId) {
+            return null;
+        }
 
-        const timer = window.setTimeout(() => {
-            setIsLoading(false);
-        }, 2500);
-
-        return () => {
-            window.clearTimeout(timer);
-        };
-    }, []);
+        return LESSON_ARCHITECTURE_URLS[
+            lessonId
+        ] || null;
+    }, [lessonId]);
 
 
     /*
-     * ---------------------------------------------------------
-     * PAGE
-     * ---------------------------------------------------------
+     * ----------------------------------------------------------
+     * LESSON NOT FOUND
+     * ----------------------------------------------------------
+     */
+
+    if (!lessonId) {
+        return (
+            <main
+                style={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#f5f7ff",
+                }}
+            >
+                <div
+                    style={{
+                        textAlign: "center",
+                        padding: "40px",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "64px",
+                            marginBottom: "20px",
+                        }}
+                    >
+                        📚
+                    </div>
+
+                    <h1
+                        style={{
+                            fontSize: "32px",
+                            fontWeight: 700,
+                            color: "#172554",
+                            marginBottom: "12px",
+                        }}
+                    >
+                        Lesson not found
+                    </h1>
+
+                    <p
+                        style={{
+                            color: "#64748b",
+                            fontSize: "16px",
+                        }}
+                    >
+                        Please select a lesson from the
+                        student dashboard.
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+
+    /*
+     * ----------------------------------------------------------
+     * ARCHITECTURE NOT CONFIGURED
+     * ----------------------------------------------------------
+     */
+
+    if (!architectureUrl) {
+        return (
+            <main
+                style={{
+                    minHeight: "100vh",
+                    background: "#f5f7ff",
+                    padding: "40px",
+                }}
+            >
+                <div
+                    style={{
+                        maxWidth: "1200px",
+                        margin: "0 auto",
+                        background: "#ffffff",
+                        borderRadius: "24px",
+                        padding: "50px",
+                        textAlign: "center",
+                        boxShadow:
+                            "0 10px 40px rgba(37, 99, 235, 0.08)",
+                    }}
+                >
+                    <div
+                        style={{
+                            fontSize: "64px",
+                            marginBottom: "20px",
+                        }}
+                    >
+                        🚧
+                    </div>
+
+                    <h1
+                        style={{
+                            fontSize: "32px",
+                            fontWeight: 800,
+                            color: "#172554",
+                            marginBottom: "12px",
+                        }}
+                    >
+                        Lesson Architecture Coming Soon
+                    </h1>
+
+                    <p
+                        style={{
+                            color: "#64748b",
+                            fontSize: "16px",
+                            marginBottom: "10px",
+                        }}
+                    >
+                        This lesson does not have an architecture
+                        configured yet.
+                    </p>
+
+                    <p
+                        style={{
+                            color: "#2563eb",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Lesson: {lessonId}
+                    </p>
+                </div>
+            </main>
+        );
+    }
+
+
+    /*
+     * ----------------------------------------------------------
+     * LESSON PLAYER
+     * ----------------------------------------------------------
      */
 
     return (
-        <main className="video-page">
-
-            {/* =====================================================
-                HEADER
-            ===================================================== */}
-
-            <div className="video-page-header">
-
-                <button
-                    type="button"
-                    className="video-back-icon"
-                    onClick={() => router.back()}
-                    aria-label="Back to lesson"
+        <main
+            style={{
+                minHeight: "100vh",
+                background: "#f5f7ff",
+            }}
+        >
+            <div
+                style={{
+                    minHeight: "100vh",
+                    padding: "24px",
+                }}
+            >
+                <div
+                    style={{
+                        width: "100%",
+                        maxWidth: "1500px",
+                        margin: "0 auto",
+                    }}
                 >
-                    ←
-                </button>
 
+                    {/* ==================================================
+              LESSON HEADER
+          ================================================== */}
 
-                <div className="video-header-text">
-
-                    <div className="video-heading-row">
-
-                        <span className="video-heading-icon">
-                            🎬
-                        </span>
-
-                        <h1>
-                            Watch & Learn
+                    <div
+                        style={{
+                            background: "#ffffff",
+                            borderRadius: "24px",
+                            padding: "28px 32px",
+                            marginBottom: "20px",
+                            boxShadow:
+                                "0 10px 40px rgba(37, 99, 235, 0.08)",
+                        }}
+                    >
+                        <h1
+                            style={{
+                                fontSize: "32px",
+                                fontWeight: 800,
+                                color: "#172554",
+                                margin: 0,
+                                marginBottom: "8px",
+                            }}
+                        >
+                            Lesson Player
                         </h1>
 
+                        <p
+                            style={{
+                                fontSize: "16px",
+                                color: "#64748b",
+                                margin: 0,
+                            }}
+                        >
+                            Current Lesson:{" "}
+                            <strong
+                                style={{
+                                    color: "#2563eb",
+                                }}
+                            >
+                                {lessonId}
+                            </strong>
+                        </p>
+
+                        {/* Topic-wise quick links */}
+                        <div
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "10px",
+                                marginTop: "18px",
+                            }}
+                        >
+                            <Link
+                                href={`/student/lesson/edunotes?lessonId=${encodeURIComponent(String(lessonId))}`}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "10px 16px",
+                                    borderRadius: "12px",
+                                    background: "#fff7ed",
+                                    border: "1px solid #fed7aa",
+                                    color: "#9a3412",
+                                    textDecoration: "none",
+                                    fontSize: "14px",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                📘 EduNotes
+                            </Link>
+
+                            <Link
+                                href={`/student/lesson/video?lessonId=${encodeURIComponent(String(lessonId))}`}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "10px 16px",
+                                    borderRadius: "12px",
+                                    background: "#eef2ff",
+                                    border: "1px solid #c7d2fe",
+                                    color: "#3730a3",
+                                    textDecoration: "none",
+                                    fontSize: "14px",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                ▶ Lesson Video
+                            </Link>
+                        </div>
                     </div>
 
 
-                    <p>
-                        Learn something new with this
-                        fun video! ✨
-                    </p>
+                    {/* ==================================================
+              ARCHITECTURE CARD
+          ================================================== */}
 
-                </div>
+                    <div
+                        style={{
+                            position: "relative",
+                            width: "100%",
+                            background: "#ffffff",
+                            borderRadius: "24px",
+                            padding: "12px",
+                            boxShadow:
+                                "0 10px 40px rgba(37, 99, 235, 0.08)",
+                            overflow: "hidden",
+                        }}
+                    >
 
-
-                <div className="video-header-badge">
-                    ⭐ Learn
-                </div>
-
-            </div>
-
-
-            {/* =====================================================
-                VIDEO SECTION
-            ===================================================== */}
-
-            <section className="video-learning-section">
-
-                {/* Floating Decorations */}
-
-                <div className="video-decoration decoration-one">
-                    ✦
-                </div>
-
-                <div className="video-decoration decoration-two">
-                    ⭐
-                </div>
-
-                <div className="video-decoration decoration-three">
-                    ✧
-                </div>
-
-
-                <div className="video-card">
-
-
-                    {/* =================================================
-                        CARD HEADER
-                    ================================================= */}
-
-                    <div className="video-card-top">
-
-                        <span>
-                            📚 Lesson Video
-                        </span>
-
-                        <span>
-                            🎯 Watch & Learn
-                        </span>
-
-                    </div>
-
-
-                    {/* =================================================
-                        VIDEO WRAPPER
-                    ================================================= */}
-
-                    <div className="video-wrapper">
-
-
-                        {/* Loading Screen */}
+                        {/* ------------------------------------------------
+                LOADING SCREEN
+            ------------------------------------------------ */}
 
                         {isLoading && (
-
-                            <div className="video-loader">
-
-                                <div className="video-loader-icon">
-                                    📺
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    zIndex: 10,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    background:
+                                        "linear-gradient(135deg, #eef2ff, #f8faff)",
+                                    borderRadius: "20px",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: "64px",
+                                        marginBottom: "20px",
+                                    }}
+                                >
+                                    🚀
                                 </div>
 
-                                <h2>
-                                    Preparing your video...
+                                <h2
+                                    style={{
+                                        fontSize: "28px",
+                                        fontWeight: 800,
+                                        color: "#172554",
+                                        marginBottom: "8px",
+                                    }}
+                                >
+                                    Preparing Your Lesson...
                                 </h2>
 
-                                <p>
-                                    Get ready to learn! 🚀
+                                <p
+                                    style={{
+                                        color: "#64748b",
+                                        fontSize: "16px",
+                                    }}
+                                >
+                                    Get ready for your learning
+                                    adventure! ✨
                                 </p>
-
                             </div>
-
                         )}
 
 
-                        {/* =================================================
-                            YOUTUBE EMBED
-                        ================================================= */}
+                        {/* ------------------------------------------------
+                ERROR SCREEN
+            ------------------------------------------------ */}
 
-                        <iframe
-                            src={YOUTUBE_VIDEO_URL}
-                            title="Intellia Lesson Video"
-                            className="youtube-player"
+                        {hasError && (
+                            <div
+                                style={{
+                                    minHeight: "750px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    textAlign: "center",
+                                    background:
+                                        "linear-gradient(135deg, #fff7ed, #fff)",
+                                    borderRadius: "20px",
+                                    padding: "40px",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: "60px",
+                                        marginBottom: "20px",
+                                    }}
+                                >
+                                    😕
+                                </div>
 
-                            frameBorder="0"
+                                <h2
+                                    style={{
+                                        fontSize: "28px",
+                                        fontWeight: 800,
+                                        color: "#172554",
+                                        marginBottom: "10px",
+                                    }}
+                                >
+                                    Lesson Could Not Be Loaded
+                                </h2>
 
-                            allow="
-                                accelerometer;
-                                autoplay;
-                                clipboard-write;
-                                encrypted-media;
-                                gyroscope;
-                                picture-in-picture;
-                                web-share
-                            "
-
-                            referrerPolicy="strict-origin-when-cross-origin"
-
-                            allowFullScreen
-
-                            onLoad={() => {
-                                setIsLoading(false);
-                            }}
-                        />
-
-                    </div>
-
-
-                    {/* =================================================
-                        VIDEO FOOTER
-                    ================================================= */}
-
-                    <div className="video-card-footer">
-
-
-                        <div className="video-tip">
-
-                            <span className="tip-icon">
-                                💡
-                            </span>
-
-
-                            <div>
-
-                                <strong>
-                                    Learning Tip
-                                </strong>
-
-                                <p>
-                                    Watch carefully and try
-                                    to remember the important
-                                    points!
+                                <p
+                                    style={{
+                                        color: "#64748b",
+                                        maxWidth: "500px",
+                                        lineHeight: 1.6,
+                                    }}
+                                >
+                                    We couldn't load this lesson
+                                    architecture. Please try again.
                                 </p>
 
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setHasError(false);
+                                        setIsLoading(true);
+                                    }}
+                                    style={{
+                                        marginTop: "20px",
+                                        padding: "12px 24px",
+                                        border: "none",
+                                        borderRadius: "12px",
+                                        background: "#2563eb",
+                                        color: "#ffffff",
+                                        fontSize: "15px",
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Try Again
+                                </button>
                             </div>
+                        )}
 
-                        </div>
 
+                        {/* ==================================================
+                ACTUAL LESSON ARCHITECTURE
+            ================================================== */}
 
-                        <div className="video-reward">
-
-                            <span>
-                                +20 XP
-                            </span>
-
-                            <span>
-                                ⭐
-                            </span>
-
-                        </div>
+                        {!hasError && (
+                            <iframe
+                                key={architectureUrl}
+                                src={architectureUrl}
+                                title={`${lessonId} Lesson Architecture`}
+                                onLoad={() => {
+                                    setIsLoading(false);
+                                }}
+                                onError={() => {
+                                    setIsLoading(false);
+                                    setHasError(true);
+                                }}
+                                style={{
+                                    width: "100%",
+                                    height: "calc(100vh - 180px)",
+                                    minHeight: "750px",
+                                    border: "none",
+                                    borderRadius: "20px",
+                                    display: "block",
+                                    background: "#ffffff",
+                                }}
+                                allow="
+                  fullscreen;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  picture-in-picture;
+                "
+                                allowFullScreen
+                                referrerPolicy="strict-origin-when-cross-origin"
+                            />
+                        )}
 
                     </div>
 
+
                 </div>
-
-            </section>
-
-
-            {/* =====================================================
-                BOTTOM NAVIGATION
-            ===================================================== */}
-
-            <div className="video-bottom-area">
-
-                <button
-                    type="button"
-                    className="video-finish-button"
-                    onClick={() => router.back()}
-                >
-
-                    <span>
-                        ✓
-                    </span>
-
-                    Back to Lesson
-
-                </button>
-
             </div>
-
-
-            {/* =====================================================
-                LESSON ID
-                Future progress tracking
-            ===================================================== */}
-
-            <span
-                style={{
-                    display: "none",
-                }}
-            >
-                {lessonId}
-            </span>
-
         </main>
     );
 }
 
 
-/* ============================================================
-   PAGE
-============================================================ */
+/*
+ * ============================================================
+ * PAGE
+ * ============================================================
+ */
 
-export default function VideoPage() {
-
+export default function StudentLessonPage() {
     return (
-
         <Suspense
-
             fallback={
-
-                <main className="video-page">
-
-                    <div className="video-error-card">
-
-                        <div className="video-error-icon">
-                            📺
+                <main
+                    style={{
+                        minHeight: "100vh",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#f5f7ff",
+                    }}
+                >
+                    <div
+                        style={{
+                            textAlign: "center",
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: "48px",
+                                marginBottom: "16px",
+                            }}
+                        >
+                            📚
                         </div>
 
-                        <h1>
-                            Loading video...
-                        </h1>
-
-                        <p>
-                            Preparing your learning
-                            experience ✨
-                        </p>
-
+                        <h2
+                            style={{
+                                fontSize: "24px",
+                                fontWeight: 700,
+                                color: "#172554",
+                            }}
+                        >
+                            Loading lesson...
+                        </h2>
                     </div>
-
                 </main>
-
             }
-
         >
-
-            <VideoContent />
-
+            <StudentLessonContent />
         </Suspense>
-
     );
 }

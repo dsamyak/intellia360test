@@ -2020,10 +2020,6 @@
     }
 }
 
-/* ============================================================
-   ACCESSIBILITY
-============================================================ */
-
 .courses-page a:focus-visible {
     outline: 3px solid rgba(18, 104, 238, .3);
     outline-offset: 3px;
@@ -2045,10 +2041,38 @@
     }
 }
 
+/* =========================================================
+   STUDENT SIDEBAR CONTAINER (Full Height & Flex Fix)
+========================================================= */
+
 .student-sidebar-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    position: sticky !important;
+    top: 0 !important;
     background: #ffffff !important;
     color: #111827 !important;
     border-right: 1px solid #e5e7eb !important;
+    overflow: hidden !important;
+}
+
+/* Scrollable area for navigation & chapters */
+.student-sidebar-scroll-area {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 12px !important;
+}
+
+/* Sticky Footer alignment */
+.student-sidebar-footer {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    padding: 12px !important;
+    border-top: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
 }
 
 /* Lessons section */

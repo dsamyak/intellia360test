@@ -12152,14 +12152,10 @@
     padding: 16px 22px 28px !important;
 }
 
-/* 480px wide with a square video: the mascot video is portrait (9:16), and the
-   old 590px card with a 16:10 video window showed only the middle third of
-   each frame — slicing through the "Hello! I am Intello" bubble at the top,
-   which the Earn XP chip then covered. */
 .home-page .hero-quest-card {
     position: relative !important;
     z-index: 3 !important;
-    width: min(100%, 480px) !important;
+    width: min(100%, 590px) !important;
     padding: 14px !important;
     border: 1px solid rgba(191, 211, 241, .95) !important;
     border-radius: 28px !important;
@@ -12207,7 +12203,7 @@
 .home-page .hero-quest-card .hero-video-card {
     width: 100% !important;
     max-width: none !important;
-    aspect-ratio: 1 / 1 !important;
+    aspect-ratio: 16 / 10 !important;
     height: auto !important;
     margin: 0 !important;
     border: 0 !important;
@@ -12217,15 +12213,12 @@
     box-shadow: none !important;
 }
 
-/* The square window shows 56% of the portrait frame; starting it 22% down
-   keeps the speech bubble (roughly 17%–37% of the frame height) and the
-   mascot's head and body in view. */
 .home-page .hero-quest-card .mascot-hero-video {
     width: 100% !important;
     height: 100% !important;
     display: block !important;
     object-fit: cover !important;
-    object-position: 50% 22% !important;
+    object-position: center center !important;
     transform: none !important;
     cursor: pointer !important;
 }
@@ -12284,28 +12277,16 @@
     box-shadow: 0 14px 30px rgba(15, 23, 42, .09) !important;
     backdrop-filter: blur(8px) !important;
     pointer-events: none !important;
-    /* Size to the label; the badge chip used to wrap "Unlock achievements"
-       onto a second line that spilled out of its right edge. */
-    width: max-content !important;
-    max-width: none !important;
-    white-space: nowrap !important;
 }
 
-/* Both chips now live inside .hero-quest-card and sit on the video's empty
-   corners — Earn XP low on the left, Badges high on the right — clear of the
-   speech bubble (upper left), the mascot (centre) and the arrow button
-   (bottom right). Offsets are measured against the 480px card: the video
-   starts ~54px below its top edge and the footer below it is ~67px tall. */
 .home-page .hero-floating-xp {
-    left: -22px !important;
-    top: auto !important;
-    bottom: 118px !important;
+    left: -2px !important;
+    top: 19% !important;
 }
 
 .home-page .hero-floating-badge {
-    right: -22px !important;
-    bottom: auto !important;
-    top: 92px !important;
+    right: -2px !important;
+    bottom: 17% !important;
 }
 
 .home-page .hero-floating-icon {
@@ -12326,16 +12307,10 @@
     background: linear-gradient(135deg, #f59e0b, #f97316) !important;
 }
 
-/* width/height/background reset: an older `.hero-floating-badge > span` rule
-   (meant for the icon) squeezed the badge chip's text into a 38px box. */
 .home-page .hero-floating-card>span:last-child {
     display: flex !important;
     flex-direction: column !important;
     gap: 2px !important;
-    width: auto !important;
-    height: auto !important;
-    background: none !important;
-    border-radius: 0 !important;
 }
 
 .home-page .hero-floating-card strong {
@@ -12365,11 +12340,11 @@
     }
 
     .home-page .hero-floating-xp {
-        left: -14px !important;
+        left: -8px !important;
     }
 
     .home-page .hero-floating-badge {
-        right: -14px !important;
+        right: -8px !important;
     }
 }
 
@@ -12422,7 +12397,7 @@
     }
 
     .home-page .hero-quest-card {
-        width: min(100%, 480px) !important;
+        width: min(100%, 590px) !important;
     }
 }
 
