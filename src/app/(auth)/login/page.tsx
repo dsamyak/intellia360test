@@ -4,7 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { AuthUser, UserRole } from "@/types/auth";
+import { postLoginPath } from "@/lib/auth/roles";
+import type { AuthUser } from "@/types/auth";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 // Login is email + password only. Role is read from the DB; the UI
@@ -92,15 +93,19 @@ declare global {
   }
 }
 
-function getDashboardPath(role: UserRole): string {
-  if (role === "TEACHER" || role === "SCHOOL") return "/";
-  if (role === "EDITOR") return "/editor/dashboard";
-  if (role === "ADMIN") return "/admin/dashboard";
-  return "/student/dashboard";
+/**
+ * The page the proxy was protecting when it sent the visitor here
+ * (`/login?next=/student/quiz`). Read at call time rather than through
+ * useSearchParams so the page can still be prerendered without a Suspense
+ * boundary; postLoginPath() decides whether it is safe to follow.
+ */
+function readNextParam(): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get("next");
 }
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, completeLogin, status, user } = useAuth();
   const router = useRouter();
 
   const [emailOrUsername, setEmailOrUsername] = useState("");
@@ -112,6 +117,16 @@ export default function LoginPage() {
   const [unverified, setUnverified] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  // True once this tab starts its own sign-in, so the effect below does not
+  // navigate a second time on top of completeLogin().
+  const signingInHere = useRef(false);
+
+  // Another tab signed in while this one sat on the form. Follow it rather
+  // than leaving a login page the proxy would bounce on the next request.
+  useEffect(() => {
+    if (status !== "authenticated" || !user || signingInHere.current) return;
+    router.replace(postLoginPath(user.role, readNextParam()));
+  }, [status, user, router]);
 
   // ── Load Google Identity Services ─────────────────────────────────────────
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -119,6 +134,7 @@ export default function LoginPage() {
   const handleGoogleCredential = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true);
     setError("");
+    signingInHere.current = true;
     try {
       const res = await fetch("/api/auth/google", {
         method: "POST",
@@ -127,17 +143,21 @@ export default function LoginPage() {
       });
       const json = await res.json();
       if (json.success && json.data) {
-        const user = json.data as AuthUser;
-        router.push(getDashboardPath(user.role));
+        // Same path as a password sign-in: the session is recorded in
+        // AuthContext (so the console shows the real account, not a
+        // placeholder) and the role lands on its own dashboard.
+        completeLogin(json.data as AuthUser, readNextParam());
       } else {
+        signingInHere.current = false;
         setError(json.message ?? "Google sign-in failed.");
       }
     } catch {
+      signingInHere.current = false;
       setError("Google sign-in failed. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
-  }, [router]);
+  }, [completeLogin]);
 
   useEffect(() => {
     if (!googleClientId) return;
@@ -183,36 +203,26 @@ export default function LoginPage() {
     setError("");
     setUnverified(false);
     setLoading(true);
+    signingInHere.current = true;
     try {
-      const result = await login({ emailOrUsername, password, rememberMe });
+      const result = await login({ emailOrUsername, password, rememberMe }, { next: readNextParam() });
       if (!result.success) {
+        signingInHere.current = false;
         if (result.unverified) setUnverified(true);
         setError(result.message);
       }
     } catch {
+      signingInHere.current = false;
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  // The site header and footer come from (auth)/layout.tsx, so the page no
+  // longer renders its own text-only logo bar or footer.
   return (
     <div className="auth-shell">
-      {/* Nav */}
-      <nav className="auth-nav">
-        <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-          <span className="auth-logo-text">
-            intellia<span className="three">3</span><span className="six">6</span>0
-          </span>
-        </Link>
-        <div className="auth-nav-action">
-          <span>New here?</span>
-          <Link href="/register" className="auth-nav-link">
-            Create account <ArrowIcon />
-          </Link>
-        </div>
-      </nav>
-
       {/* Body */}
       <div className="auth-body">
         {/* Left — form */}
@@ -395,14 +405,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="auth-page-footer">
-        <span>© 2026 Intellia360. All rights reserved.</span>
-        <Link href="/privacy">Privacy Policy</Link>
-        <Link href="/terms">Terms of Service</Link>
-        <Link href="/support">Support</Link>
-      </footer>
     </div>
   );
 }

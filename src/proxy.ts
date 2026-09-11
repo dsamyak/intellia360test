@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { dashboardFor } from "@/lib/auth/roles";
+import { AREA_ROLES, areaForPath, dashboardFor } from "@/lib/auth/roles";
 import type { UserRole } from "@/types/auth";
 
 const rawSecret = process.env.AUTH_JWT_SECRET;
@@ -22,6 +22,9 @@ interface JWTPayload {
 }
 
 // ── Route categories ──────────────────────────────────────────────────────────
+// Auth pages a signed-in user is sent away from. The protected areas, and the
+// roles allowed into each, live in AREA_ROLES (lib/auth/roles.ts) so the
+// browser-side SessionGuard applies exactly the same rules.
 const PUBLIC_ROUTES = [
   "/login",
   "/register",
@@ -30,10 +33,6 @@ const PUBLIC_ROUTES = [
   "/verify-email",
   "/resend-verification",
 ];
-const STUDENT_ROUTES = ["/student"];
-const TEACHER_ROUTES = ["/teacher"];
-const EDITOR_ROUTES  = ["/editor"];
-const ADMIN_ROUTES   = ["/admin"];
 
 async function getPayload(token: string): Promise<JWTPayload | null> {
   try {
@@ -63,41 +62,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(dashboardFor(role!), request.url));
   }
 
-  // ── Unauthenticated → redirect to /login?next=<path> ─────────────────────
-  const isProtected =
-    matches(pathname, STUDENT_ROUTES) ||
-    matches(pathname, TEACHER_ROUTES) ||
-    matches(pathname, EDITOR_ROUTES)  ||
-    matches(pathname, ADMIN_ROUTES);
+  const area = areaForPath(pathname);
 
-  if (isProtected && !authed) {
+  // ── Unauthenticated → redirect to /login?next=<path> ─────────────────────
+  if (area && !authed) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // ── Role guards ───────────────────────────────────────────────────────────
-  if (authed && role) {
-    if (matches(pathname, STUDENT_ROUTES)) {
-      if (role !== "STUDENT" && role !== "PARENT" && role !== "ADMIN") {
-        return NextResponse.redirect(new URL(dashboardFor(role), request.url));
-      }
-    }
-    if (matches(pathname, TEACHER_ROUTES)) {
-      if (role !== "TEACHER" && role !== "SCHOOL" && role !== "ADMIN") {
-        return NextResponse.redirect(new URL(dashboardFor(role), request.url));
-      }
-    }
-    if (matches(pathname, EDITOR_ROUTES)) {
-      if (role !== "EDITOR" && role !== "ADMIN") {
-        return NextResponse.redirect(new URL(dashboardFor(role), request.url));
-      }
-    }
-    if (matches(pathname, ADMIN_ROUTES)) {
-      if (role !== "ADMIN") {
-        return NextResponse.redirect(new URL(dashboardFor(role), request.url));
-      }
-    }
+  if (area && role && !AREA_ROLES[area].includes(role)) {
+    return NextResponse.redirect(new URL(dashboardFor(role), request.url));
   }
 
   // Header override for EduNotes PDF content API to allow same‑origin iframe embedding

@@ -58,6 +58,34 @@ type SubmitResponse = {
   };
 };
 
+// GET /api/student/daily-quiz — today's streak quiz. This route has no quiz id
+// in its URL, so that is the quiz it serves (see loadDailyQuiz).
+type DailyQuizApiResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    dateKey: string;
+    grade: string;
+    alreadyCompleted: boolean;
+    attempt?: { score: number; xpAwarded: number };
+    questions: {
+      id: string;
+      questionText: string;
+      options: QuizOption[];
+      topic?: string;
+      difficulty?: string;
+    }[];
+  };
+};
+
+type DailySubmitResponse = {
+  success: boolean;
+  message?: string;
+  data?: { score: number; totalQuestions: number; xpAwarded: number };
+};
+
+const DAILY_SECONDS_PER_QUESTION = 60;
+
 type QuizState = "loading" | "ready" | "submitting" | "completed" | "error";
 
 type CachedQuizRecord = {
@@ -147,11 +175,66 @@ export default function StudentQuizPage() {
     setOfflineRecords(next);
   }, []);
 
-  const loadOnlineQuiz = useCallback(async (): Promise<QuizData | null> => {
-    if (!routeQuizId) {
-      setError("Quiz could not be identified.");
-      setQuizState("error");
+  const loadDailyQuiz = useCallback(async (): Promise<QuizData | null> => {
+    try {
+      const response = await fetch("/api/student/daily-quiz", { cache: "no-store" });
+      const payload = (await response.json()) as DailyQuizApiResponse;
+
+      if (!response.ok || !payload.success || !payload.data) {
+        throw new Error(payload.message || "Unable to load today's quiz.");
+      }
+
+      const daily = payload.data;
+      const dailyQuiz: QuizData = {
+        id: `daily-${daily.dateKey}`,
+        title: "Daily Quiz",
+        lessonId: "daily-quiz",
+        lessonTitle: "Today's daily challenge",
+        durationSeconds: daily.questions.length * DAILY_SECONDS_PER_QUESTION,
+        questions: daily.questions.map((question) => ({
+          id: question.id,
+          question: question.questionText,
+          options: question.options,
+          topic: question.topic,
+          difficulty: question.difficulty,
+        })),
+        topic: "Daily Quiz",
+        grade: daily.grade,
+        source: "daily",
+      };
+
+      setQuiz(dailyQuiz);
+      setSelectedTopic(normalizeTopic(dailyQuiz.topic));
+
+      // One attempt per day: show today's stored result instead of the questions.
+      if (daily.alreadyCompleted && daily.attempt) {
+        const total = Math.max(daily.questions.length, 1);
+        setResult({
+          scorePercent: Math.round((daily.attempt.score / total) * 100),
+          correctAnswers: daily.attempt.score,
+          totalQuestions: daily.questions.length,
+          xpEarned: daily.attempt.xpAwarded,
+          synced: true,
+        });
+        setQuizState("completed");
+        return dailyQuiz;
+      }
+
+      setSecondsLeft(dailyQuiz.durationSeconds);
+      setQuizState("ready");
+      return dailyQuiz;
+    } catch (requestError) {
+      console.error("Daily quiz load error:", requestError);
       return null;
+    }
+  }, []);
+
+  const loadOnlineQuiz = useCallback(async (): Promise<QuizData | null> => {
+    // /student/daily-quiz has no quiz id in its URL; it serves today's daily
+    // streak quiz. Waiting for an id that never exists here is what left the
+    // page stuck on "Quiz unavailable".
+    if (!routeQuizId) {
+      return loadDailyQuiz();
     }
 
     try {
@@ -184,7 +267,7 @@ export default function StudentQuizPage() {
       console.error("Student quiz load error:", requestError);
       return null;
     }
-  }, [routeQuizId, saveQuizToOffline]);
+  }, [routeQuizId, saveQuizToOffline, loadDailyQuiz]);
 
   const loadOfflineTopicQuiz = useCallback(
     (topic: string): QuizData | null => {
@@ -288,7 +371,9 @@ export default function StudentQuizPage() {
       }
 
       setError(
-        "This quiz is not available offline yet. Connect to the internet once to save it for offline use.",
+        navigator.onLine
+          ? "We couldn't load this quiz. Please try again in a moment."
+          : "This quiz is not available offline yet. Connect to the internet once to save it for offline use.",
       );
       setQuizState("error");
     };
@@ -437,19 +522,49 @@ export default function StudentQuizPage() {
     setQuizState("submitting");
 
     try {
-      if (isOnline && !offlineMode) {
-        const response = await fetch(
-          `/api/student/quiz/${encodeURIComponent(quiz.id)}/submit`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              answers,
-            }),
+      if (quiz.source === "daily") {
+        // Graded, rewarded and streak-counted on the server — the answer key
+        // never reaches the browser, so there is no offline scoring for it.
+        const response = await fetch("/api/student/daily-quiz/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({ answers }),
+        });
+
+        const payload = (await response.json()) as DailySubmitResponse;
+
+        if (!response.ok || !payload.success || !payload.data) {
+          throw new Error(payload.message || "Unable to submit today's quiz.");
+        }
+
+        const total = Math.max(payload.data.totalQuestions, 1);
+        setResult({
+          scorePercent: Math.round((payload.data.score / total) * 100),
+          correctAnswers: payload.data.score,
+          totalQuestions: payload.data.totalQuestions,
+          xpEarned: payload.data.xpAwarded,
+          synced: true,
+        });
+        setQuizState("completed");
+        return;
+      }
+
+      if (isOnline && !offlineMode) {
+        // The submit route takes the quiz id in the body; there is no
+        // /api/student/quiz/<id>/submit route.
+        const response = await fetch("/api/student/quiz/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            quizId: quiz.id,
+            lessonId: quiz.lessonId,
+            answers,
+          }),
+        });
 
         const payload = (await response.json()) as SubmitResponse;
 
@@ -497,6 +612,16 @@ export default function StudentQuizPage() {
       setQuizState("completed");
     } catch (submitError) {
       console.error("Quiz submit error:", submitError);
+
+      if (quiz.source === "daily") {
+        // Keep the answers so the student can submit again once connected. A
+        // timer that already ran out gets a minute back, or the auto-submit
+        // below would retry immediately.
+        window.alert("Couldn't submit today's quiz. Check your connection and try again.");
+        setSecondsLeft((seconds) => (seconds === 0 ? 60 : seconds));
+        setQuizState("ready");
+        return;
+      }
 
       const offlineResult = calculateResult();
 
@@ -608,19 +733,22 @@ export default function StudentQuizPage() {
           </div>
 
           <div className="result-actions">
-            <button
-              type="button"
-              className="quiz-secondary-button"
-              onClick={() => {
-                setAnswers({});
-                setCurrentQuestion(0);
-                setResult(null);
-                setSecondsLeft(quiz.durationSeconds || 0);
-                setQuizState("ready");
-              }}
-            >
-              Retry Topic
-            </button>
+            {/* The daily quiz counts once per day, so it has nothing to retry. */}
+            {quiz.source !== "daily" && (
+              <button
+                type="button"
+                className="quiz-secondary-button"
+                onClick={() => {
+                  setAnswers({});
+                  setCurrentQuestion(0);
+                  setResult(null);
+                  setSecondsLeft(quiz.durationSeconds || 0);
+                  setQuizState("ready");
+                }}
+              >
+                Retry Topic
+              </button>
+            )}
 
             <button
               type="button"

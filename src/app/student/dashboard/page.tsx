@@ -738,7 +738,7 @@ export default function StudentDashboardPage() {
               Learning Progress
             </h2>
             <Link
-              href="/student/progress"
+              href="/student/courses"
               style={{
                 color: "#2563eb",
                 fontSize: 12,
@@ -1254,7 +1254,7 @@ export default function StudentDashboardPage() {
             </div>
 
             <Link
-              href="/student/progress"
+              href="/student/courses"
               style={{
                 marginTop: 5,
                 textAlign: "center",

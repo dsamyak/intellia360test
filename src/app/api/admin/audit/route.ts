@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { literalSearch } from "@/lib/db-filters";
 import type { Prisma } from "@prisma/client";
 
 export interface AuditLogRow {
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     ...(from || to
       ? { createdAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } }
       : {}),
-    ...(q ? { summary: { contains: q, mode: "insensitive" } } : {}),
+    ...(q ? { summary: { contains: literalSearch(q), mode: "insensitive" } } : {}),
   };
 
   const [total, entries] = await Promise.all([

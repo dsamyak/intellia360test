@@ -4945,18 +4945,23 @@ html.admin-dark .table-search-input::placeholder {
    and generic overflow guards.
    ========================================================= */
 
-img,
-svg,
-video,
-canvas {
-  max-width: 100%;
-}
+/* In the base layer: unlayered element rules outrank every Tailwind utility,
+   and this file stays loaded when an admin moves on to a Tailwind-styled
+   module (the Teacher Console) without a full page load. */
+@layer base {
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
 
-button,
-input,
-select,
-textarea {
-  max-width: 100%;
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
 }
 
 /* Keep flex/grid children from forcing horizontal overflow. */
@@ -5128,5 +5133,24 @@ textarea {
   .admin-content-body textarea {
     width: 100%;
     min-width: 0;
+  }
+}
+
+/* =========================================================
+   ADMIN → MY PROFILE
+   Two columns on desktop, one on narrow screens: the fixed 320px column used
+   to push the account details card off the right edge of a phone screen.
+   ========================================================= */
+
+.admin-profile-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 20px;
+  max-width: 900px;
+}
+
+@media (max-width: 768px) {
+  .admin-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

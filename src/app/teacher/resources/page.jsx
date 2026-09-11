@@ -35,7 +35,7 @@ export default function Resources() {
                   <span className="text-[11px] text-ink/40">{r.size}</span>
                 </div>
               </div>
-              <button onClick={() => notify(`Downloading "${r.title}"…`)} className="p-2 rounded-lg hover:bg-black/5 text-ink/50 shrink-0">
+              <button type="button" onClick={() => notify(`Downloading "${r.title}"…`)} aria-label={`Download ${r.title}`} className="p-2 rounded-lg hover:bg-black/5 text-ink/50 shrink-0">
                 <Download size={15} />
               </button>
             </Card>

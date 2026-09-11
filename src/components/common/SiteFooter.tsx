@@ -1,13 +1,17 @@
 /**
  * The public site footer.
  *
- * Extracted from the home page alongside SiteHeader so public and auth routes
- * share one footer. See SiteHeader for why the wrapper carries `home-page`.
+ * Extracted from the home page alongside SiteHeader so every public route
+ * shares one footer. Its links point at real routes (or at a section of the
+ * home page by full path), so they work from any page — the old in-page
+ * anchors such as #thinktales only resolved on the home page, and not all of
+ * them even there. See SiteHeader for why the wrapper carries `home-page`.
  */
 
 // The chrome ships its own styles, so any route can mount it without
 // having to remember to import home.css.
 import "@/app/home.css";
+import "@/styles/site-chrome.css";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -28,7 +32,7 @@ export default function SiteFooter() {
             <Image
               src="/assets/logo/intellia360-log.png"
               alt="Intellia360"
-              width={190}
+              width={145}
               height={80}
               className="footer-logo-image"
             />
@@ -41,33 +45,33 @@ export default function SiteFooter() {
       FOOTER NAVIGATION
   ========================= */}
 
-        <nav className="footer-nav">
+        <nav className="footer-nav" aria-label="Footer">
 
           <Link href="/">
             Home
           </Link>
 
-          <Link href="#courses">
+          <Link href="/courses">
             Math Program
           </Link>
 
-          <Link href="#thinktales">
+          <Link href="/thinktales">
             ThinkTales
           </Link>
 
-          <Link href="#intelliaplay">
+          <Link href="/intelliaplay">
             IntelliaPlay
           </Link>
 
-          <Link href="#schools">
+          <Link href="/schools">
             Intellia360 For Schools
           </Link>
 
-          <Link href="#about">
+          <Link href="/#learning">
             About Us
           </Link>
 
-          <Link href="#contact">
+          <Link href="/support">
             Contact
           </Link>
 
@@ -202,6 +206,12 @@ export default function SiteFooter() {
             © {new Date().getFullYear()} Intellia360.
             All rights reserved.
           </p>
+
+          <nav className="footer-legal-links" aria-label="Legal">
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <Link href="/support">Support</Link>
+          </nav>
 
         </div>
 

@@ -9,7 +9,7 @@ import { hashPassword } from "@/lib/auth/hash";
 import { PasswordSchema } from "@/lib/auth/validation";
 import { ALL_ROLES } from "@/lib/auth/roles";
 import { db } from "@/lib/db";
-import { notDeleted } from "@/lib/db-filters";
+import { literalSearch, notDeleted } from "@/lib/db-filters";
 import type { AuthResponse } from "@/types/auth";
 
 export interface UserRow {
@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
     ...(role ? { role: role as never } : {}),
     ...(q ? {
       OR: [
-        { name:  { contains: q, mode: "insensitive" as const } },
-        { email: { contains: q, mode: "insensitive" as const } },
+        { name:  { contains: literalSearch(q), mode: "insensitive" as const } },
+        { email: { contains: literalSearch(q), mode: "insensitive" as const } },
       ],
     } : {}),
   };

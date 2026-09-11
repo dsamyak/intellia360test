@@ -516,7 +516,7 @@ export default function HomePage() {
                 <span aria-hidden="true">→</span>
               </Link>
 
-              <Link href="/login" className="hero-secondary">
+              <Link href="/courses" className="hero-secondary">
                 Explore Courses
               </Link>
             </div>
@@ -577,6 +577,9 @@ export default function HomePage() {
                   muted
                   playsInline
                   preload="auto"
+                  // No browser picture-in-picture/cast overlay on top of the mascot.
+                  disablePictureInPicture
+                  disableRemotePlayback
                   onClick={(e) => {
                     const video = e.currentTarget;
 
@@ -608,10 +611,6 @@ export default function HomePage() {
               </div>
 
             </div>
-
-
-
-
 
           </div>
 

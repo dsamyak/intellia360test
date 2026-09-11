@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import SessionGuard from "@/components/auth/SessionGuard";
 
 export default async function AdminRootLayout({
   children,
@@ -17,5 +18,5 @@ export default async function AdminRootLayout({
   // makes React report an attribute mismatch on the root element, and the fix
   // for that (suppressHydrationWarning) lives in the shared root layout,
   // outside this module.
-  return <>{children}</>;
+  return <SessionGuard area="admin">{children}</SessionGuard>;
 }

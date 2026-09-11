@@ -127,15 +127,8 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
+    // Header and footer come from (auth)/layout.tsx.
     <div className="auth-shell">
-      <nav className="auth-nav">
-        <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-          <span className="auth-logo-text">
-            intellia<span className="three">3</span><span className="six">6</span>0
-          </span>
-        </Link>
-      </nav>
-
       <div className="auth-body" style={{ gridTemplateColumns: "1fr", maxWidth: "480px" }}>
         <div className="auth-card">
           <h1 className="auth-card-title">Reset Your Password</h1>
@@ -145,13 +138,6 @@ export default function ResetPasswordPage() {
           </Suspense>
         </div>
       </div>
-
-      <footer className="auth-page-footer">
-        <span>© 2025 Intellia360. All rights reserved.</span>
-        <Link href="/privacy">Privacy Policy</Link>
-        <Link href="/terms">Terms of Service</Link>
-        <Link href="/support">Support</Link>
-      </footer>
     </div>
   );
 }

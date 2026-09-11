@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import Link from "next/link";
 import SiteHeader from "@/components/common/SiteHeader";
 import SiteFooter from "@/components/common/SiteFooter";
+import GradeParamSync from "./GradeParamSync";
 
 
 import "./courses.css";
@@ -153,6 +154,12 @@ export default function CoursesPage() {
         gradePage * gradesPerPage + gradesPerPage
     );
 
+    // Opened from a grade link (/courses?grade=grade3): start on that grade's page.
+    const showGrade = useCallback((gradeId: string) => {
+        const index = grades.findIndex((grade) => grade.id === gradeId);
+        if (index >= 0) setGradePage(Math.floor(index / gradesPerPage));
+    }, [gradesPerPage]);
+
     return (
         <main className="courses-page">
 
@@ -161,6 +168,10 @@ export default function CoursesPage() {
             ================================================== */}
 
             <SiteHeader />
+
+            <Suspense fallback={null}>
+                <GradeParamSync onGrade={showGrade} />
+            </Suspense>
 
 
             {/* ==================================================

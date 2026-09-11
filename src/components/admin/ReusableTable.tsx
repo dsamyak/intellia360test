@@ -121,7 +121,11 @@ export default function ReusableTable<T extends { id: string }>({
                     {rowActions && rowActions.length > 0 ? (
                       <>
                         <button
+                          type="button"
                           className="admin-table-row-btn"
+                          aria-label="Row actions"
+                          aria-haspopup="menu"
+                          aria-expanded={openMenuId === row.id}
                           onClick={() => setOpenMenuId((prev) => (prev === row.id ? null : row.id))}
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -157,7 +161,7 @@ export default function ReusableTable<T extends { id: string }>({
                         )}
                       </>
                     ) : (
-                      <button className="admin-table-row-btn">
+                      <button type="button" className="admin-table-row-btn" aria-label="No actions available" disabled>
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     )}
@@ -182,6 +186,7 @@ export default function ReusableTable<T extends { id: string }>({
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={currentPage <= 1}
             className="admin-table-page-btn"
+            aria-label="Previous page"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -193,6 +198,7 @@ export default function ReusableTable<T extends { id: string }>({
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage >= totalPages}
             className="admin-table-page-btn"
+            aria-label="Next page"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

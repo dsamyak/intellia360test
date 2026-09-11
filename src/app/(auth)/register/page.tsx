@@ -211,14 +211,8 @@ export default function RegisterPage() {
   // ── Email-sent confirmation screen ─────────────────────────────────────────
   if (registeredEmail) {
     return (
+      // Header and footer come from (auth)/layout.tsx.
       <div className="auth-shell">
-        <nav className="auth-nav">
-          <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-            <span className="auth-logo-text">
-              intellia<span className="three">3</span><span className="six">6</span>0
-            </span>
-          </Link>
-        </nav>
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 24px" }}>
           <div style={{ background: "#fff", borderRadius: 24, padding: "48px 44px", maxWidth: 480, width: "100%", boxShadow: "0 8px 40px rgba(30,27,75,.10)", textAlign: "center" }}>
             <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(249,115,22,.10)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.2rem", margin: "0 auto 24px", border: "2px solid rgba(249,115,22,.20)" }}>
@@ -260,29 +254,13 @@ export default function RegisterPage() {
             </div>
           </div>
         </div>
-        <footer className="auth-page-footer">
-          <span>© 2026 Intellia360. All rights reserved.</span>
-        </footer>
       </div>
     );
   }
 
   return (
+    // Header and footer come from (auth)/layout.tsx.
     <div className="auth-shell">
-      {/* ── Nav ── */}
-      <nav className="auth-nav">
-        <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-          <span className="auth-logo-text">
-            intellia<span className="three">3</span><span className="six">6</span>0
-          </span>
-        </Link>
-        <div className="auth-nav-action">
-          <span>Already have an account?</span>
-          <Link href="/login" className="auth-nav-link" id="nav-login-btn">
-            Login <ArrowIcon />
-          </Link>
-        </div>
-      </nav>
 
       {/* ── Body ── */}
       <div className="auth-body">
@@ -495,13 +473,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* ── Footer ── */}
-      <footer className="auth-page-footer">
-        <span>© 2025 Intellia360. All rights reserved.</span>
-        <Link href="/privacy">Privacy Policy</Link>
-        <Link href="/terms">Terms of Service</Link>
-        <Link href="/support">Support</Link>
-      </footer>
     </div>
   );
 }

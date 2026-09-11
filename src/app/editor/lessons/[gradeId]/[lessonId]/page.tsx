@@ -126,9 +126,21 @@ export default function LessonEditorPage({
           <h2 className="ed-page-title">{lesson.title}</h2>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <a href={lesson.modules.architectureModule.url || "#"} target="_blank" rel="noopener noreferrer" className="ed-btn-secondary">
-            👁 Preview
-          </a>
+          {lesson.modules.architectureModule.url ? (
+            <a href={lesson.modules.architectureModule.url} target="_blank" rel="noopener noreferrer" className="ed-btn-secondary">
+              👁 Preview
+            </a>
+          ) : (
+            // Without a module URL this used to be a "#" link that did nothing.
+            <span
+              className="ed-btn-secondary"
+              aria-disabled="true"
+              title="Add an architecture module URL to preview this lesson"
+              style={{ opacity: 0.55, cursor: "not-allowed" }}
+            >
+              👁 Preview
+            </span>
+          )}
           <Link href={`/editor/lessons?grade=${gradeId}`} className="ed-btn-secondary">← Back</Link>
         </div>
       </div>

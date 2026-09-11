@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
-import { notArchived } from "@/lib/db-filters";
+import { literalSearch, notArchived } from "@/lib/db-filters";
 import { computeSchoolCounts, normSchoolKey } from "@/lib/admin/school-stats";
 import { recordAudit } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
@@ -40,9 +40,9 @@ export async function GET(request: NextRequest) {
     ...(q
       ? {
           OR: [
-            { name: { contains: q, mode: "insensitive" } },
-            { location: { contains: q, mode: "insensitive" } },
-            { code: { contains: q, mode: "insensitive" } },
+            { name: { contains: literalSearch(q), mode: "insensitive" } },
+            { location: { contains: literalSearch(q), mode: "insensitive" } },
+            { code: { contains: literalSearch(q), mode: "insensitive" } },
           ],
         }
       : {}),

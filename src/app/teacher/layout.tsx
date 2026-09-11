@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Fraunces, JetBrains_Mono } from "next/font/google";
 import { TeacherDataProvider } from "@/context/TeacherDataContext";
 import TeacherShell from "@/components/teacher/TeacherShell";
+import SessionGuard from "@/components/auth/SessionGuard";
 
 // Display + data faces for the Teacher Console. Inter (the UI face) is already
 // loaded by the root layout; these two are only pulled in for /teacher/*.
@@ -31,9 +32,11 @@ export default function TeacherLayout({
 }) {
   return (
     <div className={`${fraunces.variable} ${jetbrainsMono.variable} teacher-shell`}>
-      <TeacherDataProvider>
-        <TeacherShell>{children}</TeacherShell>
-      </TeacherDataProvider>
+      <SessionGuard area="teacher">
+        <TeacherDataProvider>
+          <TeacherShell>{children}</TeacherShell>
+        </TeacherDataProvider>
+      </SessionGuard>
     </div>
   );
 }

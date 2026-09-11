@@ -5,9 +5,13 @@ import { Bell, Lock } from "lucide-react";
 import { useData } from "@/context/TeacherDataContext";
 import { Card, CardHeader, Avatar, Input, Label, Button } from "@/components/teacher/ui";
 
-function Toggle({ checked, onChange }) {
+function Toggle({ checked, onChange, label }) {
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
       onClick={() => onChange(!checked)}
       className={`w-10 h-6 rounded-full relative transition-colors ${checked ? "bg-violet" : "bg-black/15"}`}
     >
@@ -80,7 +84,7 @@ export default function Settings() {
                 <Icon size={15} className="text-ink/40" />
                 <span className="text-[13px]">{label}</span>
               </div>
-              <Toggle checked={prefs[key]} onChange={(v) => setPrefs((p) => ({ ...p, [key]: v }))} />
+              <Toggle label={label} checked={prefs[key]} onChange={(v) => setPrefs((p) => ({ ...p, [key]: v }))} />
             </div>
           ))}
         </div>

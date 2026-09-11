@@ -3,15 +3,11 @@
 import React, { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { UserRole } from "@/types/auth";
+import { useAuth } from "@/context/AuthContext";
+import { dashboardFor } from "@/lib/auth/roles";
+import type { AuthUser, UserRole } from "@/types/auth";
 
 type Status = "verifying" | "success" | "expired" | "used" | "invalid" | "no-token";
-
-function dashboardFor(role: UserRole): string {
-  if (role === "TEACHER" || role === "SCHOOL") return "/teacher/dashboard";
-  if (role === "ADMIN"   || role === "EDITOR") return "/editor/dashboard";
-  return "/student/dashboard";
-}
 
 function ArrowIcon() {
   return (
@@ -32,6 +28,7 @@ export default function VerifyEmailPage() {
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router       = useRouter();
+  const { completeLogin } = useAuth();
 
   const [status, setStatus]   = useState<Status>("verifying");
   const [message, setMessage] = useState("");
@@ -52,10 +49,17 @@ function VerifyEmailContent() {
       if (json.success) {
         setStatus("success");
         setMessage(json.message);
-        // Auto-redirect to dashboard after 2 s
+        // Auto-redirect to dashboard after 2 s. Verifying signs the user in,
+        // so the new session is handed to AuthContext (and on to the role's
+        // own dashboard) instead of waiting for a page reload to discover it.
         setTimeout(() => {
-          const role: UserRole = json.data?.role ?? "STUDENT";
-          router.push(dashboardFor(role));
+          const verified = json.data as Partial<AuthUser> | undefined;
+          if (verified?.id && verified.role) {
+            completeLogin(verified as AuthUser);
+          } else {
+            const role: UserRole = verified?.role ?? "STUDENT";
+            router.push(dashboardFor(role));
+          }
         }, 2000);
         return;
       }
@@ -74,7 +78,7 @@ function VerifyEmailContent() {
       setStatus("invalid");
       setMessage("Network error. Please check your connection and try again.");
     }
-  }, [router]);
+  }, [router, completeLogin]);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -133,15 +137,8 @@ function VerifyEmailContent() {
   const cfg = configs[status];
 
   return (
+    // Header and footer come from (auth)/layout.tsx.
     <div className="auth-shell">
-      <nav className="auth-nav">
-        <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-          <span className="auth-logo-text">
-            intellia<span className="three">3</span><span className="six">6</span>0
-          </span>
-        </Link>
-      </nav>
-
       <div
         style={{
           flex: 1,

@@ -72,7 +72,7 @@ function writeTheme(next: "dark" | "light") {
 
 export default function AdminNavbar({ onToggleSidebar }: AdminNavbarProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const isDark = theme === "dark";
@@ -201,20 +201,16 @@ export default function AdminNavbar({ onToggleSidebar }: AdminNavbarProps) {
   }, []);
 
   /* ── Logout ─────────────────────────────────────────────────────────────── */
+  // The shared AuthContext logout clears the session, tells other tabs and
+  // leaves with a full page load; it only returns when the request failed.
   const handleLogout = async () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
 
-    try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
-      if (!response.ok) throw new Error("Logout failed");
-
-      localStorage.removeItem("user");
-      setIsProfileOpen(false);
-      router.push("/login");
-    } catch (error) {
-      console.error("[AdminNavbar] Logout error:", error);
+    if (!(await logout())) {
+      console.error("[AdminNavbar] Logout request failed");
       setIsLoggingOut(false);
+      window.alert("Couldn't log out. Check your connection and try again.");
     }
   };
 

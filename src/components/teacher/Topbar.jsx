@@ -26,6 +26,7 @@ export default function Topbar({ title, subtitle, onMenu }) {
   const [copied, setCopied] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const notificationsRef = useRef(null);
   const profileRef = useRef(null);
@@ -48,6 +49,18 @@ export default function Topbar({ title, subtitle, onMenu }) {
     setCopied(true);
     notify("Class code copied to clipboard!");
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  // The menu stays open while the request runs so the "Logging out…" state is
+  // visible; logout() leaves the page on success and only returns on failure.
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    const ok = await logout();
+    if (!ok) {
+      setLoggingOut(false);
+      notify("Couldn't log out — check your connection and try again.", "warn");
+    }
   };
 
   const getNotificationIcon = (type) => {
@@ -81,7 +94,7 @@ export default function Topbar({ title, subtitle, onMenu }) {
   return (
     <header className="sticky top-0 z-30 bg-canvas/85 backdrop-blur-md border-b border-black/[0.06]">
       <div className="h-16 px-4 sm:px-6 flex items-center gap-3">
-        <button onClick={onMenu} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-black/5 cursor-pointer">
+        <button onClick={onMenu} aria-label="Open navigation" className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-black/5 cursor-pointer">
           <Menu size={20} />
         </button>
 
@@ -103,7 +116,7 @@ export default function Topbar({ title, subtitle, onMenu }) {
         <div className="hidden md:flex items-center gap-1.5 bg-white border border-black/[0.07] rounded-xl px-3 py-1.5 text-[12px] shadow-sm">
           <span className="text-ink/40">Class Code</span>
           <span className="font-mono font-semibold tracking-wide">{teacher.classCode}</span>
-          <button onClick={copyCode} className="ml-1 text-violet hover:text-violet-deep cursor-pointer">
+          <button onClick={copyCode} aria-label="Copy class code" className="ml-1 text-violet hover:text-violet-deep cursor-pointer">
             {copied ? <Check size={13} /> : <Copy size={13} />}
           </button>
         </div>
@@ -124,6 +137,9 @@ export default function Topbar({ title, subtitle, onMenu }) {
               setShowNotifications(!showNotifications);
               setShowProfile(false);
             }}
+            aria-label={teacher.notifications > 0 ? `Notifications (${teacher.notifications} unread)` : "Notifications"}
+            aria-haspopup="menu"
+            aria-expanded={showNotifications}
             className={`relative p-2 rounded-lg transition-colors cursor-pointer ${
               showNotifications ? "bg-black/5 text-ink" : "hover:bg-black/5 text-ink/70"
             }`}
@@ -167,6 +183,7 @@ export default function Topbar({ title, subtitle, onMenu }) {
                         }}
                         className="text-[11px] text-ink/40 hover:text-ink/60 cursor-pointer transition-colors"
                         title="Clear all"
+                        aria-label="Clear all notifications"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -229,6 +246,9 @@ export default function Topbar({ title, subtitle, onMenu }) {
               setShowProfile(!showProfile);
               setShowNotifications(false);
             }}
+            aria-label="Account menu"
+            aria-haspopup="menu"
+            aria-expanded={showProfile}
             className={`flex items-center gap-2 pl-1.5 pr-2 py-1 rounded-xl transition-colors cursor-pointer ${
               showProfile ? "bg-black/5" : "hover:bg-black/5"
             }`}
@@ -288,6 +308,7 @@ export default function Topbar({ title, subtitle, onMenu }) {
                       <span className="font-mono font-semibold tracking-wider text-[11px]">{teacher.classCode}</span>
                       <button
                         onClick={copyCode}
+                        aria-label="Copy class code"
                         className="text-violet hover:text-violet-deep p-0.5 rounded hover:bg-black/5 cursor-pointer"
                       >
                         <Copy size={11} />
@@ -298,14 +319,13 @@ export default function Topbar({ title, subtitle, onMenu }) {
 
                 <div className="py-1">
                   <button
-                    onClick={() => {
-                      setShowProfile(false);
-                      logout();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-coral-tint text-coral cursor-pointer transition-colors"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    aria-busy={loggingOut}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold rounded-lg hover:bg-coral-tint text-coral cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait"
                   >
                     <LogOut size={14} />
-                    Log Out
+                    {loggingOut ? "Logging out…" : "Log Out"}
                   </button>
                 </div>
               </div>
