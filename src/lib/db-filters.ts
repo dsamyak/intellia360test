@@ -51,3 +51,15 @@ export function notArchived() {
 export function hasRequestedRole() {
   return { NOT: { OR: [{ requestedRole: null }, { requestedRole: { isSet: false } }] } };
 }
+
+/**
+ * Makes search-box text safe to pass to Prisma's `contains` on MongoDB.
+ *
+ * The MongoDB connector turns `contains` into a `$regex` without escaping it,
+ * so the text was read as a pattern: a lone "(" made the query invalid and the
+ * route answered 500, and "1+1" or "St. Mary's (Pune)" silently matched the
+ * wrong rows. Escaping the metacharacters makes the search match literally.
+ */
+export function literalSearch(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

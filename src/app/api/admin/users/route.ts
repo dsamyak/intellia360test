@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
-import { notDeleted, hasRequestedRole } from "@/lib/db-filters";
+import { notDeleted, hasRequestedRole, literalSearch } from "@/lib/db-filters";
 import { Role } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 
@@ -102,8 +102,8 @@ export async function GET(request: NextRequest) {
     ...(role ? { role } : {}),
     ...(q ? {
       OR: [
-        { name:  { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
+        { name:  { contains: literalSearch(q), mode: "insensitive" } },
+        { email: { contains: literalSearch(q), mode: "insensitive" } },
       ],
     } : {}),
   };

@@ -29,7 +29,7 @@ export default function AdminProfilePage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 20, maxWidth: 900 }}>
+      <div className="admin-profile-grid">
 
         {/* Avatar card */}
         <div className="admin-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "36px 24px", gap: 14 }}>

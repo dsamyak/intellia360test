@@ -3,18 +3,17 @@
  * Returns basic teacher stats from the DB.
  */
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import type { AuthResponse } from "@/types/auth";
+import { requireTeacherSession } from "@/lib/teacher/require-teacher-session";
 
 export async function GET() {
-  const payload = await getSession();
-  if (!payload) {
-    return NextResponse.json<AuthResponse>({ success: false, message: "Unauthorized" }, { status: 401 });
-  }
+  // Same role guard as every other teacher route. This one only checked that a
+  // session existed, so a student or editor session got a 200 back.
+  const { session, errorResponse } = await requireTeacherSession();
+  if (errorResponse) return errorResponse;
 
   const teacherProfile = await db.teacherProfile.findUnique({
-    where: { userId: payload.sub },
+    where: { userId: session.userId },
     include: {
       classes: {
         include: { students: true, assignments: true },

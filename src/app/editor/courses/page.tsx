@@ -61,7 +61,8 @@ export default function CoursesPage() {
           <h2 className="ed-page-title">Courses</h2>
           <p className="ed-page-sub">Browse all lessons organised by grade and chapter.</p>
         </div>
-        <Link href="/editor/lessons/new" className="ed-btn-primary">+ New Lesson</Link>
+        {/* Lessons are created on the Lessons page; /editor/lessons/new never existed. */}
+        <Link href={selected ? `/editor/lessons?grade=${selected}` : "/editor/lessons"} className="ed-btn-primary">+ New Lesson</Link>
       </div>
 
       {/* Grade picker */}

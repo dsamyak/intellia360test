@@ -516,7 +516,7 @@ export default function HomePage() {
                 <span aria-hidden="true">→</span>
               </Link>
 
-              <Link href="/login" className="hero-secondary">
+              <Link href="/courses" className="hero-secondary">
                 Explore Courses
               </Link>
             </div>
@@ -577,6 +577,9 @@ export default function HomePage() {
                   muted
                   playsInline
                   preload="auto"
+                  // No browser picture-in-picture/cast overlay on top of the mascot.
+                  disablePictureInPicture
+                  disableRemotePlayback
                   onClick={(e) => {
                     const video = e.currentTarget;
 
@@ -607,22 +610,26 @@ export default function HomePage() {
                 <span className="hero-quest-arrow" aria-hidden="true">→</span>
               </div>
 
-            </div>
+              {/* The chips are positioned against the card itself (not the
+                  column around it) so they can sit on the video's empty
+                  corners — clear of the "Hello! I am Intello" bubble, the
+                  mascot and the arrow button at every width. */}
+              <div className="hero-floating-card hero-floating-xp" aria-hidden="true">
+                <span className="hero-floating-icon">XP</span>
+                <span>
+                  <strong>Earn XP</strong>
+                  <small>Learn & progress</small>
+                </span>
+              </div>
 
-            <div className="hero-floating-card hero-floating-xp" aria-hidden="true">
-              <span className="hero-floating-icon">XP</span>
-              <span>
-                <strong>Earn XP</strong>
-                <small>Learn & progress</small>
-              </span>
-            </div>
+              <div className="hero-floating-card hero-floating-badge" aria-hidden="true">
+                <span className="hero-floating-icon">★</span>
+                <span>
+                  <strong>Badges</strong>
+                  <small>Unlock achievements</small>
+                </span>
+              </div>
 
-            <div className="hero-floating-card hero-floating-badge" aria-hidden="true">
-              <span className="hero-floating-icon">★</span>
-              <span>
-                <strong>Badges</strong>
-                <small>Unlock achievements</small>
-              </span>
             </div>
 
           </div>

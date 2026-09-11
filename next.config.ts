@@ -54,7 +54,8 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
 
       // Styles
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      // accounts.google.com serves the Google sign-in button's stylesheet.
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
 
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",

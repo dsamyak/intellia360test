@@ -112,19 +112,8 @@ function ResendForm() {
 
 export default function ResendVerificationPage() {
   return (
+    // Header and footer come from (auth)/layout.tsx.
     <div className="auth-shell">
-      <nav className="auth-nav">
-        <Link href="/" className="auth-logo" aria-label="Intellia360 Home">
-          <span className="auth-logo-text">
-            intellia<span className="three">3</span><span className="six">6</span>0
-          </span>
-        </Link>
-        <div className="auth-nav-action">
-          <span>Already verified?</span>
-          <Link href="/login" className="auth-nav-link">Log in <ArrowIcon /></Link>
-        </div>
-      </nav>
-
       <div style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px 24px" }}>
         <div style={{ background:"#fff",borderRadius:24,padding:"44px",maxWidth:460,width:"100%",boxShadow:"0 8px 40px rgba(30,27,75,.10)" }}>
           <Suspense fallback={null}>
@@ -132,12 +121,6 @@ export default function ResendVerificationPage() {
           </Suspense>
         </div>
       </div>
-
-      <footer className="auth-page-footer">
-        <span>© 2026 Intellia360. All rights reserved.</span>
-        <Link href="/login">Login</Link>
-        <Link href="/register">Register</Link>
-      </footer>
     </div>
   );
 }

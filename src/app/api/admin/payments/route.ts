@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
 import { db } from "@/lib/db";
+import { literalSearch } from "@/lib/db-filters";
 import { recordAudit } from "@/lib/audit";
 import type { Prisma } from "@prisma/client";
 import type { AuthResponse } from "@/types/auth";
@@ -41,9 +42,9 @@ export async function GET(request: NextRequest) {
     ...(q
       ? {
           OR: [
-            { payerName: { contains: q, mode: "insensitive" } },
-            { transactionId: { contains: q, mode: "insensitive" } },
-            { schoolOrUser: { contains: q, mode: "insensitive" } },
+            { payerName: { contains: literalSearch(q), mode: "insensitive" } },
+            { transactionId: { contains: literalSearch(q), mode: "insensitive" } },
+            { schoolOrUser: { contains: literalSearch(q), mode: "insensitive" } },
           ],
         }
       : {}),

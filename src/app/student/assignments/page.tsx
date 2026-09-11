@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useStudentContext } from "@/context/StudentContext";
 import "./assignments.css";
 
 type AssignmentStatus =
@@ -38,6 +39,45 @@ const STATUS_LABELS: Record<AssignmentStatus, string> = {
     COMPLETED: "Completed",
     OVERDUE: "Overdue",
 };
+
+/**
+ * Where an assignment's button leads. There is no assignment detail route —
+ * the old links to /student/assignments/<id> were 404s — so an assignment
+ * opens the lesson it is attached to, or that lesson's practice quiz when the
+ * teacher set it as a quiz (the API reports the assignment type as `subject`).
+ * An assignment without a lesson has nothing to open in the app.
+ */
+function assignmentHref(
+    assignment: StudentAssignment,
+    topics: { id: string }[],
+): string | null {
+    if (!assignment.lessonId) return null;
+    if (assignment.subject === "Quiz") {
+        return `/student/quiz/practice-${encodeURIComponent(assignment.lessonId)}`;
+    }
+    return `/student/lesson/${encodeURIComponent(curriculumTopicId(assignment.lessonId, topics))}`;
+}
+
+/**
+ * Lesson files (which assignments and quizzes reference) and the curriculum use
+ * different ids for some lessons: counting-up-to-100 vs
+ * counting-numbers-up-to-100, ordinal-numbers vs
+ * ordinal-numbers-first-second-third. An exact id wins; otherwise the topic
+ * whose id contains the lesson id words in order is used, but only when exactly
+ * one topic matches.
+ */
+function curriculumTopicId(lessonId: string, topics: { id: string }[]): string {
+    if (topics.some((t) => t.id === lessonId)) return lessonId;
+    const words = lessonId.split("-");
+    const matches = topics.filter((t) => {
+        let matched = 0;
+        for (const part of t.id.split("-")) {
+            if (part === words[matched]) matched += 1;
+        }
+        return matched === words.length;
+    });
+    return matches.length === 1 ? matches[0].id : lessonId;
+}
 
 function ClipboardIcon() {
     return (
@@ -178,6 +218,11 @@ function getEffectiveStatus(
 }
 
 export default function StudentAssignmentsPage() {
+    const { curriculum } = useStudentContext();
+    const topics = useMemo(
+        () => curriculum?.chapters.flatMap((chapter) => chapter.topics) ?? [],
+        [curriculum],
+    );
     const [assignments, setAssignments] = useState<StudentAssignment[]>([]);
     const [activeFilter, setActiveFilter] = useState<FilterType>("ALL");
     const [loading, setLoading] = useState(true);
@@ -421,6 +466,7 @@ export default function StudentAssignmentsPage() {
                         {filteredAssignments.map((assignment) => {
                             const status = getEffectiveStatus(assignment);
                             const progress = getProgress(assignment);
+                            const actionHref = assignmentHref(assignment, topics);
 
                             return (
                                 <article
@@ -510,11 +556,18 @@ export default function StudentAssignmentsPage() {
                                             </span>
                                         </div>
 
-                                        {assignment.status === "COMPLETED" ? (
+                                        {!actionHref ? (
+                                            <span
+                                                className="assignment-secondary-button"
+                                                aria-disabled="true"
+                                                title="This assignment isn't linked to a lesson — your teacher will share the material"
+                                                style={{ cursor: "default", opacity: 0.75 }}
+                                            >
+                                                From your teacher
+                                            </span>
+                                        ) : assignment.status === "COMPLETED" ? (
                                             <Link
-                                                href={`/student/assignments/${encodeURIComponent(
-                                                    assignment.id,
-                                                )}`}
+                                                href={actionHref}
                                                 className="assignment-secondary-button"
                                             >
                                                 Review
@@ -522,9 +575,7 @@ export default function StudentAssignmentsPage() {
                                             </Link>
                                         ) : (
                                             <Link
-                                                href={`/student/assignments/${encodeURIComponent(
-                                                    assignment.id,
-                                                )}`}
+                                                href={actionHref}
                                                 className="assignment-primary-button"
                                             >
                                                 {assignment.status === "IN_PROGRESS"

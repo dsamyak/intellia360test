@@ -78,7 +78,7 @@ export default function Messages() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
               />
-              <Button onClick={send}><Send size={14} /></Button>
+              <Button onClick={send} aria-label="Send reply"><Send size={14} /></Button>
             </div>
           </>
         ) : (

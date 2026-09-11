@@ -140,7 +140,7 @@ function AiAssistantChat() {
             placeholder="Ask about a class, a student, or a topic…"
             className="flex-1 bg-canvas border border-black/10 rounded-xl px-3.5 py-2.5 text-[13.5px] outline-none focus:border-violet focus:ring-2 focus:ring-violet/15"
           />
-          <button onClick={() => send()} className="bg-violet text-white rounded-xl px-4 grid place-items-center hover:bg-violet-deep">
+          <button type="button" onClick={() => send()} aria-label="Send message" className="bg-violet text-white rounded-xl px-4 grid place-items-center hover:bg-violet-deep">
             <Send size={16} />
           </button>
         </div>

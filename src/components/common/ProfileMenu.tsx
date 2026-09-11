@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProfileMenuProps {
   avatarUrl?: string;
@@ -17,6 +18,7 @@ export default function ProfileMenu({
 
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { logout } = useAuth();
 
   /* ─────────────────────────────────────────────
      Close dropdown when clicking outside
@@ -46,7 +48,8 @@ export default function ProfileMenu({
   }, []);
 
   /* ─────────────────────────────────────────────
-     Logout
+     Logout — the shared AuthContext logout clears the session, tells other
+     tabs, and leaves with a full page load. It only returns when it failed.
   ───────────────────────────────────────────── */
 
   const handleLogout = async () => {
@@ -54,26 +57,8 @@ export default function ProfileMenu({
 
     setIsLoggingOut(true);
 
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        throw new Error("Logout request failed");
-      }
-
-      // Remove client-side user data if present
-      localStorage.removeItem("user");
-
-      // Close dropdown
-      setIsOpen(false);
-
-      // Redirect to login
-      router.push("/login");
-    } catch (error) {
-      console.error("[ProfileMenu] Logout error:", error);
-
+    if (!(await logout())) {
+      console.error("[ProfileMenu] Logout request failed");
       setIsLoggingOut(false);
     }
   };

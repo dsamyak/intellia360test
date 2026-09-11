@@ -1,19 +1,34 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { dashboardFor } from "@/lib/auth/roles";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { postLoginPath } from "@/lib/auth/roles";
 import type { AuthUser, LoginInput, RegisterInput, UserRole } from "@/types/auth";
 
 // ─── Context Shape ────────────────────────────────────────────────────────────
 
+/**
+ * `unknown` means the last session check failed for a reason other than "not
+ * signed in" (network error, 5xx). It must not be treated as a sign-out.
+ */
+export type SessionStatus = "loading" | "authenticated" | "unauthenticated" | "unknown";
+
 interface AuthContextValue {
   user:            AuthUser | null;
+  status:          SessionStatus;
   isAuthenticated: boolean;
   isLoading:       boolean;
-  login:    (input: LoginInput)    => Promise<{ success: boolean; message: string; unverified?: boolean }>;
+  login:    (input: LoginInput, options?: { next?: string | null }) => Promise<{ success: boolean; message: string; unverified?: boolean }>;
+  /** Adopts a session a sign-in endpoint has already issued (Google sign-in, email verification). */
+  completeLogin: (user: AuthUser, next?: string | null) => void;
   register: (input: RegisterInput) => Promise<RegisterResult>;
-  logout:   ()                     => Promise<void>;
+  /** Re-reads the session from the server. */
+  refreshSession: () => Promise<void>;
+  /**
+   * Ends the session and leaves for /login with a full page load. Resolves
+   * false — and stays on the page — when the server could not be reached to
+   * clear the session cookie.
+   */
+  logout:   (options?: { next?: string }) => Promise<boolean>;
   hasRole:  (...roles: UserRole[]) => boolean;
 }
 
@@ -28,32 +43,166 @@ export interface RegisterResult {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ─── Cross-tab session signal ─────────────────────────────────────────────────
+// The session cookie is shared by every tab in the browser, so signing in or
+// out in one tab silently changes the session of all the others. Tabs tell
+// each other when that happens so they can re-check immediately.
+
+const AUTH_CHANNEL = "intellia360-auth";
+
+/** Minimum gap between the session checks triggered by a tab regaining focus. */
+const FOCUS_RECHECK_MS = 5000;
+
+const hasBroadcastChannel = () => typeof BroadcastChannel !== "undefined";
+
+function announceSessionChange(type: "login" | "logout") {
+  const signal = { type, at: Date.now() };
+  try {
+    if (hasBroadcastChannel()) {
+      const channel = new BroadcastChannel(AUTH_CHANNEL);
+      channel.postMessage(signal);
+      channel.close();
+    } else {
+      localStorage.setItem(AUTH_CHANNEL, JSON.stringify(signal));
+    }
+  } catch {
+    // No channel or storage — other tabs still re-check when they regain focus.
+  }
+}
+
+type SessionCheck =
+  | { kind: "user"; user: AuthUser }
+  | { kind: "signed-out" }
+  | { kind: "failed" };
+
+/** Asks the server who the session cookie belongs to. */
+async function checkSession(): Promise<SessionCheck> {
+  try {
+    const res = await fetch("/api/auth/me", { cache: "no-store" });
+    if (res.status === 401) return { kind: "signed-out" };
+    const json = res.ok ? await res.json() : null;
+    if (json?.success && json.data) return { kind: "user", user: json.data as AuthUser };
+    return { kind: "failed" };
+  } catch {
+    return { kind: "failed" };
+  }
+}
+
+/**
+ * Crosses between the public site and a signed-in module with a full page
+ * load rather than a client-side navigation.
+ *
+ * A client-side navigation keeps the previous page's stylesheets in the
+ * document. The public site's CSS includes unscoped class rules
+ * (.section-eyebrow, .courses-section, …) that restyled student and teacher
+ * pages reached that way, and the client router cache can still hold
+ * responses fetched under the previous session — a /login prefetched while
+ * signed in is a redirect to the dashboard. A fresh document avoids both.
+ */
+function leaveFor(path: string, { replace = false } = {}) {
+  if (replace) window.location.replace(path);
+  else window.location.assign(path);
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user,      setUser]      = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+  const [user,   setUser]   = useState<AuthUser | null>(null);
+  const [status, setStatus] = useState<SessionStatus>("loading");
+
+  const lastCheckAt = useRef(0);
+  // Set while the page is navigating away after a sign-in or sign-out, so the
+  // tab's own session signal doesn't flash a stale state before it unloads.
+  const leaving = useRef(false);
+
+  const applySession = useCallback((check: SessionCheck) => {
+    if (leaving.current) return;
+    if (check.kind === "signed-out") {
+      setUser(null);
+      setStatus("unauthenticated");
+    } else if (check.kind === "user") {
+      const fresh = check.user;
+      // Keep the same object when nothing changed, so a focus check does not
+      // re-render every consumer.
+      setUser((prev) =>
+        prev &&
+        prev.id === fresh.id &&
+        prev.role === fresh.role &&
+        prev.name === fresh.name &&
+        prev.email === fresh.email
+          ? prev
+          : fresh
+      );
+      setStatus("authenticated");
+    } else {
+      // Network error or 5xx — keep whatever we last knew.
+      setStatus((prev) => (prev === "loading" ? "unknown" : prev));
+    }
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    if (leaving.current) return;
+    lastCheckAt.current = Date.now();
+    applySession(await checkSession());
+  }, [applySession]);
 
   // Restore session from the httpOnly cookie on every page load
   useEffect(() => {
+    let cancelled = false;
+    lastCheckAt.current = Date.now();
     (async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data) setUser(json.data as AuthUser);
-        }
-      } catch {
-        // Network error — treat as logged-out
-      } finally {
-        setIsLoading(false);
-      }
+      const check = await checkSession();
+      if (!cancelled) applySession(check);
     })();
+    return () => {
+      cancelled = true;
+    };
+  }, [applySession]);
+
+  // Re-check when another tab signs in or out, and when this tab comes back
+  // into view. Without this a stale tab only finds out on its next click, which
+  // the proxy then redirects into another role's console or back to /login.
+  useEffect(() => {
+    const recheck = () => void refreshSession();
+    const recheckIfStale = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastCheckAt.current < FOCUS_RECHECK_MS) return;
+      recheck();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_CHANNEL) recheck();
+    };
+
+    let channel: BroadcastChannel | null = null;
+    if (hasBroadcastChannel()) {
+      channel = new BroadcastChannel(AUTH_CHANNEL);
+      channel.onmessage = recheck;
+    } else {
+      window.addEventListener("storage", onStorage);
+    }
+    document.addEventListener("visibilitychange", recheckIfStale);
+    window.addEventListener("focus", recheckIfStale);
+
+    return () => {
+      channel?.close();
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", recheckIfStale);
+      window.removeEventListener("focus", recheckIfStale);
+    };
+  }, [refreshSession]);
+
+  // ── Complete a sign-in ─────────────────────────────────────────────────────
+  const completeLogin = useCallback((authUser: AuthUser, next?: string | null) => {
+    setUser(authUser);
+    setStatus("authenticated");
+    lastCheckAt.current = Date.now();
+    leaving.current = true;
+    announceSessionChange("login");
+    leaveFor(postLoginPath(authUser.role, next));
   }, []);
 
   // ── Login ──────────────────────────────────────────────────────────────────
-  const login = useCallback(async (input: LoginInput) => {
+  const login = useCallback(async (input: LoginInput, options?: { next?: string | null }) => {
     const res  = await fetch("/api/auth/login", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
@@ -67,13 +216,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (json.success && json.data) {
-      const authUser = json.data as AuthUser;
-      setUser(authUser);
-      router.push(dashboardFor(authUser.role));
+      completeLogin(json.data as AuthUser, options?.next);
     }
 
     return { success: json.success, message: json.message };
-  }, [router]);
+  }, [completeLogin]);
 
   // ── Register ───────────────────────────────────────────────────────────────
   // After the new flow, register does NOT issue a session — it just queues a
@@ -94,11 +241,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Logout ─────────────────────────────────────────────────────────────────
-  const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
-    router.push("/login");
-  }, [router]);
+  const logout = useCallback(async (options?: { next?: string }) => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST", cache: "no-store" });
+      if (!res.ok) return false;
+    } catch {
+      return false;
+    }
+
+    leaving.current = true;
+    try {
+      localStorage.removeItem("user");
+    } catch {
+      // Storage unavailable — nothing to clear.
+    }
+    announceSessionChange("logout");
+
+    // A full page load (see leaveFor) also drops every in-memory store of the
+    // old session — teacher data, student progress — along with the router
+    // cache, whose stale /login redirect used to send router.push("/login")
+    // straight back into the console. `replace` keeps the signed-in page out of
+    // the back-button history.
+    const target = options?.next ? `/login?next=${encodeURIComponent(options.next)}` : "/login";
+    leaveFor(target, { replace: true });
+    return true;
+  }, []);
 
   // ── hasRole ────────────────────────────────────────────────────────────────
   const hasRole = useCallback((...roles: UserRole[]) => {
@@ -108,7 +275,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, hasRole }}
+      value={{
+        user,
+        status,
+        isAuthenticated: !!user,
+        isLoading: status === "loading",
+        login,
+        completeLogin,
+        register,
+        refreshSession,
+        logout,
+        hasRole,
+      }}
     >
       {children}
     </AuthContext.Provider>
