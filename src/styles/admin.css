@@ -4650,6 +4650,9 @@
   }
 
   .settings-tab {
+    /* In the horizontal strip a tab must size to its label; the base rule is
+       width:100%, which showed one tab at a time on phones and tablets. */
+    width: auto;
     flex-shrink: 0;
   }
 

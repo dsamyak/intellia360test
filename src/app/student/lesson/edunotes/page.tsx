@@ -4,6 +4,8 @@ import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useStudent } from "@/context/StudentContext";
+import LessonResourceNav from "@/components/student/LessonResourceNav";
+import "@/styles/lesson-resources.css";
 
 /*
  * react-pdf uses browser APIs such as DOMMatrix.
@@ -189,6 +191,12 @@ function EduNotesContent() {
           Notes for this lesson are not
           available yet.
         </p>
+
+        <LessonResourceNav
+          lessonId={lessonIdParam}
+          grade={effectiveGrade}
+          active="edunotes"
+        />
       </div>
     );
   }
@@ -206,6 +214,14 @@ function EduNotesContent() {
 
   return (
     <div className="edunotes-page-wrapper">
+      <div className="edunotes-resource-bar">
+        <LessonResourceNav
+          lessonId={lessonId}
+          grade={effectiveGrade}
+          active="edunotes"
+        />
+      </div>
+
       <EduNotesBookViewer
         pdfUrl={pdfUrl}
         lessonId={lessonId}
