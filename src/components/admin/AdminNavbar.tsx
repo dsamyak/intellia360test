@@ -289,6 +289,7 @@ export default function AdminNavbar({ onToggleSidebar }: AdminNavbarProps) {
             type="button"
             className="admin-icon-btn"
             title="Pending role upgrade requests"
+            aria-label="Pending role requests"
             onClick={() => setIsNotifOpen((prev) => !prev)}
             aria-expanded={isNotifOpen}
             aria-haspopup="menu"

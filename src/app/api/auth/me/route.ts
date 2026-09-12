@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { getSession, setSessionCookie } from "@/lib/auth/session";
+import { signToken } from "@/lib/auth/jwt";
 import { db } from "@/lib/db";
 import type { AuthResponse, AuthUser } from "@/types/auth";
 
@@ -32,9 +33,28 @@ export async function GET() {
       email:         dbUser.email,
       role:          dbUser.role,
       emailVerified: dbUser.emailVerified,
+      requestedRole: dbUser.requestedRole,
       createdAt:     dbUser.createdAt.toISOString(),
       updatedAt:     dbUser.updatedAt.toISOString(),
     };
+
+    // The role travels in the signed session token, which proxy.ts and the API
+    // guards trust. When an administrator changes it — for example approving
+    // an Editor request — the token is re-issued here, so the change reaches
+    // the user within seconds instead of at their next sign-in.
+    if (
+      payload.role !== dbUser.role ||
+      payload.name !== dbUser.name ||
+      payload.email !== dbUser.email
+    ) {
+      const refreshed = await signToken({
+        sub:   dbUser.id,
+        email: dbUser.email,
+        role:  dbUser.role,
+        name:  dbUser.name,
+      });
+      await setSessionCookie(refreshed);
+    }
 
     return NextResponse.json<AuthResponse<AuthUser>>(
       { success: true, message: "OK", data: user },

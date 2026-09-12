@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import type { AuthUser } from "@/types/auth";
 import { REGISTRABLE_ROLES, type RegistrableRole } from "@/lib/auth/roles";
 
 // ── Intent options (what the user plans to use Intellia360 as) ───────────────
@@ -127,7 +128,7 @@ function AppleIcon() {
 }
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, completeLogin } = useAuth();
 
   const [requestedRole, setRequestedRole] = useState<RegistrableRole>("STUDENT");
   const [name, setName] = useState("");
@@ -146,7 +147,22 @@ export default function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [emailSent, setEmailSent] = useState(true);
 
+  // Set when the server verified the account on creation and signed it in.
+  const [verifyingUser, setVerifyingUser] = useState<AuthUser | null>(null);
+  const [verifyStep, setVerifyStep] = useState(0);
+
   const fieldError = (field: string) => fieldErrors[field]?.[0];
+
+  // Walks a verified account through the short verifying screen, then signs in.
+  useEffect(() => {
+    if (!verifyingUser) return;
+    const timers = [
+      window.setTimeout(() => setVerifyStep(1), 900),
+      window.setTimeout(() => setVerifyStep(2), 1800),
+      window.setTimeout(() => completeLogin(verifyingUser), 2600),
+    ];
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [verifyingUser, completeLogin]);
 
   /** Client-side mirror of the server schema. Returns per-field messages. */
   function validate(): Record<string, string[]> {
@@ -189,7 +205,10 @@ export default function RegisterPage() {
         name: name.trim(), email: email.trim(), password,
         confirmPassword, requestedRole, agreeToTerms,
       });
-      if (result.success) {
+      if (result.success && result.user) {
+        // Verified on the spot — show the short verifying step, then sign in.
+        setVerifyingUser(result.user);
+      } else if (result.success) {
         setEmailSent(result.emailSent !== false);
         setRegisteredEmail(email.trim());
       } else if (result.errors && Object.keys(result.errors).length > 0) {
@@ -209,6 +228,60 @@ export default function RegisterPage() {
   }
 
   // ── Email-sent confirmation screen ─────────────────────────────────────────
+  // ── Instant verification screen ─────────────────────────────────────────────
+  // The server verified the account when it created it; these few seconds show
+  // that progress before the user is signed in and sent to their dashboard.
+  if (verifyingUser) {
+    const requested = verifyingUser.requestedRole;
+    const pendingLabel =
+      requested && requested !== verifyingUser.role && requested in INTENT_PRESENTATION
+        ? INTENT_PRESENTATION[requested as RegistrableRole].label
+        : null;
+    const steps = ["Account created", "Email address verified", "Signing you in"];
+    const done = verifyStep >= 2;
+
+    return (
+      // Header and footer come from (auth)/layout.tsx.
+      <div className="auth-shell">
+        <style>{"@keyframes intellia-verify-spin { to { transform: rotate(360deg); } }"}</style>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 24px" }}>
+          <div role="status" aria-live="polite" style={{ background: "#fff", borderRadius: 24, padding: "44px 40px", maxWidth: 460, width: "100%", boxShadow: "0 8px 40px rgba(30,27,75,.10)", textAlign: "center" }}>
+            <div aria-hidden="true" style={{ width: 76, height: 76, borderRadius: "50%", margin: "0 auto 22px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", background: done ? "rgba(16,185,129,.12)" : "rgba(37,99,235,.10)", border: done ? "2px solid rgba(16,185,129,.35)" : "2px solid rgba(37,99,235,.25)" }}>
+              {done ? (
+                "✅"
+              ) : (
+                <span style={{ width: 34, height: 34, borderRadius: "50%", border: "4px solid rgba(37,99,235,.25)", borderTopColor: "#2563eb", animation: "intellia-verify-spin .8s linear infinite" }} />
+              )}
+            </div>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e1b4b", margin: "0 0 6px" }}>
+              {done ? "You're verified!" : "Verifying your account…"}
+            </h1>
+            <p style={{ fontSize: ".95rem", fontWeight: 700, color: "#2563eb", margin: "0 0 22px", overflowWrap: "anywhere" }}>
+              {verifyingUser.email}
+            </p>
+            <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10, textAlign: "left" }}>
+              {steps.map((label, index) => {
+                const complete = index <= verifyStep;
+                return (
+                  <li key={label} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: complete ? "#ecfdf5" : "#f8fafc", color: complete ? "#047857" : "#64748b", fontSize: ".9rem", fontWeight: 600 }}>
+                    <span aria-hidden="true">{complete ? "✓" : "…"}</span>
+                    {label}
+                  </li>
+                );
+              })}
+            </ol>
+            {pendingLabel && (
+              <p style={{ margin: "16px 0 0", fontSize: ".85rem", color: "#6d28d9", lineHeight: 1.6, background: "rgba(124,58,237,.07)", borderRadius: 10, padding: "10px 14px" }}>
+                Your <strong>{pendingLabel}</strong> access is waiting for an administrator. You can
+                start on the Student plan now — you’ll be moved over automatically once it’s approved.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (registeredEmail) {
     return (
       // Header and footer come from (auth)/layout.tsx.
@@ -279,8 +352,8 @@ export default function RegisterPage() {
             borderRadius: 10, padding: "10px 14px", marginBottom: 16,
             fontSize: "0.8rem", color: "#6d28d9", lineHeight: 1.55,
           }}>
-            ℹ️ All accounts start on the <strong>Student plan</strong>. An administrator will
-            upgrade your role after verifying your account.
+            ℹ️ All accounts start on the <strong>Student plan</strong>. Teacher, School and
+            Editor access is switched on as soon as an administrator approves it.
           </div>
           <div className="auth-role-grid" role="group" aria-label="Select your intended use">
             {INTENT_OPTIONS.map((r) => (
