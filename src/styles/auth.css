@@ -566,6 +566,13 @@
   font-size: 26px;
 }
 
+/* The AI card uses a brand SVG spark instead of an emoji; match the emoji box. */
+.auth-feature-card .feat-icon-svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
 .auth-hero-img {
   width: 100%;
   max-width: 500px;
@@ -1002,6 +1009,11 @@
 
   .auth-feature-card .feat-icon {
     font-size: 22px;
+  }
+
+  .auth-feature-card .feat-icon-svg {
+    width: 22px;
+    height: 22px;
   }
 
   .auth-feature-list {

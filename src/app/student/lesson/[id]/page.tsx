@@ -6,6 +6,8 @@ import {
   useState,
 } from "react";
 import { useParams } from "next/navigation";
+import LessonResourceNav from "@/components/student/LessonResourceNav";
+import "@/styles/lesson-resources.css";
 
 
 
@@ -182,6 +184,12 @@ function StudentLessonContent() {
           >
             Lesson: {lessonId}
           </p>
+
+          {/* The interactive module is not ready, but the topic videos and
+              EduNotes for this lesson still are. */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <LessonResourceNav lessonId={lessonId} active="lesson" />
+          </div>
         </div>
       </main>
     );
@@ -257,6 +265,9 @@ function StudentLessonContent() {
                 {lessonId}
               </strong>
             </p>
+
+            {/* Topic-wise resources for this lesson */}
+            <LessonResourceNav lessonId={lessonId} active="lesson" />
           </div>
 
 

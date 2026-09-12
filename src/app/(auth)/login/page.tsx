@@ -42,6 +42,31 @@ function EyeIcon({ open }: { open: boolean }) {
     </svg>
   );
 }
+// Brand spark used on the "AI-Powered Insights" card. The robot emoji that
+// used to sit there read as another product's assistant logo.
+function AiSparkIcon() {
+  return (
+    <svg
+      className="feat-icon-svg"
+      viewBox="0 0 32 32"
+      role="img"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <linearGradient id="feat-ai-spark" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#6d28d9" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M16 3.2c.5 0 .9.3 1.1.8l2 5.4a5 5 0 0 0 3 3l5.4 2c.5.2.8.6.8 1.1s-.3.9-.8 1.1l-5.4 2a5 5 0 0 0-3 3l-2 5.4a1.2 1.2 0 0 1-2.2 0l-2-5.4a5 5 0 0 0-3-3l-5.4-2a1.2 1.2 0 0 1 0-2.2l5.4-2a5 5 0 0 0 3-3l2-5.4c.2-.5.6-.8 1.1-.8Z"
+        fill="url(#feat-ai-spark)"
+      />
+      <circle cx="25.5" cy="6.5" r="2.6" fill="#f97316" />
+    </svg>
+  );
+}
 function ArrowIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -389,7 +414,7 @@ export default function LoginPage() {
           </p>
           <div className="auth-feature-grid">
             <div className="auth-feature-card"><span className="feat-icon">📘</span>Personalized Learning</div>
-            <div className="auth-feature-card"><span className="feat-icon">🤖</span>AI-Powered Insights</div>
+            <div className="auth-feature-card"><span className="feat-icon"><AiSparkIcon /></span>AI-Powered Insights</div>
             <div className="auth-feature-card"><span className="feat-icon">📊</span>Real-time Progress</div>
             <div className="auth-feature-card"><span className="feat-icon">🛡️</span>Safe &amp; Secure</div>
           </div>

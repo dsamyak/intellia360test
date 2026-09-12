@@ -1,551 +1,290 @@
 "use client";
 
-import {
-    Suspense,
-    useMemo,
-    useState,
-} from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-
-
-
-const LESSON_ARCHITECTURE_URLS: Record<string, string> = {
-    "counting-numbers-up-to-100":
-        "https://number-counting-gamma.vercel.app/",
-
-    "reading-and-writing-numbers":
-        "https://readingnumbers.vercel.app/",
-
-    "place-value-tens-and-ones":
-        "https://placetens.vercel.app/",
-};
-
-
 /*
  * ============================================================
- * LESSON CONTENT
+ * LESSON VIDEOS  —  /student/lesson/video?lessonId=...&grade=...
  * ============================================================
+ *
+ * Topic-wise videos for the lesson the student is on. The lesson is read
+ * from the query string (this route has no dynamic segment), the same way
+ * the EduNotes page reads it, and the list comes from /api/student/videos.
  */
 
-function StudentLessonContent() {
-    const params = useParams();
+import { Suspense, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useStudent } from "@/context/StudentContext";
+import LessonResourceNav from "@/components/student/LessonResourceNav";
+import "@/styles/lesson-resources.css";
 
-    const lessonId = Array.isArray(params.id)
-        ? params.id[0]
-        : params.id;
-
-    const [isLoading, setIsLoading] =
-        useState(true);
-
-    const [hasError, setHasError] =
-        useState(false);
-
-
-    /*
-     * ----------------------------------------------------------
-     * FIND ARCHITECTURE URL
-     * ----------------------------------------------------------
-     */
-
-    const architectureUrl = useMemo(() => {
-        if (!lessonId) {
-            return null;
-        }
-
-        return LESSON_ARCHITECTURE_URLS[
-            lessonId
-        ] || null;
-    }, [lessonId]);
-
-
-    /*
-     * ----------------------------------------------------------
-     * LESSON NOT FOUND
-     * ----------------------------------------------------------
-     */
-
-    if (!lessonId) {
-        return (
-            <main
-                style={{
-                    minHeight: "100vh",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#f5f7ff",
-                }}
-            >
-                <div
-                    style={{
-                        textAlign: "center",
-                        padding: "40px",
-                    }}
-                >
-                    <div
-                        style={{
-                            fontSize: "64px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        📚
-                    </div>
-
-                    <h1
-                        style={{
-                            fontSize: "32px",
-                            fontWeight: 700,
-                            color: "#172554",
-                            marginBottom: "12px",
-                        }}
-                    >
-                        Lesson not found
-                    </h1>
-
-                    <p
-                        style={{
-                            color: "#64748b",
-                            fontSize: "16px",
-                        }}
-                    >
-                        Please select a lesson from the
-                        student dashboard.
-                    </p>
-                </div>
-            </main>
-        );
-    }
-
-
-    /*
-     * ----------------------------------------------------------
-     * ARCHITECTURE NOT CONFIGURED
-     * ----------------------------------------------------------
-     */
-
-    if (!architectureUrl) {
-        return (
-            <main
-                style={{
-                    minHeight: "100vh",
-                    background: "#f5f7ff",
-                    padding: "40px",
-                }}
-            >
-                <div
-                    style={{
-                        maxWidth: "1200px",
-                        margin: "0 auto",
-                        background: "#ffffff",
-                        borderRadius: "24px",
-                        padding: "50px",
-                        textAlign: "center",
-                        boxShadow:
-                            "0 10px 40px rgba(37, 99, 235, 0.08)",
-                    }}
-                >
-                    <div
-                        style={{
-                            fontSize: "64px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        🚧
-                    </div>
-
-                    <h1
-                        style={{
-                            fontSize: "32px",
-                            fontWeight: 800,
-                            color: "#172554",
-                            marginBottom: "12px",
-                        }}
-                    >
-                        Lesson Architecture Coming Soon
-                    </h1>
-
-                    <p
-                        style={{
-                            color: "#64748b",
-                            fontSize: "16px",
-                            marginBottom: "10px",
-                        }}
-                    >
-                        This lesson does not have an architecture
-                        configured yet.
-                    </p>
-
-                    <p
-                        style={{
-                            color: "#2563eb",
-                            fontWeight: 600,
-                        }}
-                    >
-                        Lesson: {lessonId}
-                    </p>
-                </div>
-            </main>
-        );
-    }
-
-
-    /*
-     * ----------------------------------------------------------
-     * LESSON PLAYER
-     * ----------------------------------------------------------
-     */
-
-    return (
-        <main
-            style={{
-                minHeight: "100vh",
-                background: "#f5f7ff",
-            }}
-        >
-            <div
-                style={{
-                    minHeight: "100vh",
-                    padding: "24px",
-                }}
-            >
-                <div
-                    style={{
-                        width: "100%",
-                        maxWidth: "1500px",
-                        margin: "0 auto",
-                    }}
-                >
-
-                    {/* ==================================================
-              LESSON HEADER
-          ================================================== */}
-
-                    <div
-                        style={{
-                            background: "#ffffff",
-                            borderRadius: "24px",
-                            padding: "28px 32px",
-                            marginBottom: "20px",
-                            boxShadow:
-                                "0 10px 40px rgba(37, 99, 235, 0.08)",
-                        }}
-                    >
-                        <h1
-                            style={{
-                                fontSize: "32px",
-                                fontWeight: 800,
-                                color: "#172554",
-                                margin: 0,
-                                marginBottom: "8px",
-                            }}
-                        >
-                            Lesson Player
-                        </h1>
-
-                        <p
-                            style={{
-                                fontSize: "16px",
-                                color: "#64748b",
-                                margin: 0,
-                            }}
-                        >
-                            Current Lesson:{" "}
-                            <strong
-                                style={{
-                                    color: "#2563eb",
-                                }}
-                            >
-                                {lessonId}
-                            </strong>
-                        </p>
-
-                        {/* Topic-wise quick links */}
-                        <div
-                            style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "10px",
-                                marginTop: "18px",
-                            }}
-                        >
-                            <Link
-                                href={`/student/lesson/edunotes?lessonId=${encodeURIComponent(String(lessonId))}`}
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    padding: "10px 16px",
-                                    borderRadius: "12px",
-                                    background: "#fff7ed",
-                                    border: "1px solid #fed7aa",
-                                    color: "#9a3412",
-                                    textDecoration: "none",
-                                    fontSize: "14px",
-                                    fontWeight: 800,
-                                }}
-                            >
-                                📘 EduNotes
-                            </Link>
-
-                            <Link
-                                href={`/student/lesson/video?lessonId=${encodeURIComponent(String(lessonId))}`}
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    padding: "10px 16px",
-                                    borderRadius: "12px",
-                                    background: "#eef2ff",
-                                    border: "1px solid #c7d2fe",
-                                    color: "#3730a3",
-                                    textDecoration: "none",
-                                    fontSize: "14px",
-                                    fontWeight: 800,
-                                }}
-                            >
-                                ▶ Lesson Video
-                            </Link>
-                        </div>
-                    </div>
-
-
-                    {/* ==================================================
-              ARCHITECTURE CARD
-          ================================================== */}
-
-                    <div
-                        style={{
-                            position: "relative",
-                            width: "100%",
-                            background: "#ffffff",
-                            borderRadius: "24px",
-                            padding: "12px",
-                            boxShadow:
-                                "0 10px 40px rgba(37, 99, 235, 0.08)",
-                            overflow: "hidden",
-                        }}
-                    >
-
-                        {/* ------------------------------------------------
-                LOADING SCREEN
-            ------------------------------------------------ */}
-
-                        {isLoading && (
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    zIndex: 10,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexDirection: "column",
-                                    background:
-                                        "linear-gradient(135deg, #eef2ff, #f8faff)",
-                                    borderRadius: "20px",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        fontSize: "64px",
-                                        marginBottom: "20px",
-                                    }}
-                                >
-                                    🚀
-                                </div>
-
-                                <h2
-                                    style={{
-                                        fontSize: "28px",
-                                        fontWeight: 800,
-                                        color: "#172554",
-                                        marginBottom: "8px",
-                                    }}
-                                >
-                                    Preparing Your Lesson...
-                                </h2>
-
-                                <p
-                                    style={{
-                                        color: "#64748b",
-                                        fontSize: "16px",
-                                    }}
-                                >
-                                    Get ready for your learning
-                                    adventure! ✨
-                                </p>
-                            </div>
-                        )}
-
-
-                        {/* ------------------------------------------------
-                ERROR SCREEN
-            ------------------------------------------------ */}
-
-                        {hasError && (
-                            <div
-                                style={{
-                                    minHeight: "750px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexDirection: "column",
-                                    textAlign: "center",
-                                    background:
-                                        "linear-gradient(135deg, #fff7ed, #fff)",
-                                    borderRadius: "20px",
-                                    padding: "40px",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        fontSize: "60px",
-                                        marginBottom: "20px",
-                                    }}
-                                >
-                                    😕
-                                </div>
-
-                                <h2
-                                    style={{
-                                        fontSize: "28px",
-                                        fontWeight: 800,
-                                        color: "#172554",
-                                        marginBottom: "10px",
-                                    }}
-                                >
-                                    Lesson Could Not Be Loaded
-                                </h2>
-
-                                <p
-                                    style={{
-                                        color: "#64748b",
-                                        maxWidth: "500px",
-                                        lineHeight: 1.6,
-                                    }}
-                                >
-                                    We couldn't load this lesson
-                                    architecture. Please try again.
-                                </p>
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setHasError(false);
-                                        setIsLoading(true);
-                                    }}
-                                    style={{
-                                        marginTop: "20px",
-                                        padding: "12px 24px",
-                                        border: "none",
-                                        borderRadius: "12px",
-                                        background: "#2563eb",
-                                        color: "#ffffff",
-                                        fontSize: "15px",
-                                        fontWeight: 700,
-                                        cursor: "pointer",
-                                    }}
-                                >
-                                    Try Again
-                                </button>
-                            </div>
-                        )}
-
-
-                        {/* ==================================================
-                ACTUAL LESSON ARCHITECTURE
-            ================================================== */}
-
-                        {!hasError && (
-                            <iframe
-                                key={architectureUrl}
-                                src={architectureUrl}
-                                title={`${lessonId} Lesson Architecture`}
-                                onLoad={() => {
-                                    setIsLoading(false);
-                                }}
-                                onError={() => {
-                                    setIsLoading(false);
-                                    setHasError(true);
-                                }}
-                                style={{
-                                    width: "100%",
-                                    height: "calc(100vh - 180px)",
-                                    minHeight: "750px",
-                                    border: "none",
-                                    borderRadius: "20px",
-                                    display: "block",
-                                    background: "#ffffff",
-                                }}
-                                allow="
-                  fullscreen;
-                  autoplay;
-                  clipboard-write;
-                  encrypted-media;
-                  picture-in-picture;
-                "
-                                allowFullScreen
-                                referrerPolicy="strict-origin-when-cross-origin"
-                            />
-                        )}
-
-                    </div>
-
-
-                </div>
-            </div>
-        </main>
-    );
+interface LessonVideo {
+  videoId: string;
+  title: string;
+  description?: string;
+  durationLabel?: string;
 }
 
+type LoadState = "loading" | "ready" | "error";
 
-/*
- * ============================================================
- * PAGE
- * ============================================================
- */
+function StateCard({
+  icon,
+  title,
+  children,
+}: {
+  icon: string;
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="lesson-video-state">
+      <div className="lesson-video-state-card">
+        <div className="lesson-video-state-icon" aria-hidden="true">
+          {icon}
+        </div>
 
-export default function StudentLessonPage() {
+        <h2>{title}</h2>
+
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function LessonVideoContent() {
+  const searchParams = useSearchParams();
+
+  const lessonIdParam = searchParams.get("lessonId");
+  const gradeParam = searchParams.get("grade");
+  const videoIdParam = searchParams.get("videoId");
+
+  const { currentGrade, curriculum } = useStudent();
+
+  const effectiveGrade = gradeParam || currentGrade || "grade1";
+
+  const [state, setState] = useState<LoadState>("loading");
+  const [videos, setVideos] = useState<LessonVideo[]>([]);
+  const [selected, setSelected] = useState(0);
+
+  const lessonTitle =
+    curriculum?.chapters
+      .flatMap((chapter) => chapter.topics)
+      .find((topic) => topic.id === lessonIdParam)?.title ?? lessonIdParam;
+
+  useEffect(() => {
+    // Without a lesson the page renders its own notice below, so there is
+    // nothing to load and no state to change here.
+    if (!lessonIdParam) return;
+
+    let cancelled = false;
+
+    async function loadVideos(lessonId: string) {
+      try {
+        const url =
+          "/api/student/videos" +
+          "?lessonId=" + encodeURIComponent(lessonId) +
+          "&grade=" + encodeURIComponent(effectiveGrade);
+
+        const response = await fetch(url, { cache: "no-store" });
+
+        if (cancelled) return;
+
+        if (!response.ok) {
+          setState("error");
+          return;
+        }
+
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        const list: LessonVideo[] = Array.isArray(data?.videos)
+          ? data.videos
+          : [];
+
+        const startIndex = videoIdParam
+          ? list.findIndex((video) => video.videoId === videoIdParam)
+          : 0;
+
+        setVideos(list);
+        setSelected(startIndex > 0 ? startIndex : 0);
+        setState("ready");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Lesson videos error:", error);
+        setState("error");
+      }
+    }
+
+    loadVideos(lessonIdParam);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonIdParam, effectiveGrade, videoIdParam]);
+
+  /* ---------- No lesson in the URL ---------- */
+
+  if (!lessonIdParam) {
     return (
-        <Suspense
-            fallback={
-                <main
-                    style={{
-                        minHeight: "100vh",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "#f5f7ff",
-                    }}
-                >
-                    <div
-                        style={{
-                            textAlign: "center",
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: "48px",
-                                marginBottom: "16px",
-                            }}
-                        >
-                            📚
-                        </div>
+      <main className="lesson-video-page">
+        <div className="lesson-video-shell">
+          <StateCard icon="🎬" title="Lesson ID is missing">
+            <p>
+              Open a lesson first — its Videos button carries the topic across.
+            </p>
 
-                        <h2
-                            style={{
-                                fontSize: "24px",
-                                fontWeight: 700,
-                                color: "#172554",
-                            }}
-                        >
-                            Loading lesson...
-                        </h2>
-                    </div>
-                </main>
-            }
-        >
-            <StudentLessonContent />
-        </Suspense>
+            <div className="lesson-resource-nav">
+              <Link href="/student/courses" className="lesson-resource-btn">
+                <span aria-hidden="true">📚</span>
+                Browse my courses
+              </Link>
+            </div>
+          </StateCard>
+        </div>
+      </main>
     );
+  }
+
+  const activeVideo = videos[selected];
+
+  return (
+    <main className="lesson-video-page">
+      <div className="lesson-video-shell">
+
+        <header className="lesson-video-header">
+          <h1>Lesson Videos</h1>
+
+          <p>
+            Current Lesson: <strong>{lessonTitle}</strong>
+          </p>
+
+          <LessonResourceNav
+            lessonId={lessonIdParam}
+            grade={effectiveGrade}
+            active="video"
+          />
+        </header>
+
+        {state === "loading" && (
+          <StateCard icon="🎬" title="Loading videos…">
+            <p>Fetching the videos for this topic.</p>
+          </StateCard>
+        )}
+
+        {state === "error" && (
+          <StateCard icon="😕" title="Unable to load videos">
+            <p>Something went wrong while loading the videos for this topic.</p>
+
+            <button
+              type="button"
+              className="edunotes-retry-button"
+              onClick={() => window.location.reload()}
+            >
+              🔄 Try Again
+            </button>
+          </StateCard>
+        )}
+
+        {state === "ready" && videos.length === 0 && (
+          <StateCard icon="🎬" title="Videos coming soon">
+            <p>
+              No videos are published for this topic yet. The EduNotes book and
+              the interactive lesson are ready to use in the meantime.
+            </p>
+
+            <LessonResourceNav
+              lessonId={lessonIdParam}
+              grade={effectiveGrade}
+              active="video"
+            />
+          </StateCard>
+        )}
+
+        {state === "ready" && activeVideo && (
+          <div className="lesson-video-layout">
+
+            <section className="lesson-video-main" aria-label="Video player">
+              <div className="lesson-video-frame">
+                <iframe
+                  key={activeVideo.videoId}
+                  src={
+                    "https://www.youtube-nocookie.com/embed/" +
+                    activeVideo.videoId +
+                    "?rel=0"
+                  }
+                  title={activeVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowFullScreen
+                />
+              </div>
+
+              <div className="lesson-video-caption">
+                <h2>{activeVideo.title}</h2>
+
+                {activeVideo.description && <p>{activeVideo.description}</p>}
+              </div>
+            </section>
+
+            {videos.length > 1 && (
+              <aside
+                className="lesson-video-side"
+                aria-label="Videos in this topic"
+              >
+                <h3>In this topic</h3>
+
+                <ul className="lesson-video-list">
+                  {videos.map((video, index) => (
+                    <li key={video.videoId}>
+                      <button
+                        type="button"
+                        className={
+                          "lesson-video-item" +
+                          (index === selected ? " is-active" : "")
+                        }
+                        aria-current={index === selected ? "true" : undefined}
+                        onClick={() => setSelected(index)}
+                      >
+                        <span
+                          className="lesson-video-item-index"
+                          aria-hidden="true"
+                        >
+                          {index + 1}
+                        </span>
+
+                        <span className="lesson-video-item-body">
+                          <strong>{video.title}</strong>
+                          {video.durationLabel && (
+                            <small>{video.durationLabel}</small>
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+export default function LessonVideoPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="lesson-video-page">
+          <div className="lesson-video-shell">
+            <StateCard icon="🎬" title="Loading videos…">
+              <p>Preparing the videos for this topic.</p>
+            </StateCard>
+          </div>
+        </main>
+      }
+    >
+      <LessonVideoContent />
+    </Suspense>
+  );
 }

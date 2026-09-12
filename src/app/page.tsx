@@ -404,6 +404,20 @@ function ExperienceVideoRow({
 }
 
 /* ============================================================
+   INTELLIAPLAY
+   Same six modes as the /intelliaplay page, summarised here.
+============================================================ */
+
+const playModes = [
+  { icon: "🎯", title: "Daily Quiz", text: "A fresh set of questions every day — play it to keep your streak alive." },
+  { icon: "🧩", title: "Practice Quizzes", text: "Short five-question sets per topic, with your best score kept." },
+  { icon: "🗺️", title: "Quest Map", text: "Lessons laid out as a journey — finish a topic to unlock the next." },
+  { icon: "🏅", title: "Badges", text: "Unlock achievements for milestones, strong scores and long streaks." },
+  { icon: "🏆", title: "Leaderboard", text: "See where your XP ranks across your grade — or everyone." },
+  { icon: "💎", title: "XP, Gems & Streaks", text: "Every activity earns rewards, and daily learning builds your streak." },
+];
+
+/* ============================================================
    PAGE
 ============================================================ */
 
@@ -1144,6 +1158,91 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      {/* ======================================================
+          INTELLIAPLAY
+      ====================================================== */}
+
+      <section
+        className="play-home-section"
+        id="intelliaplay"
+        aria-labelledby="play-home-title"
+      >
+        <div className="home-container">
+
+          <div className="section-heading play-home-heading">
+            <span className="section-eyebrow">🎮 INTELLIAPLAY</span>
+
+            <h2 id="play-home-title">
+              Practice That Feels
+              <span> Like a Game</span>
+            </h2>
+
+            <p>
+              IntelliaPlay is the play side of Intellia360 — quick challenges, daily
+              quizzes, streaks and badges that turn practice into something students
+              come back to.
+            </p>
+          </div>
+
+          <div className="play-home-grid">
+
+            <div className="play-home-modes">
+              {playModes.map((mode) => (
+                <article className="play-home-card" key={mode.title}>
+                  <span className="play-home-icon" aria-hidden="true">{mode.icon}</span>
+                  <h3>{mode.title}</h3>
+                  <p>{mode.text}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="play-home-demo">
+
+              <div className="play-home-demo-card" aria-hidden="true">
+                <div className="play-home-demo-head">
+                  <span className="play-home-tag">DAILY CHALLENGE</span>
+                  <span className="play-home-count">Question 3 of 5</span>
+                </div>
+
+                <div className="play-home-progress">
+                  <span />
+                </div>
+
+                <p className="play-home-question">What is ¾ of 20?</p>
+
+                <div className="play-home-options">
+                  <span>10</span>
+                  <span>12</span>
+                  <span className="is-correct">15 ✓</span>
+                  <span>18</span>
+                </div>
+
+                <div className="play-home-reward">
+                  <span>Correct — nice work!</span>
+                  <strong>+25 XP</strong>
+                </div>
+              </div>
+
+              <ul className="play-home-points" aria-label="IntelliaPlay highlights">
+                <li><span aria-hidden="true">🔥</span> Daily streaks</li>
+                <li><span aria-hidden="true">⭐</span> XP &amp; levels</li>
+                <li><span aria-hidden="true">🏅</span> Unlockable badges</li>
+              </ul>
+
+              <div className="play-home-actions">
+                <Link href="/intelliaplay" className="play-home-btn is-primary">
+                  Explore IntelliaPlay <span aria-hidden="true">→</span>
+                </Link>
+
+                <Link href="/register" className="play-home-btn is-ghost">
+                  Start Playing
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ======================================================
           GAMIFIED STATS
       ====================================================== */}

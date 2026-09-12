@@ -481,3 +481,23 @@
         transition: none !important;
     }
 }
+
+/* ============================================================
+   SCHOOL MENU TAGLINE IN FLOW
+   The "Let's Build Future-Ready Learners Together" line used to be
+   absolutely positioned over a fixed bottom band. When a column grew
+   (e.g. "Intellia 360 School Program" wrapping to two lines) it covered
+   the bottom of that column, clipping GET STARTED TODAY. As its own
+   full-width grid row it always sits below the three columns.
+   ============================================================ */
+
+.header-mega-menu.school-menu {
+  padding-bottom: 30px;
+}
+
+.school-menu .school-bottom-title {
+  position: static;
+  grid-column: 1 / -1;
+  min-height: 0;
+  padding-top: 4px;
+}

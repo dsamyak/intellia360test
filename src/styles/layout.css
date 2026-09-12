@@ -16052,3 +16052,41 @@ body {
     transition: none !important;
   }
 }
+
+/* ================================================================
+   STUDENT SIDEBAR — ICON RAIL BELOW 900px
+   The rail is 72px (58px on phones), but the component still renders
+   its text because collapsing is a user preference on desktop. Without
+   this the labels wrapped one or two letters per line inside the rail
+   ("YO SP", "LEA JO"). Icons stay, and every destination is also
+   reachable from the pages themselves.
+   ================================================================ */
+
+@media (max-width: 900px) {
+
+  .student-sidebar-container .student-sidebar-nav-heading,
+  .student-sidebar-container .student-sidebar-section-label,
+  .student-sidebar-container .student-sidebar-nav-label,
+  .student-sidebar-container .student-sidebar-badge,
+  .student-sidebar-container .student-sidebar-chevron,
+  .student-sidebar-container .student-sidebar-submenu,
+  .student-sidebar-container .student-sidebar-footer {
+    display: none !important;
+  }
+
+  .student-sidebar-container .student-sidebar-nav-item {
+    justify-content: center !important;
+    gap: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .student-sidebar-container .student-sidebar-nav-icon {
+    margin: 0 !important;
+  }
+
+  .student-sidebar-container .student-sidebar-scroll-area {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}

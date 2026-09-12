@@ -295,14 +295,12 @@ export default function StudentDashboardPage() {
   const practiceUrl =
     actionCards.practice ?? "/student/quiz/practice-1";
 
-  // Use the lesson's configured video when available.
-  // Otherwise keep the existing internal video route instead of a hard-coded
-  // external YouTube URL.
+  // Always open the in-app video page for this topic. It resolves the
+  // lesson videos server-side and ignores the placeholder clip that the
+  // seed curriculum still carries for many topics.
   const videoUrl =
-    actionCards.video ||
-    `/student/lesson/video?lessonId=${encodeURIComponent(
-      activeLessonData.id
-    )}`;
+    "/student/lesson/video?lessonId=" +
+    encodeURIComponent(activeLessonData.id);
 
   const isArchCompleted = isActivityCompleted(
     activeLessonData.id,
