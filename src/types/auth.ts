@@ -14,6 +14,8 @@ export interface AuthUser {
   email:         string;
   role:          UserRole;
   emailVerified: boolean;
+  /** Role asked for at sign-up that an administrator has not approved yet. */
+  requestedRole?: UserRole | null;
   createdAt:     string;
   updatedAt:     string;
 }

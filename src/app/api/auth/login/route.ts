@@ -10,6 +10,7 @@ import {
   rateLimitHeaders,
   getClientIp,
 } from "@/lib/auth/rate-limit";
+import { requireEmailVerification } from "@/lib/auth/verification-policy";
 import { db } from "@/lib/db";
 import type { AuthResponse, AuthUser } from "@/types/auth";
 
@@ -134,7 +135,22 @@ export async function POST(request: NextRequest) {
     }
 
     // ── 7. Email verification gate ─────────────────────────────────────────
-    if (!dbUser.emailVerified) {
+    let accountUser = dbUser;
+    if (!dbUser.emailVerified && !requireEmailVerification()) {
+      // Emailed links are not required (lib/auth/verification-policy.ts): the
+      // correct password verifies the account right here, and any links still
+      // outstanding are retired.
+      accountUser = await db.user.update({
+        where: { id: dbUser.id },
+        data:  { emailVerified: true },
+      });
+      await db.emailVerificationToken.updateMany({
+        where: { userId: dbUser.id, used: false },
+        data:  { used: true },
+      });
+    }
+
+    if (!accountUser.emailVerified) {
       return NextResponse.json<AuthResponse>(
         {
           success: false,
@@ -159,7 +175,8 @@ export async function POST(request: NextRequest) {
       name: dbUser.name,
       email: dbUser.email,
       role: dbUser.role,
-      emailVerified: dbUser.emailVerified,
+      emailVerified: accountUser.emailVerified,
+      requestedRole: accountUser.requestedRole,
       createdAt: dbUser.createdAt.toISOString(),
       updatedAt: dbUser.updatedAt.toISOString(),
     };

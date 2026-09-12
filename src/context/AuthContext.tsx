@@ -30,6 +30,11 @@ interface AuthContextValue {
    */
   logout:   (options?: { next?: string }) => Promise<boolean>;
   hasRole:  (...roles: UserRole[]) => boolean;
+  /**
+   * True once the signed-in account's role changed while the page was open —
+   * an administrator approved a request. SessionGuard moves the user on.
+   */
+  roleUpdated: boolean;
 }
 
 export interface RegisterResult {
@@ -39,6 +44,8 @@ export interface RegisterResult {
   errors?: Record<string, string[]>;
   /** False when the account was created but the verification email bounced. */
   emailSent?: boolean;
+  /** Present when the account was verified on the spot and is already signed in. */
+  user?: AuthUser;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -52,6 +59,9 @@ const AUTH_CHANNEL = "intellia360-auth";
 
 /** Minimum gap between the session checks triggered by a tab regaining focus. */
 const FOCUS_RECHECK_MS = 5000;
+
+/** How often to look for an administrator's decision on a pending role request. */
+const ROLE_REQUEST_POLL_MS = 8000;
 
 const hasBroadcastChannel = () => typeof BroadcastChannel !== "undefined";
 
@@ -109,6 +119,9 @@ function leaveFor(path: string, { replace = false } = {}) {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user,   setUser]   = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<SessionStatus>("loading");
+  const [roleUpdated, setRoleUpdated] = useState(false);
+  // The user last applied, readable from callbacks without re-creating them.
+  const userRef = useRef<AuthUser | null>(null);
 
   const lastCheckAt = useRef(0);
   // Set while the page is navigating away after a sign-in or sign-out, so the
@@ -118,21 +131,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const applySession = useCallback((check: SessionCheck) => {
     if (leaving.current) return;
     if (check.kind === "signed-out") {
+      userRef.current = null;
       setUser(null);
       setStatus("unauthenticated");
     } else if (check.kind === "user") {
       const fresh = check.user;
+      const prev = userRef.current;
+      // Same account, new role: an administrator changed it (e.g. approved an
+      // Editor request). /api/auth/me has already re-issued the session cookie.
+      if (prev && prev.id === fresh.id && prev.role !== fresh.role) setRoleUpdated(true);
       // Keep the same object when nothing changed, so a focus check does not
       // re-render every consumer.
-      setUser((prev) =>
-        prev &&
+      const unchanged =
+        prev !== null &&
         prev.id === fresh.id &&
         prev.role === fresh.role &&
         prev.name === fresh.name &&
-        prev.email === fresh.email
-          ? prev
-          : fresh
-      );
+        prev.email === fresh.email &&
+        (prev.requestedRole ?? null) === (fresh.requestedRole ?? null);
+      if (!unchanged) {
+        userRef.current = fresh;
+        setUser(fresh);
+      }
       setStatus("authenticated");
     } else {
       // Network error or 5xx — keep whatever we last knew.
@@ -191,8 +211,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refreshSession]);
 
+  // While a role request (e.g. Editor) waits for an administrator, look again
+  // every few seconds so an approval switches the user over without a re-login.
+  const upgradePending =
+    status === "authenticated" && !!user?.requestedRole && user.requestedRole !== user.role;
+
+  useEffect(() => {
+    if (!upgradePending) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshSession();
+    }, ROLE_REQUEST_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [upgradePending, refreshSession]);
+
   // ── Complete a sign-in ─────────────────────────────────────────────────────
   const completeLogin = useCallback((authUser: AuthUser, next?: string | null) => {
+    userRef.current = authUser;
     setUser(authUser);
     setStatus("authenticated");
     lastCheckAt.current = Date.now();
@@ -223,8 +257,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [completeLogin]);
 
   // ── Register ───────────────────────────────────────────────────────────────
-  // After the new flow, register does NOT issue a session — it just queues a
-  // verification email.  The page handles showing the confirmation UI.
+  // When emailed verification links are required, register only queues the
+  // email. Otherwise the account is verified on creation and the response
+  // carries the signed-in user, which the page hands to completeLogin().
   const register = useCallback(async (input: RegisterInput): Promise<RegisterResult> => {
     const res  = await fetch("/api/auth/register", {
       method:  "POST",
@@ -237,6 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       message:   json.message,
       errors:    json.errors,
       emailSent: json.data?.emailSent,
+      user:      json.data?.user as AuthUser | undefined,
     };
   }, []);
 
@@ -286,6 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshSession,
         logout,
         hasRole,
+        roleUpdated,
       }}
     >
       {children}

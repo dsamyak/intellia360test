@@ -22,7 +22,10 @@ import { sendVerificationEmail } from "@/lib/auth/email";
 import { generateRawToken, hashToken, VERIFY_TOKEN_TTL_MS } from "@/lib/auth/token";
 import { checkRateLimit, rateLimitHeaders, getClientIp } from "@/lib/auth/rate-limit";
 import { db } from "@/lib/db";
-import type { AuthResponse } from "@/types/auth";
+import { signToken } from "@/lib/auth/jwt";
+import { setSessionCookie } from "@/lib/auth/session";
+import { requireEmailVerification } from "@/lib/auth/verification-policy";
+import type { AuthResponse, AuthUser } from "@/types/auth";
 
 export async function POST(request: NextRequest) {
   // ── IP rate limit ─────────────────────────────────────────────────────────
@@ -81,6 +84,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Emailed links are only required when the policy says so (see
+    // lib/auth/verification-policy.ts); otherwise the account is verified now.
+    const verifyByEmail = requireEmailVerification();
+
     const hashedPassword = await hashPassword(password);
     const rawToken = generateRawToken();
     const tokenHash = hashToken(rawToken);
@@ -88,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // ── Transactional create ────────────────────────────────────────────────
     // role is ALWAYS STUDENT — requestedRole is stored for admin review.
-    const createdUserId = await db.$transaction(async (tx) => {
+    const createdUser = await db.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
           name,
@@ -96,7 +103,7 @@ export async function POST(request: NextRequest) {
           password: hashedPassword,
           role: DEFAULT_ROLE,        // ← always base plan
           requestedRole: requestedRole ?? "STUDENT",
-          emailVerified: false,
+          emailVerified: !verifyByEmail,
         },
       });
 
@@ -126,12 +133,52 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      await tx.emailVerificationToken.create({
-        data: { tokenHash, userId: newUser.id, expiresAt, used: false },
-      });
+      if (verifyByEmail) {
+        await tx.emailVerificationToken.create({
+          data: { tokenHash, userId: newUser.id, expiresAt, used: false },
+        });
+      }
 
-      return newUser.id;
+      return newUser;
     });
+
+    // ── Instant verification ──────────────────────────────────────────────
+    // No email round-trip: the account is already verified, so the new user
+    // is signed in straight away. The register page shows a short
+    // "verifying" step and then opens their dashboard.
+    if (!verifyByEmail) {
+      const user: AuthUser = {
+        id:            createdUser.id,
+        name:          createdUser.name,
+        email:         createdUser.email,
+        role:          createdUser.role,
+        emailVerified: createdUser.emailVerified,
+        requestedRole: createdUser.requestedRole,
+        createdAt:     createdUser.createdAt.toISOString(),
+        updatedAt:     createdUser.updatedAt.toISOString(),
+      };
+
+      const sessionToken = await signToken({
+        sub:   user.id,
+        email: user.email,
+        role:  user.role,
+        name:  user.name,
+      });
+      await setSessionCookie(sessionToken);
+
+      const upgradePending = requestedRole !== DEFAULT_ROLE;
+
+      return NextResponse.json<AuthResponse<{ user: AuthUser; verified: boolean; emailSent: boolean }>>(
+        {
+          success: true,
+          message: upgradePending
+            ? `Account created and verified. Your ${requestedRole} access is waiting for an administrator's approval.`
+            : "Account created and verified.",
+          data: { user, verified: true, emailSent: false },
+        },
+        { status: 201 }
+      );
+    }
 
     // ── Send verification email ─────────────────────────────────────────────
     // We do NOT issue a session cookie here — the user must verify first.
@@ -158,7 +205,7 @@ export async function POST(request: NextRequest) {
             "Your account starts on the Student plan — an admin can upgrade your role once verified."
           : "Account created, but we could not send the verification email. " +
             "Use the resend link below to try again.",
-        data: { userId: createdUserId, emailSent },
+        data: { userId: createdUser.id, emailSent },
       },
       { status: 201 }
     );
