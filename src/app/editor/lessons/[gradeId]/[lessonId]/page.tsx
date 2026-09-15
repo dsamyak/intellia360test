@@ -116,7 +116,7 @@ export default function LessonEditorPage({
 
       setLesson(next);
       setRaw(JSON.stringify(next, null, 2));
-      setMsg({ type: "ok", text: "Lesson saved." });
+      setMsg({ type: "ok", text: json.message ?? "Lesson saved." });
     } catch {
       setMsg({ type: "err", text: "Network error — the lesson was not saved." });
     } finally {
