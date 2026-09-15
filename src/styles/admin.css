@@ -4803,6 +4803,428 @@
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
 }
 
+/* =========================================================
+   USERS & ROLES  (/admin/users)
+   Token-driven throughout, so dark mode needs no overrides.
+========================================================= */
+
+.au-tone-ADMIN   { --au-tone: #ea580c; }
+.au-tone-EDITOR  { --au-tone: #7c3aed; }
+.au-tone-TEACHER { --au-tone: #059669; }
+.au-tone-SCHOOL  { --au-tone: #db2777; }
+.au-tone-STUDENT { --au-tone: #2563eb; }
+.au-tone-PARENT  { --au-tone: #0891b2; }
+
+.au-stat {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.au-stat.is-active {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-soft);
+}
+
+.au-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-2);
+}
+
+.au-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--admin-text-2);
+  white-space: nowrap;
+}
+
+.au-tab:hover {
+  color: var(--admin-text);
+}
+
+.au-tab.active {
+  background: var(--admin-surface);
+  color: var(--admin-accent);
+  box-shadow: var(--admin-shadow);
+}
+
+.au-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #ffffff;
+  font-size: 0.66rem;
+}
+
+.au-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 0.75rem;
+  border-radius: 11px;
+  border: 1px solid var(--admin-border-strong);
+  background: var(--admin-surface-2);
+  color: var(--admin-text);
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.au-input:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-soft);
+}
+
+.au-select {
+  width: auto;
+  min-width: 130px;
+}
+
+.au-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-text-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.au-toggle input,
+.au-role-option input {
+  accent-color: var(--admin-accent);
+}
+
+.au-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.au-notice.ok {
+  border: 1px solid rgba(22, 163, 74, 0.28);
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--admin-ok);
+}
+
+.au-notice.error {
+  border: 1px solid rgba(225, 29, 72, 0.28);
+  background: rgba(225, 29, 72, 0.08);
+  color: var(--admin-danger);
+}
+
+.au-notice button {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.au-table tr.is-deactivated td {
+  opacity: 0.65;
+}
+
+.au-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.au-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--au-tone, #94a3b8);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.au-user-text {
+  min-width: 0;
+}
+
+.au-user-name {
+  font-weight: 700;
+  color: var(--admin-text);
+  white-space: nowrap;
+}
+
+.au-user-email {
+  font-size: 0.74rem;
+  color: var(--admin-text-3);
+  overflow-wrap: anywhere;
+}
+
+.au-you {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.au-role-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--au-tone, #94a3b8) 14%, transparent);
+  color: var(--au-tone, #94a3b8);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.au-requested {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--admin-warn);
+  white-space: nowrap;
+}
+
+.au-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.au-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.au-status.ok   { color: var(--admin-ok); }
+.au-status.warn { color: var(--admin-warn); }
+.au-status.off  { color: var(--admin-danger); }
+
+.au-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.au-btn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-text-2);
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.au-btn:hover:not(:disabled) {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.au-btn.primary {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.au-btn.primary:hover:not(:disabled) {
+  background: var(--admin-accent-strong);
+  color: #ffffff;
+}
+
+.au-btn.danger:hover:not(:disabled) {
+  border-color: var(--admin-danger);
+  color: var(--admin-danger);
+}
+
+.au-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.au-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 10, 20, 0.5);
+}
+
+.au-modal {
+  width: 480px;
+  max-width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border-radius: 18px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow-lg);
+}
+
+.au-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 0;
+}
+
+.au-modal-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--admin-text);
+}
+
+.au-modal-sub {
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--admin-text-3);
+  overflow-wrap: anywhere;
+}
+
+.au-modal-close {
+  padding: 4px;
+  border-radius: 8px;
+  color: var(--admin-text-3);
+}
+
+.au-modal-close:hover {
+  background: var(--admin-surface-2);
+  color: var(--admin-text);
+}
+
+.au-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+}
+
+.au-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.au-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.au-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--admin-text-2);
+}
+
+.au-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--admin-text-3);
+}
+
+.au-error {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--admin-danger);
+}
+
+.au-role-options {
+  display: grid;
+  gap: 8px;
+}
+
+.au-role-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.au-role-option:hover {
+  border-color: var(--admin-border-strong);
+}
+
+.au-role-option.is-selected {
+  border-color: var(--admin-accent);
+  background: var(--admin-accent-soft);
+}
+
+.au-role-option.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.au-role-option input {
+  margin-top: 3px;
+}
+
+.au-role-option strong {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--admin-text);
+}
+
+.au-role-option span {
+  font-size: 0.72rem;
+  color: var(--admin-text-3);
+}
+
+.au-current {
+  font-style: normal;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--admin-accent);
+}
+
 /* ══════════════════════════════════════════════════════════════
    DARK MODE  (toggled by AdminNavbar via html.admin-dark class)
 

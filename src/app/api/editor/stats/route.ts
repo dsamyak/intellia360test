@@ -1,11 +1,13 @@
 /**
  * GET /api/editor/stats  — dashboard aggregate stats
+ *
+ * Content counters only. User accounts are managed from the admin console
+ * (/admin/users), so nothing about users is exposed to the editor role here.
  */
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
-import { db } from "@/lib/db";
 import type { AuthResponse } from "@/types/auth";
 
 const DATA_ROOT = path.join(process.cwd(), "src", "data", "grades");
@@ -13,8 +15,6 @@ const DATA_ROOT = path.join(process.cwd(), "src", "data", "grades");
 export interface EditorStats {
   totalGrades: number;
   totalLessons: number;
-  totalUsers: number;
-  usersByRole: Record<string, number>;
   gradesWithNoLessons: string[];
 }
 
@@ -22,7 +22,6 @@ export async function GET() {
   const { errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  // File-system stats
   let totalGrades = 0;
   let totalLessons = 0;
   const gradesWithNoLessons: string[] = [];
@@ -45,22 +44,9 @@ export async function GET() {
     }
   }
 
-  // DB stats
-  const [totalUsers, roleCounts] = await Promise.all([
-    db.user.count(),
-    db.user.groupBy({ by: ["role"], _count: { role: true } }),
-  ]);
-
-  const usersByRole: Record<string, number> = {};
-  for (const r of roleCounts) {
-    usersByRole[r.role] = r._count.role;
-  }
-
   const stats: EditorStats = {
     totalGrades,
     totalLessons,
-    totalUsers,
-    usersByRole,
     gradesWithNoLessons,
   };
 

@@ -1,20 +1,31 @@
 /**
- * GET /api/admin/users
+ * GET  /api/admin/users
+ * POST /api/admin/users
  *
- * ADMIN-only: list users with pagination, search, and role filter.
- * Returns requestedRole alongside current role so admins can action pending
- * role upgrade requests.
+ * ADMIN-only: list users with pagination, search, and role filter, and create
+ * accounts directly with any role. Account management lives here and not in
+ * the editor console — no other role can list or create users.
+ *
+ * GET returns requestedRole alongside current role so admins can action
+ * pending role upgrade requests.
  *
  * Deactivated accounts (`deletedAt` set) are excluded unless the caller asks
  * for them explicitly with `?includeDeleted=true`, which is how an admin finds
  * an account to restore.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin/require-admin-session";
+import { hashPassword } from "@/lib/auth/hash";
+import { PasswordSchema } from "@/lib/auth/validation";
+import { ALL_ROLES } from "@/lib/auth/roles";
+import { requireEmailVerification } from "@/lib/auth/verification-policy";
+import { recordAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { notDeleted, hasRequestedRole, literalSearch } from "@/lib/db-filters";
 import { Role } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import type { AuthResponse } from "@/types/auth";
 
 export interface AdminUserRow {
   id:            string;
@@ -159,5 +170,101 @@ export async function GET(request: NextRequest) {
       meta:    { total, page, limit, pages: Math.max(1, Math.ceil(total / limit)) },
     },
     { status: 200 }
+  );
+}
+
+// ── POST (create) ─────────────────────────────────────────────────────────────
+// Accounts created here go through the same rules as self-registration, so an
+// admin-created account cannot end up with a weaker password or a
+// non-normalised email that its owner can then never log in with.
+const CreateUserSchema = z.object({
+  name:     z.string().trim().min(2, "Name must be at least 2 characters"),
+  email:    z.string().trim().toLowerCase().email("Enter a valid email address"),
+  password: PasswordSchema,
+  role:     z.enum(ALL_ROLES),
+});
+
+export async function POST(request: NextRequest) {
+  const { session, errorResponse } = await requireAdminSession();
+  if (errorResponse) return errorResponse;
+
+  const body   = await request.json().catch(() => ({}));
+  const result = CreateUserSchema.safeParse(body);
+
+  if (!result.success) {
+    return NextResponse.json<AuthResponse>(
+      {
+        success: false,
+        // The first rule that failed, so the form can show something actionable.
+        message: result.error.issues[0]?.message ?? "Validation failed",
+        errors:  result.error.flatten().fieldErrors as Record<string, string[]>,
+      },
+      { status: 422 }
+    );
+  }
+
+  const { name, email, password, role } = result.data;
+
+  const existing = await db.user.findUnique({ where: { email }, select: { deletedAt: true } });
+  if (existing) {
+    return NextResponse.json<AuthResponse>(
+      {
+        success: false,
+        message: existing.deletedAt
+          ? "A deactivated account already uses this email — restore it instead."
+          : "An account with this email already exists.",
+      },
+      { status: 409 }
+    );
+  }
+
+  const hashed = await hashPassword(password);
+
+  const created = await db.$transaction(async (tx) => {
+    const u = await tx.user.create({
+      data: {
+        name,
+        email,
+        password:      hashed,
+        role:          role as Role,
+        emailVerified: !requireEmailVerification(),
+      },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    // Same profile rules as a role change — every page for the role reads it.
+    if (role === "TEACHER" || role === "SCHOOL") {
+      await tx.teacherProfile.create({ data: { userId: u.id } });
+    }
+
+    if (role === "STUDENT" || role === "PARENT") {
+      await tx.studentProfile.create({
+        data: {
+          userId:         u.id,
+          grade:          "grade1",
+          xpPoints:       0,
+          learningGems:   0,
+          streakDays:     1,
+          lastActiveDate: new Date(),
+        },
+      });
+    }
+
+    return u;
+  });
+
+  await recordAudit({
+    actor: { userId: session.userId, email: session.email, role: session.role },
+    action: "user.create",
+    entityType: "User",
+    entityId: created.id,
+    summary: `Created ${created.email} as ${created.role}`,
+    after: { role: created.role },
+    request,
+  });
+
+  return NextResponse.json<AuthResponse<typeof created>>(
+    { success: true, message: `Created ${created.name} as ${created.role}`, data: created },
+    { status: 201 }
   );
 }

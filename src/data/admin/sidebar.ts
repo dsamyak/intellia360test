@@ -49,8 +49,9 @@ export const sidebarSections: MenuSection[] = [
         id: "users",
         label: "Users",
         icon: "Users",
-        path: "/admin/students",
+        path: "/admin/users",
         children: [
+          { label: "All Users & Roles", path: "/admin/users" },
           { label: "Students", path: "/admin/students" },
           { label: "Teachers", path: "/admin/teachers" },
         ],
