@@ -5,9 +5,10 @@ import Link from "next/link";
 /**
  * Topic-wise resource switcher shown on every lesson screen.
  *
- * All three destinations carry the same lessonId (and grade when known), so
- * "Videos" and "EduNotes" always open the material for the topic the student
- * is currently on.
+ * Every button opens the lesson screen (/student/lesson/[id]) with the module
+ * in ?module=, so Architecture, Videos and EduNotes all render inside the one
+ * lesson page for the same lessonId (and grade when known). They used to open
+ * separate routes.
  */
 
 export type LessonResourceKey = "lesson" | "video" | "edunotes";
@@ -30,11 +31,12 @@ export default function LessonResourceNav({
   grade,
   active,
 }: LessonResourceNavProps) {
-  const withLesson = (base: string) => {
+  const moduleHref = (key: LessonResourceKey) => {
     const params = new URLSearchParams();
-    params.set("lessonId", lessonId ?? "");
+    if (key !== "lesson") params.set("module", key);
     if (grade) params.set("grade", grade);
-    return `${base}?${params.toString()}`;
+    const query = params.toString();
+    return `/student/lesson/${encodeURIComponent(lessonId ?? "")}${query ? `?${query}` : ""}`;
   };
 
   const items: ResourceItem[] = [
@@ -42,19 +44,19 @@ export default function LessonResourceNav({
       key: "lesson",
       icon: "🧩",
       label: "Lesson",
-      href: `/student/lesson/${encodeURIComponent(lessonId ?? "")}`,
+      href: moduleHref("lesson"),
     },
     {
       key: "video",
       icon: "🎬",
       label: "Videos",
-      href: withLesson("/student/lesson/video"),
+      href: moduleHref("video"),
     },
     {
       key: "edunotes",
       icon: "📘",
       label: "EduNotes",
-      href: withLesson("/student/lesson/edunotes"),
+      href: moduleHref("edunotes"),
     },
   ];
 

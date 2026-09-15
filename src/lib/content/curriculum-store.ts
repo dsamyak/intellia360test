@@ -250,16 +250,177 @@ export async function findMirroredDocument(relPath: string) {
   }
 }
 
-/** Every mirrored document of one kind for a grade, tombstones included. */
-export async function listMirroredDocuments(gradeId: string, kind: CurriculumKind) {
+/** Every mirrored document for a grade (optionally of one kind), tombstones included. */
+export async function listMirroredDocuments(gradeId: string, kind?: CurriculumKind) {
   try {
     return await db.curriculumDocument.findMany({
-      where: { gradeId, kind },
+      where: { gradeId, ...(kind ? { kind } : {}) },
       select: { path: true, lessonId: true, content: true, deletedAt: true, version: true },
     });
   } catch (err) {
     console.error("[curriculum-store] mirror list failed for", gradeId, kind, err);
     return [];
+  }
+}
+
+/** The grade of every mirrored curriculum.json, tombstones included. */
+export async function listMirroredCurricula(): Promise<{ gradeId: string; deletedAt: Date | null }[]> {
+  try {
+    return await db.curriculumDocument.findMany({
+      where: { kind: "curriculum" },
+      select: { gradeId: true, deletedAt: true },
+    });
+  } catch (err) {
+    console.error("[curriculum-store] mirror curriculum list failed", err);
+    return [];
+  }
+}
+
+/* ── Documents: the file where writable, the mirror where not ─────────────── */
+
+/** A store failure the API should report with this HTTP status and message. */
+export class StoreError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "StoreError";
+  }
+}
+
+/** Codes meaning "this host will not let us write here", as opposed to a transient fault. */
+const READ_ONLY_CODES = new Set(["EROFS", "EACCES", "EPERM"]);
+
+function errorCode(err: unknown): string | undefined {
+  return (err as NodeJS.ErrnoException | null)?.code;
+}
+
+export function isReadOnlyError(err: unknown): boolean {
+  const code = errorCode(err);
+  return !!code && READ_ONLY_CODES.has(code);
+}
+
+/**
+ * The current content of a store file, or null when it does not exist or was
+ * deleted. On a read-only host the mirrored copy wins over the file that
+ * shipped with the build, and a tombstone hides that file.
+ */
+export async function readStoreDocument(relPath: string): Promise<unknown | null> {
+  if (!isStoreWritable()) {
+    const doc = await findMirroredDocument(relPath);
+    if (doc) return doc.deletedAt ? null : doc.content;
+  }
+
+  const fp = resolveInStore(...relPath.split("/"));
+  if (!fs.existsSync(fp)) return null;
+
+  try {
+    return JSON.parse(fs.readFileSync(fp, "utf-8")) as unknown;
+  } catch (err) {
+    console.error("[curriculum-store] could not read", relPath, err);
+    throw new StoreError(
+      err instanceof SyntaxError
+        ? `${relPath} is not valid JSON.`
+        : `Could not read ${relPath} (${errorCode(err) ?? "unknown error"}).`,
+      500
+    );
+  }
+}
+
+/** Whether a store file exists — same precedence as readStoreDocument, without parsing it. */
+export async function storeDocumentExists(relPath: string): Promise<boolean> {
+  if (!isStoreWritable()) {
+    const doc = await findMirroredDocument(relPath);
+    if (doc) return !doc.deletedAt;
+  }
+  return fs.existsSync(resolveInStore(...relPath.split("/")));
+}
+
+/** Whether a grade exists: its directory where files are writable, its live curriculum where not. */
+export async function storeGradeExists(gradeId: string): Promise<boolean> {
+  if (isStoreWritable()) return fs.existsSync(resolveInStore(gradeId));
+  return storeDocumentExists(storePath(gradeId, "curriculum.json"));
+}
+
+export interface StoredDocument {
+  version: number | null;
+  /** "database" when this host could not write the file and only the mirror holds the change. */
+  storedIn: "file" | "database";
+}
+
+/**
+ * Writes a store file and mirrors it. `label` names the document in error
+ * messages ("lesson", "curriculum"). Throws StoreError when nothing durable
+ * accepted the write.
+ */
+export async function writeStoreDocument(args: MirrorArgs, label: string): Promise<StoredDocument> {
+  let wroteFile = false;
+
+  if (isStoreWritable()) {
+    const fp = resolveInStore(...args.path.split("/"));
+    try {
+      fs.mkdirSync(path.dirname(fp), { recursive: true });
+      fs.writeFileSync(fp, JSON.stringify(args.content, null, 2));
+      wroteFile = true;
+    } catch (err) {
+      if (!isReadOnlyError(err)) {
+        console.error("[curriculum-store] could not write", args.path, err);
+        throw new StoreError(`Could not write the ${label} file (${errorCode(err) ?? "unknown error"}).`, 500);
+      }
+      // Refused despite the probe — treat the host as read-only from now on.
+      markStoreReadOnly();
+    }
+  }
+
+  const version = await mirrorCurriculumWrite(args);
+
+  if (!wroteFile && version === null) {
+    throw new StoreError(
+      `The ${label} was not saved: this server cannot write curriculum files and the database could not be reached. Try again in a moment.`,
+      503
+    );
+  }
+
+  return { version, storedIn: wroteFile ? "file" : "database" };
+}
+
+/**
+ * Deletes store files. Each is snapshotted into the mirror first, so every
+ * tombstone carries recoverable content. Where files are writable they are
+ * removed; on a read-only host the shipped files stay and the tombstones are
+ * what hide them, so there the mirror must succeed.
+ */
+export async function deleteStoreDocuments(documents: MirrorArgs[], label: string): Promise<void> {
+  if (documents.length === 0) return;
+
+  let snapshotted = true;
+  for (const doc of documents) {
+    if ((await mirrorCurriculumWrite(doc)) === null) snapshotted = false;
+  }
+
+  const paths = documents.map((doc) => doc.path);
+  const updatedBy = documents[0].updatedBy ?? null;
+
+  if (isStoreWritable()) {
+    try {
+      for (const relPath of paths) {
+        const fp = resolveInStore(...relPath.split("/"));
+        if (fs.existsSync(fp)) fs.unlinkSync(fp);
+      }
+      await mirrorCurriculumDelete(paths, updatedBy);
+      return;
+    } catch (err) {
+      if (!isReadOnlyError(err)) {
+        console.error("[curriculum-store] could not delete", paths, err);
+        throw new StoreError(`Could not delete the ${label} file (${errorCode(err) ?? "unknown error"}).`, 500);
+      }
+      markStoreReadOnly();
+    }
+  }
+
+  if (!snapshotted || !(await mirrorCurriculumDelete(paths, updatedBy))) {
+    throw new StoreError(
+      `The ${label} was not deleted: the database could not be reached. Try again in a moment.`,
+      503
+    );
   }
 }
 

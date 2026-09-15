@@ -33,10 +33,12 @@ function EduNotesContent() {
   const lessonIdParam = searchParams.get("lessonId");
   const gradeParam = searchParams.get("grade");
 
-  const { currentGrade } = useStudent();
+  const { currentGrade, gradeReady } = useStudent();
 
+  // The grade in the link, otherwise the student's grade once their profile
+  // has loaded — reading it earlier briefly checked the default grade's notes.
   const effectiveGrade =
-    gradeParam || currentGrade || "grade1";
+    gradeParam || (gradeReady ? currentGrade || "grade1" : "");
 
   const [loading, setLoading] = useState(true);
   const [available, setAvailable] = useState(false);
@@ -48,6 +50,9 @@ function EduNotesContent() {
       setAvailable(false);
       return;
     }
+
+    // The loading state stays up until the student's grade is known.
+    if (!effectiveGrade) return;
 
     const lessonId = lessonIdParam;
     let cancelled = false;

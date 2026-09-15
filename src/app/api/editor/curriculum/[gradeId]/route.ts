@@ -3,189 +3,155 @@
  * PUT   /api/editor/curriculum/[gradeId]  — overwrite curriculum.json
  * PATCH /api/editor/curriculum/[gradeId]  — merge-update curriculum.json
  *
- * `gradeId` arrives from the URL and is interpolated into a filesystem path, so
- * every handler validates it through assertGradeId before touching the disk.
+ * `gradeId` arrives from the URL and ends up in a filesystem path, so every
+ * handler validates it through assertGradeId before touching the store.
  *
- * Writes are mirrored into MongoDB (see lib/content/curriculum-store) because
- * src/data/grades lives inside the deploy artifact and is not covered by any
- * database backup — without the mirror an editor's saved work is lost at the
- * next deploy and cannot be recovered.
+ * Storage goes through readStoreDocument / writeStoreDocument
+ * (lib/content/curriculum-store): the file where it is writable, always
+ * mirrored into MongoDB because src/data/grades is not covered by any database
+ * backup; on a read-only host (Vercel) the mirror alone — where the file write
+ * used to fail with an unhandled EROFS 500.
  */
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
 import {
   assertGradeId,
-  mirrorCurriculumWrite,
-  resolveInStore,
+  readStoreDocument,
+  storeGradeExists,
   storePath,
+  StoreError,
   UnsafePathError,
+  writeStoreDocument,
+  type StoredDocument,
 } from "@/lib/content/curriculum-store";
 import { recordAudit } from "@/lib/audit";
 import type { AuthResponse } from "@/types/auth";
 
-function curriculumPath(gradeId: string) {
-  return resolveInStore(gradeId, "curriculum.json");
+type Params = { params: Promise<{ gradeId: string }> };
+
+function fail(message: string, status: number) {
+  return NextResponse.json<AuthResponse>({ success: false, message }, { status });
 }
 
-function badPath(err: unknown) {
-  return NextResponse.json<AuthResponse>(
-    { success: false, message: err instanceof UnsafePathError ? err.message : "Invalid path" },
-    { status: 400 }
-  );
+/** Turns anything thrown while handling the curriculum into a JSON response, never a bare 500. */
+function failure(err: unknown) {
+  if (err instanceof UnsafePathError) return fail(err.message, 400);
+  if (err instanceof StoreError) return fail(err.message, err.status);
+  console.error("[editor/curriculum] unexpected error", err);
+  return fail("Unexpected server error while handling the curriculum.", 500);
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ gradeId: string }> }
-) {
+async function readObjectBody(request: NextRequest): Promise<Record<string, unknown> | null> {
+  const body = await request.json().catch(() => null);
+  return body && typeof body === "object" && !Array.isArray(body)
+    ? (body as Record<string, unknown>)
+    : null;
+}
+
+function savedMessage(saved: StoredDocument, verb: "saved" | "updated"): string {
+  return saved.storedIn === "file"
+    ? `curriculum.json ${verb}`
+    : `curriculum.json ${verb} to the database. This server can't write curriculum files, so the repository copy updates when it is restored with scripts/restore-curriculum.mjs.`;
+}
+
+export async function GET(_request: NextRequest, { params }: Params) {
   const { errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  let gradeId: string;
-  let filePath: string;
   try {
-    gradeId = assertGradeId((await params).gradeId);
-    filePath = curriculumPath(gradeId);
-  } catch (err) {
-    return badPath(err);
-  }
+    const gradeId = assertGradeId((await params).gradeId);
+    const data = await readStoreDocument(storePath(gradeId, "curriculum.json"));
+    if (data === null) return fail(`curriculum.json not found for ${gradeId}`, 404);
 
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: `curriculum.json not found for ${gradeId}` },
-      { status: 404 }
+    return NextResponse.json<AuthResponse<unknown>>(
+      { success: true, message: "OK", data },
+      { status: 200 }
     );
+  } catch (err) {
+    return failure(err);
   }
-
-  const raw = fs.readFileSync(filePath, "utf-8");
-  return NextResponse.json<AuthResponse<unknown>>(
-    { success: true, message: "OK", data: JSON.parse(raw) },
-    { status: 200 }
-  );
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ gradeId: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: Params) {
   const { session, errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  let gradeId: string;
-  let filePath: string;
   try {
-    gradeId = assertGradeId((await params).gradeId);
-    filePath = curriculumPath(gradeId);
+    const gradeId = assertGradeId((await params).gradeId);
+
+    const body = await readObjectBody(request);
+    if (!body) return fail("Request body must be a valid JSON object", 422);
+
+    if (!(await storeGradeExists(gradeId))) return fail(`Grade directory not found: ${gradeId}`, 404);
+
+    const relPath = storePath(gradeId, "curriculum.json");
+    // Only needed for the audit entry — an unreadable previous version must not block the save.
+    const previous = await readStoreDocument(relPath).catch(() => null);
+
+    const saved = await writeStoreDocument(
+      { path: relPath, gradeId, kind: "curriculum", content: body, updatedBy: session.userId },
+      "curriculum"
+    );
+
+    await recordAudit({
+      actor: { userId: session.userId, email: session.email, role: session.role },
+      action: "curriculum.replace",
+      entityType: "CurriculumDocument",
+      entityId: relPath,
+      summary: `Replaced curriculum.json for ${gradeId}`,
+      before: previous,
+      after: body,
+      request,
+    });
+
+    return NextResponse.json<AuthResponse<{ version: number | null }>>(
+      { success: true, message: savedMessage(saved, "saved"), data: { version: saved.version } },
+      { status: 200 }
+    );
   } catch (err) {
-    return badPath(err);
+    return failure(err);
   }
-
-  const gradeDir = path.dirname(filePath);
-
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: "Request body must be a valid JSON object" },
-      { status: 422 }
-    );
-  }
-
-  if (!fs.existsSync(gradeDir)) {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: `Grade directory not found: ${gradeId}` },
-      { status: 404 }
-    );
-  }
-
-  const previous = fs.existsSync(filePath)
-    ? (JSON.parse(fs.readFileSync(filePath, "utf-8")) as unknown)
-    : null;
-
-  fs.writeFileSync(filePath, JSON.stringify(body, null, 2));
-
-  const version = await mirrorCurriculumWrite({
-    path: storePath(gradeId, "curriculum.json"),
-    gradeId,
-    kind: "curriculum",
-    content: body,
-    updatedBy: session.userId,
-  });
-
-  await recordAudit({
-    actor: { userId: session.userId, email: session.email, role: session.role },
-    action: "curriculum.replace",
-    entityType: "CurriculumDocument",
-    entityId: storePath(gradeId, "curriculum.json"),
-    summary: `Replaced curriculum.json for ${gradeId}`,
-    before: previous,
-    after: body,
-    request,
-  });
-
-  return NextResponse.json<AuthResponse<{ version: number | null }>>(
-    { success: true, message: "curriculum.json saved", data: { version } },
-    { status: 200 }
-  );
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ gradeId: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: Params) {
   const { session, errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  let gradeId: string;
-  let filePath: string;
   try {
-    gradeId = assertGradeId((await params).gradeId);
-    filePath = curriculumPath(gradeId);
+    const gradeId = assertGradeId((await params).gradeId);
+    const relPath = storePath(gradeId, "curriculum.json");
+
+    const existing = await readStoreDocument(relPath);
+    if (!existing || typeof existing !== "object") {
+      return fail(`curriculum.json not found for ${gradeId}`, 404);
+    }
+
+    const body = await readObjectBody(request);
+    if (!body) return fail("Request body must be a valid JSON object", 422);
+
+    const merged = { ...(existing as Record<string, unknown>), ...body };
+
+    const saved = await writeStoreDocument(
+      { path: relPath, gradeId, kind: "curriculum", content: merged, updatedBy: session.userId },
+      "curriculum"
+    );
+
+    await recordAudit({
+      actor: { userId: session.userId, email: session.email, role: session.role },
+      action: "curriculum.update",
+      entityType: "CurriculumDocument",
+      entityId: relPath,
+      summary: `Updated curriculum.json for ${gradeId}`,
+      before: existing,
+      after: merged,
+      request,
+    });
+
+    return NextResponse.json<AuthResponse<unknown>>(
+      { success: true, message: savedMessage(saved, "updated"), data: merged },
+      { status: 200 }
+    );
   } catch (err) {
-    return badPath(err);
+    return failure(err);
   }
-
-  if (!fs.existsSync(filePath)) {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: `curriculum.json not found for ${gradeId}` },
-      { status: 404 }
-    );
-  }
-
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: "Request body must be a valid JSON object" },
-      { status: 422 }
-    );
-  }
-
-  const existing = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  const merged = { ...existing, ...body };
-  fs.writeFileSync(filePath, JSON.stringify(merged, null, 2));
-
-  await mirrorCurriculumWrite({
-    path: storePath(gradeId, "curriculum.json"),
-    gradeId,
-    kind: "curriculum",
-    content: merged,
-    updatedBy: session.userId,
-  });
-
-  await recordAudit({
-    actor: { userId: session.userId, email: session.email, role: session.role },
-    action: "curriculum.update",
-    entityType: "CurriculumDocument",
-    entityId: storePath(gradeId, "curriculum.json"),
-    summary: `Updated curriculum.json for ${gradeId}`,
-    before: existing,
-    after: merged,
-    request,
-  });
-
-  return NextResponse.json<AuthResponse<unknown>>(
-    { success: true, message: "curriculum.json updated", data: merged },
-    { status: 200 }
-  );
 }
