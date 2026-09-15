@@ -182,6 +182,28 @@ export async function deleteUser(id: string): Promise<{ success: boolean; messag
   return sendMutation(`/api/admin/users/${id}`, { method: "DELETE" }, "Failed to delete account.");
 }
 
+export async function createUser(input: {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}): Promise<{ success: boolean; message: string }> {
+  return sendMutation("/api/admin/users", jsonBody("POST", input), "Failed to create account.");
+}
+
+export async function changeUserRole(id: string, role: string): Promise<{ success: boolean; message: string }> {
+  return sendMutation(`/api/admin/users/${id}/role`, jsonBody("PATCH", { role }), "Failed to change role.");
+}
+
+export async function restoreUser(id: string): Promise<{ success: boolean; message: string }> {
+  return sendMutation(`/api/admin/users/${id}`, jsonBody("PATCH", { restore: true }), "Failed to restore account.");
+}
+
+/** Only succeeds for an account that is already deactivated. */
+export async function deleteUserPermanently(id: string): Promise<{ success: boolean; message: string }> {
+  return sendMutation(`/api/admin/users/${id}?permanent=true`, { method: "DELETE" }, "Failed to delete account permanently.");
+}
+
 /* ============================================================
    STUDENT
 ============================================================ */

@@ -15,7 +15,6 @@ const NAV = [
   { icon: "📚", label: "Courses",     href: "/editor/courses" },
   { icon: "📝", label: "Lessons",     href: "/editor/lessons" },
   { icon: "🗂", label: "Curriculum",  href: "/editor/curriculum" },
-  { icon: "👥", label: "Users",       href: "/editor/users" },
 ];
 
 export default function EditorLayout({ children }: { children: React.ReactNode }) {

@@ -145,7 +145,7 @@ Everything that names a role imports from there:
 | Signup schema | `src/lib/auth/validation.ts` | `REGISTRABLE_ROLES`, `DEFAULT_ROLE` |
 | Signup UI | `src/app/(auth)/register/page.tsx` | `REGISTRABLE_ROLES` |
 | Admin role change | `src/app/api/admin/users/[userId]/role/route.ts` | `ALL_ROLES` |
-| Editor user admin | `src/app/api/editor/users/route.ts`, `src/app/editor/users/page.tsx` | `ALL_ROLES` |
+| Admin user management | `src/app/api/admin/users/route.ts`, `src/app/admin/users/page.tsx` | `ALL_ROLES` |
 | Redirects | `src/proxy.ts`, `src/context/AuthContext.tsx` | `dashboardFor` |
 
 The values are SCREAMING_CASE everywhere. Nothing sends `"Editor"` or
@@ -240,7 +240,7 @@ expires.
 - **Hashing:** bcryptjs, `SALT_ROUNDS = 12` (`src/lib/auth/hash.ts`).
   Only `hashPassword` writes and only `verifyPassword` compares.
 - **Rules** — `PasswordSchema` in `src/lib/auth/validation.ts`, one definition
-  shared by registration, password reset, change-password, and editor-created
+  shared by registration, password reset, change-password, and admin-created
   accounts:
   - at least 8 characters
   - at least one letter
@@ -288,8 +288,8 @@ Role-scoped areas (representative — every route in each group uses the guard s
 | GET | `/api/student/progress`, `/badges`, `/missions`, `/daily-quiz`, `/notifications` | Student data | Yes | STUDENT, PARENT, ADMIN |
 | GET | `/api/editor/stats` | Editor dashboard counters | Yes | EDITOR, ADMIN |
 | GET/POST | `/api/editor/grades`, `/lessons/**`, `/curriculum/**` | Curriculum authoring | Yes | EDITOR, ADMIN |
-| GET/POST | `/api/editor/users` | User admin from the editor console | Yes | EDITOR, ADMIN |
-| GET | `/api/admin/stats`, `/dashboard`, `/audit`, `/users` | Admin console | Yes | ADMIN |
+| GET | `/api/admin/stats`, `/dashboard`, `/audit` | Admin console | Yes | ADMIN |
+| GET/POST | `/api/admin/users` | List users / create a user with any role (`/admin/users`) — user management is admin-only | Yes | ADMIN |
 | PATCH | `/api/admin/users/[userId]/role` | Change a user's role | Yes | ADMIN |
 | GET/POST | `/api/admin/courses`, `/content`, `/schools`, `/payments`, `/settings` | Platform admin | Yes | ADMIN |
 | POST | `/api/admin/seed-admin` | One-time first-admin bootstrap; 410 once an admin exists | No | — |
