@@ -307,6 +307,10 @@
 
 .ed-error-msg   { font-size: .8rem; color: var(--color-danger);  font-weight: 600; margin-top: 6px; }
 .ed-success-txt { font-size: .8rem; color: var(--color-success); font-weight: 600; margin-top: 6px; }
+.ed-input.invalid,
+.ed-input.invalid:focus { border-color: var(--color-danger); box-shadow: 0 0 0 3px rgba(239,68,68,.10); }
+.ed-field-hint  { font-size: .72rem; color: var(--color-text-muted); }
+.ed-field-error { font-size: .72rem; color: var(--color-danger); font-weight: 600; }
 
 /* ── JSON textarea ───────────────────────────────────────────── */
 .ed-json-editor {
