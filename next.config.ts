@@ -77,6 +77,10 @@ const securityHeaders = [
       // YouTube no-cookie
       // Google Drive
       //
+      // Keep in step with EMBEDDABLE_HOSTS in
+      // src/lib/content/lesson-modules.ts — the Editor rejects
+      // architecture/video links on any site not listed here.
+      //
       "frame-src 'self' https://accounts.google.com https://*.vercel.app https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://drive.google.com",
 
       // Prevent plugins
@@ -100,6 +104,20 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
+  },
+
+  // ───────────────────────────────────────────────────────────
+  // CURRICULUM FILES
+  // ───────────────────────────────────────────────────────────
+  // These routes read src/data/grades with fs at request time
+  // (src/lib/content), not through imports, so make sure the
+  // JSON ships with their server functions.
+  outputFileTracingIncludes: {
+    "/api/editor/**": ["./src/data/grades/**/*.json"],
+    "/api/student/lesson-resources": ["./src/data/grades/**/*.json"],
+    "/api/student/videos": ["./src/data/grades/**/*.json"],
+    "/api/student/edunotes": ["./src/data/grades/**/*.json"],
+    "/api/student/edunotes/content": ["./src/data/grades/**/*.json"],
   },
 
   // ───────────────────────────────────────────────────────────

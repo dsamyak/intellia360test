@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEduNotes } from "@/lib/student/edunotes";
+import { UnsafePathError } from "@/lib/content/curriculum-store";
+import { resolveLessonResources } from "@/lib/student/lesson-resources";
 
+/**
+ * EduNotes metadata. The source is resolved by
+ * src/lib/student/lesson-resources.ts — the Editor's EduNotes URL first, then
+ * the curriculum, then EDUNOTES_REGISTRY.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -17,7 +23,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const edunote = getEduNotes(lessonId, grade);
+    const { eduNotes: edunote } = await resolveLessonResources(
+      lessonId,
+      grade,
+      request.nextUrl.origin
+    );
 
     if (!edunote) {
       return NextResponse.json(
@@ -32,14 +42,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        lessonId: edunote.lessonId,
+        lessonId,
         fileId: edunote.fileId,
         fileName: edunote.fileName,
-        previewUrl: edunote.previewUrl,
+        previewUrl: edunote.fileId
+          ? `https://drive.google.com/file/d/${edunote.fileId}/preview`
+          : edunote.url,
       },
       { status: 200 }
     );
   } catch (error) {
+    if (error instanceof UnsafePathError) {
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 400 }
+      );
+    }
+
     console.error("Error fetching EduNotes:", error);
     return NextResponse.json(
       {

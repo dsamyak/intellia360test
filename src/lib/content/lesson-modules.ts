@@ -5,6 +5,10 @@
  * a link is required only while its module is enabled, and any link given must
  * be a site path ("/student/lesson/video") or an absolute http(s) URL.
  *
+ * Architecture and video links are framed inside the student lesson screen, so
+ * an absolute link must also be on a site the app's Content-Security-Policy
+ * allows it to frame (EMBEDDABLE_HOSTS).
+ *
  * No Node APIs here — this module is imported by client components.
  */
 import type { LessonModuleConfig } from "@/types/student";
@@ -26,6 +30,49 @@ export const LESSON_MODULE_LABELS: Record<LessonModuleKey, string> = {
   practiceModule:     "Practice module",
   eduNotes:           "EduNotes",
 };
+
+/**
+ * Sites the student lesson screen may frame.
+ *
+ * Must match the `frame-src` directive in next.config.ts: a link to any other
+ * site is blocked by the app's own Content-Security-Policy and would show as an
+ * empty frame. (next.config.ts cannot import this module — its module
+ * resolution is limited to CommonJS — so the two lists are kept in step by hand.)
+ */
+export const EMBEDDABLE_HOSTS: readonly string[] = [
+  "*.vercel.app",
+  "www.youtube.com",
+  "youtube.com",
+  "www.youtube-nocookie.com",
+  "drive.google.com",
+];
+
+/** YouTube links are played through youtube-nocookie.com, so every YouTube host works for videos. */
+const YOUTUBE_HOSTS = ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtube-nocookie.com"];
+
+/** Modules whose links are framed on the student lesson screen. */
+const FRAMED_MODULES: Partial<Record<LessonModuleKey, { video: boolean }>> = {
+  architectureModule: { video: false },
+  videoLesson:        { video: true },
+};
+
+/** Whether the lesson screen may frame this absolute URL under the app's CSP. */
+export function isEmbeddableUrl(url: string, { video = false }: { video?: boolean } = {}): boolean {
+  let host: string;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    host = parsed.hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+
+  if (video && YOUTUBE_HOSTS.includes(host)) return true;
+
+  return EMBEDDABLE_HOSTS.some((pattern) =>
+    pattern.startsWith("*.") ? host.endsWith(pattern.slice(1)) : host === pattern
+  );
+}
 
 /**
  * Every module present with a boolean `enabled` and a trimmed `url`.
@@ -70,6 +117,13 @@ export function validateLessonModules(modules: LessonModules): LessonModuleError
     }
     if (!isValidModuleUrl(url)) {
       errors[key] = "Use a site path like /student/lesson/video or a full https:// link.";
+      continue;
+    }
+    const framed = FRAMED_MODULES[key];
+    if (framed && !url.startsWith("/") && !isEmbeddableUrl(url, framed)) {
+      errors[key] = framed.video
+        ? "Students can't play this site here. Use a YouTube, Google Drive or *.vercel.app link."
+        : "Students can't open this site inside the lesson. Use a *.vercel.app or Google Drive link.";
     }
   }
   return errors;

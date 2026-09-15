@@ -58,9 +58,12 @@ function LessonVideoContent() {
   const gradeParam = searchParams.get("grade");
   const videoIdParam = searchParams.get("videoId");
 
-  const { currentGrade, curriculum } = useStudent();
+  const { currentGrade, gradeReady, curriculum } = useStudent();
 
-  const effectiveGrade = gradeParam || currentGrade || "grade1";
+  // The grade in the link, otherwise the student's grade once their profile
+  // has loaded — reading it earlier briefly loaded the default grade's videos.
+  const effectiveGrade =
+    gradeParam || (gradeReady ? currentGrade || "grade1" : "");
 
   const [state, setState] = useState<LoadState>("loading");
   const [videos, setVideos] = useState<LessonVideo[]>([]);
@@ -73,8 +76,9 @@ function LessonVideoContent() {
 
   useEffect(() => {
     // Without a lesson the page renders its own notice below, so there is
-    // nothing to load and no state to change here.
-    if (!lessonIdParam) return;
+    // nothing to load and no state to change here. Without a grade yet, the
+    // loading state stays up until the student's profile arrives.
+    if (!lessonIdParam || !effectiveGrade) return;
 
     let cancelled = false;
 

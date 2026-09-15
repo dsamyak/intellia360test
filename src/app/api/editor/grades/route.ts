@@ -1,16 +1,30 @@
 /**
- * GET  /api/editor/grades  — list all grade directories with metadata
- * POST /api/editor/grades  — create a new grade directory scaffold
+ * GET  /api/editor/grades  — list all grades with metadata
+ * POST /api/editor/grades  — create a new grade scaffold
+ *
+ * Storage goes through lib/content/curriculum-store: grade directories where
+ * the store is writable; on a read-only host (Vercel) the database mirror,
+ * so grades created or deleted there are listed correctly and creating one no
+ * longer fails on the directory write.
  */
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import path from "path";
 import { requireEditorSession } from "@/lib/editor/require-editor-session";
-import { mirrorCurriculumWrite, storePath } from "@/lib/content/curriculum-store";
+import {
+  CURRICULUM_ROOT,
+  isStoreWritable,
+  listMirroredCurricula,
+  resolveInStore,
+  storeDocumentExists,
+  storeGradeExists,
+  storePath,
+  StoreError,
+  UnsafePathError,
+  writeStoreDocument,
+} from "@/lib/content/curriculum-store";
+import { listLessons } from "@/lib/content/lesson-store";
 import { recordAudit } from "@/lib/audit";
 import type { AuthResponse } from "@/types/auth";
-
-const DATA_ROOT = path.join(process.cwd(), "src", "data", "grades");
 
 export interface GradeMeta {
   id: string;
@@ -20,45 +34,61 @@ export interface GradeMeta {
   hasDashboard: boolean;
 }
 
+function fail(message: string, status: number) {
+  return NextResponse.json<AuthResponse>({ success: false, message }, { status });
+}
+
+/** Turns anything thrown while handling grades into a JSON response, never a bare 500. */
+function failure(err: unknown) {
+  if (err instanceof UnsafePathError) return fail(err.message, 400);
+  if (err instanceof StoreError) return fail(err.message, err.status);
+  console.error("[editor/grades] unexpected error", err);
+  return fail("Unexpected server error while handling grades.", 500);
+}
+
 export async function GET() {
   const { errorResponse } = await requireEditorSession();
   if (errorResponse) return errorResponse;
 
-  if (!fs.existsSync(DATA_ROOT)) {
+  try {
+    const ids = new Set<string>(
+      fs.existsSync(CURRICULUM_ROOT)
+        ? fs
+            .readdirSync(CURRICULUM_ROOT, { withFileTypes: true })
+            .filter((d) => d.isDirectory())
+            .map((d) => d.name)
+        : []
+    );
+
+    // On a read-only host the mirror knows about grades created or deleted
+    // since the build: a live curriculum adds a grade, a tombstone removes it.
+    if (!isStoreWritable()) {
+      for (const doc of await listMirroredCurricula()) {
+        if (doc.deletedAt) ids.delete(doc.gradeId);
+        else ids.add(doc.gradeId);
+      }
+    }
+
+    const grades: GradeMeta[] = await Promise.all(
+      [...ids].sort().map(async (id) => ({
+        id,
+        label: id.replace("grade", "Grade "),
+        lessonCount: (await listLessons(id)).length,
+        hasCurriculum: await storeDocumentExists(storePath(id, "curriculum.json")),
+        hasDashboard: await storeDocumentExists(storePath(id, "dashboard.json")),
+      }))
+    );
+
     return NextResponse.json<AuthResponse<GradeMeta[]>>(
-      { success: true, message: "No grades found", data: [] },
+      { success: true, message: grades.length ? "OK" : "No grades found", data: grades },
       { status: 200 }
     );
+  } catch (err) {
+    return failure(err);
   }
-
-  const dirs = fs
-    .readdirSync(DATA_ROOT, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-    .sort();
-
-  const grades: GradeMeta[] = dirs.map((id) => {
-    const gradeDir = path.join(DATA_ROOT, id);
-    const lessonsDir = path.join(gradeDir, "lessons");
-    const lessonCount = fs.existsSync(lessonsDir)
-      ? fs.readdirSync(lessonsDir).filter((f) => f.endsWith(".json")).length
-      : 0;
-    return {
-      id,
-      label: id.replace("grade", "Grade "),
-      lessonCount,
-      hasCurriculum: fs.existsSync(path.join(gradeDir, "curriculum.json")),
-      hasDashboard:  fs.existsSync(path.join(gradeDir, "dashboard.json")),
-    };
-  });
-
-  return NextResponse.json<AuthResponse<GradeMeta[]>>(
-    { success: true, message: "OK", data: grades },
-    { status: 200 }
-  );
 }
 
-const EMPTY_CURRICULUM = (gradeId: string) => ({
+const EMPTY_CURRICULUM = () => ({
   activeTopic: null,
   standaloneTopics: [],
   chapters: [
@@ -77,50 +107,52 @@ export async function POST(request: NextRequest) {
   if (errorResponse) return errorResponse;
 
   const body = await request.json().catch(() => ({}));
-  const gradeId: string = (body.gradeId ?? "").trim().toLowerCase().replace(/\s+/g, "");
+  const gradeId: string = String(body.gradeId ?? "").trim().toLowerCase().replace(/\s+/g, "");
 
   if (!gradeId || !/^grade\d+$/.test(gradeId)) {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: "gradeId must match the pattern grade<number> (e.g. grade8)" },
-      { status: 422 }
-    );
+    return fail("gradeId must match the pattern grade<number> (e.g. grade8)", 422);
   }
 
-  const gradeDir   = path.join(DATA_ROOT, gradeId);
-  const lessonsDir = path.join(gradeDir, "lessons");
+  try {
+    if (await storeGradeExists(gradeId)) return fail(`${gradeId} already exists`, 409);
 
-  if (fs.existsSync(gradeDir)) {
-    return NextResponse.json<AuthResponse>(
-      { success: false, message: `${gradeId} already exists` },
-      { status: 409 }
+    const curriculum = EMPTY_CURRICULUM();
+
+    const saved = await writeStoreDocument(
+      {
+        path: storePath(gradeId, "curriculum.json"),
+        gradeId,
+        kind: "curriculum",
+        content: curriculum,
+        updatedBy: session.userId,
+      },
+      "grade"
     );
+
+    // The lessons directory only exists where files are written.
+    if (saved.storedIn === "file") {
+      fs.mkdirSync(resolveInStore(gradeId, "lessons"), { recursive: true });
+    }
+
+    await recordAudit({
+      actor: { userId: session.userId, email: session.email, role: session.role },
+      action: "grade.create",
+      entityType: "CurriculumGrade",
+      entityId: gradeId,
+      summary: `Created grade ${gradeId}`,
+      after: { gradeId },
+      request,
+    });
+
+    return NextResponse.json<AuthResponse<{ id: string }>>(
+      {
+        success: true,
+        message: saved.storedIn === "file" ? `${gradeId} created` : `${gradeId} created in the database`,
+        data: { id: gradeId },
+      },
+      { status: 201 }
+    );
+  } catch (err) {
+    return failure(err);
   }
-
-  const curriculum = EMPTY_CURRICULUM(gradeId);
-
-  fs.mkdirSync(lessonsDir, { recursive: true });
-  fs.writeFileSync(path.join(gradeDir, "curriculum.json"), JSON.stringify(curriculum, null, 2));
-
-  await mirrorCurriculumWrite({
-    path: storePath(gradeId, "curriculum.json"),
-    gradeId,
-    kind: "curriculum",
-    content: curriculum,
-    updatedBy: session.userId,
-  });
-
-  await recordAudit({
-    actor: { userId: session.userId, email: session.email, role: session.role },
-    action: "grade.create",
-    entityType: "CurriculumGrade",
-    entityId: gradeId,
-    summary: `Created grade ${gradeId}`,
-    after: { gradeId },
-    request,
-  });
-
-  return NextResponse.json<AuthResponse<{ id: string }>>(
-    { success: true, message: `${gradeId} created`, data: { id: gradeId } },
-    { status: 201 }
-  );
 }

@@ -50,6 +50,11 @@ interface StudentContextType {
   studentName: string;
   studentEmail: string;
   currentGrade: string;
+  /**
+   * True once the student's profile grade has loaded (or failed to load).
+   * Before that, currentGrade is only the default or a cached value.
+   */
+  gradeReady: boolean;
   setCurrentGrade: (grade: string) => void;
   curriculum: Curriculum | null;
   activeLessonId: string;
@@ -77,8 +82,9 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
   const [studentName, setStudentName] = useState<string>("Student Profile");
   const [studentEmail, setStudentEmail] = useState<string>("");
   const [currentGrade, setCurrentGradeState] = useState<string>("grade1");
+  const [gradeReady, setGradeReady] = useState<boolean>(false);
   const [curriculum, setCurriculum] = useState<Curriculum | null>(null);
-  
+
   const [activeLessonId, setActiveLessonIdState] = useState<string>("");
   const [xpPoints, setXpPoints] = useState<number>(0);
   const [learningGems, setLearningGems] = useState<number>(0);
@@ -119,7 +125,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
       try {
         const data = await import(`../data/grades/${currentGrade}/curriculum.json`);
         setCurriculum(data.default || data);
-        
+
         // If we don't have an active lesson, or if the current active lesson doesn't exist in the new curriculum, reset it
         const allTopics = (data.default || data).chapters.flatMap((c: CurriculumChapter) => c.topics);
         if (allTopics.length > 0) {
@@ -152,6 +158,8 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
             if (profile.grade) {
               setCurrentGradeState(profile.grade);
             }
+            // The grade is known now; progress below does not change it.
+            setGradeReady(true);
             if (typeof profile.xpPoints === "number") setXpPoints(profile.xpPoints);
             if (typeof profile.learningGems === "number") setLearningGems(profile.learningGems);
             if (typeof profile.streakDays === "number") setStreakDays(profile.streakDays);
@@ -173,6 +181,9 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (err) {
         console.error("Failed to sync student data from API", err);
+      } finally {
+        // Without a profile the cached/default grade is the best available.
+        setGradeReady(true);
       }
     }
     syncStudentData();
@@ -247,7 +258,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
   const addXp = (points: number) => {
     setXpPoints((prev) => prev + points);
   };
-  
+
   const addGems = (points: number) => {
     setLearningGems((prev) => prev + points);
   };
@@ -348,6 +359,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         studentName,
         studentEmail,
         currentGrade,
+        gradeReady,
         setCurrentGrade,
         curriculum,
         activeLessonId,

@@ -1,20 +1,27 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
+/*
+ * Architecture is rendered by the lesson screen (/student/lesson/[id]) from the
+ * lesson's own data. This older route only forwards there, so any saved link
+ * still works without a hard-coded lesson URL or a nested student layout.
+ */
 function ArchitectureContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
     const lessonId = searchParams.get("lessonId");
+    const grade = searchParams.get("grade");
 
-    const architectureUrl =
-        lessonId === "counting-numbers-up-to-100"
-            ? "https://number-counting-gamma.vercel.app/"
-            : null;
+    useEffect(() => {
+        if (!lessonId) return;
+        const query = grade ? `?grade=${encodeURIComponent(grade)}` : "";
+        router.replace(`/student/lesson/${encodeURIComponent(lessonId)}${query}`);
+    }, [lessonId, grade, router]);
 
-    if (!architectureUrl) {
+    if (!lessonId) {
         return (
             <main className="lesson-error">
                 <h1>Architecture not available</h1>
@@ -25,46 +32,27 @@ function ArchitectureContent() {
         );
     }
 
+    return <ArchitectureLoading />;
+}
+
+function ArchitectureLoading() {
     return (
         <main
             style={{
-                width: "100%",
                 minHeight: "100vh",
-                background: "#f5f7ff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
             }}
         >
-            <iframe
-                src={architectureUrl}
-                title="Lesson Architecture"
-                style={{
-                    width: "100%",
-                    height: "100vh",
-                    border: "none",
-                    display: "block",
-                }}
-                allow="fullscreen"
-                allowFullScreen
-            />
+            <h2>Loading architecture...</h2>
         </main>
     );
 }
 
 export default function ArchitecturePage() {
     return (
-        <Suspense
-            fallback={
-                <main
-                    style={{
-                        minHeight: "100vh",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <h2>Loading architecture...</h2>
-                </main>
-            }
-        >
+        <Suspense fallback={<ArchitectureLoading />}>
             <ArchitectureContent />
         </Suspense>
     );
