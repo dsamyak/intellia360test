@@ -192,15 +192,74 @@ export async function mirrorCurriculumWrite(args: MirrorArgs): Promise<number | 
 export async function mirrorCurriculumDelete(
   paths: string[],
   updatedBy?: string | null
-): Promise<void> {
-  if (paths.length === 0) return;
+): Promise<boolean> {
+  if (paths.length === 0) return true;
   try {
     await db.curriculumDocument.updateMany({
       where: { path: { in: paths }, AND: [notDeleted()] },
       data: { deletedAt: new Date(), updatedBy: updatedBy ?? null },
     });
+    return true;
   } catch (err) {
     console.error("[curriculum-store] mirror delete failed", err);
+    return false;
+  }
+}
+
+/* ── Read-only hosts ──────────────────────────────────────────────────────── */
+
+let storeWritable: boolean | null = null;
+
+/**
+ * Whether curriculum files can be written on this host. Probed once per process.
+ *
+ * Locally they can, and the files stay the source of truth. On a read-only
+ * deployment (Vercel mounts the build output read-only) every write throws
+ * EROFS, so there the mirrored database copy has to act as the store.
+ */
+export function isStoreWritable(): boolean {
+  if (storeWritable === null) {
+    try {
+      fs.accessSync(CURRICULUM_ROOT, fs.constants.W_OK);
+      storeWritable = true;
+    } catch {
+      storeWritable = false;
+    }
+  }
+  return storeWritable;
+}
+
+/** Called when a write is refused even though the probe said the store was writable. */
+export function markStoreReadOnly(): void {
+  storeWritable = false;
+}
+
+/**
+ * The mirrored copy of one file, tombstones included. Null when the file was
+ * never mirrored or the database could not be reached.
+ */
+export async function findMirroredDocument(relPath: string) {
+  try {
+    return await db.curriculumDocument.findUnique({
+      where: { path: relPath },
+      select: { path: true, lessonId: true, content: true, deletedAt: true, version: true },
+    });
+  } catch (err) {
+    console.error("[curriculum-store] mirror read failed for", relPath, err);
+    return null;
+  }
+}
+
+/** Every mirrored document of one kind for a grade, tombstones included. */
+export async function listMirroredDocuments(gradeId: string, kind: CurriculumKind) {
+  try {
+    return await db.curriculumDocument.findMany({
+      where: { gradeId, kind },
+      select: { path: true, lessonId: true, content: true, deletedAt: true, version: true },
+    });
+  } catch (err) {
+    console.error("[curriculum-store] mirror list failed for", gradeId, kind, err);
+    return [];
   }
 }
 
