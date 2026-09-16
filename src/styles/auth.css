@@ -465,6 +465,56 @@
   height: 18px;
 }
 
+/* ── Google slot ──────────────────────────────────────────────────────────
+   Google Identity Services renders its own button and will not accept our
+   styling, so the Google cell holds two layers: the branded face we draw
+   (identical to the Microsoft and Apple buttons, and present in the
+   server-rendered HTML so the option is visible before any script runs) and
+   Google's real button stretched over it at zero opacity, which is what the
+   visitor actually clicks. `overflow: hidden` matters — GSI enforces a
+   minimum button width wider than this grid cell, and without the clip its
+   button would spill over the Microsoft cell and swallow those clicks. */
+.auth-social-slot {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.auth-social-slot .auth-social-btn {
+  width: 100%;
+}
+
+.auth-social-gsi {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  overflow: hidden;
+  /* Inert until Google's button is really in there, so a click during
+     loading does not land on nothing. */
+  pointer-events: none;
+}
+
+.auth-social-slot.is-ready .auth-social-gsi {
+  pointer-events: auto;
+}
+
+/* Sign-in in flight, or Google unavailable — dim the face and stop taking
+   clicks so the request is not fired twice. */
+.auth-social-slot.is-busy .auth-social-gsi {
+  pointer-events: none;
+}
+
+.auth-social-slot.is-busy .auth-social-btn,
+.auth-social-btn.is-unavailable {
+  opacity: .55;
+}
+
+.auth-social-btn.is-unavailable {
+  cursor: default;
+}
+
 /* ── Footer switch ───────────────────────────────────────────────────────── */
 .auth-footer-switch {
   text-align: center;

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { postLoginPath } from "@/lib/auth/roles";
@@ -141,6 +142,10 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [unverified, setUnverified] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // True once Google Identity Services has rendered its own button into the
+  // slot. Until then the branded face below is inert, so the slot never looks
+  // clickable while there is nothing behind it to click.
+  const [googleReady, setGoogleReady] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   // True once this tab starts its own sign-in, so the effect below does not
   // navigate a second time on top of completeLogin().
@@ -184,43 +189,22 @@ export default function LoginPage() {
     }
   }, [completeLogin]);
 
-  useEffect(() => {
-    if (!googleClientId) return;
-
-    const scriptId = "google-gsi";
-    if (document.getElementById(scriptId)) {
-      // Script already loaded — just initialise
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: handleGoogleCredential,
-        });
-        if (googleBtnRef.current) {
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "outline", size: "large", text: "signin_with", width: 280,
-          });
-        }
-      }
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = scriptId;
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.onload = () => {
-      if (!window.google) return;
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: handleGoogleCredential,
-      });
-      if (googleBtnRef.current) {
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          theme: "outline", size: "large", text: "signin_with", width: 280,
-        });
-      }
-    };
-    document.body.appendChild(script);
+  /**
+   * Hand the slot over to Google's own button. Runs from <Script onReady>,
+   * which fires both on first load and on every remount once the script is
+   * cached — the previous hand-rolled loader skipped the second case and left
+   * the slot empty whenever the visitor returned to /login client-side.
+   */
+  const initGoogle = useCallback(() => {
+    if (!googleClientId || !window.google || !googleBtnRef.current) return;
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback:  handleGoogleCredential,
+    });
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: "outline", size: "large", text: "signin_with", width: 280,
+    });
+    setGoogleReady(true);
   }, [googleClientId, handleGoogleCredential]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -248,6 +232,14 @@ export default function LoginPage() {
   // longer renders its own text-only logo bar or footer.
   return (
     <div className="auth-shell">
+      {googleClientId && (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onReady={initGoogle}
+          onError={() => setGoogleReady(false)}
+        />
+      )}
       {/* Body */}
       <div className="auth-body">
         {/* Left — form */}
@@ -368,28 +360,34 @@ export default function LoginPage() {
             {/* Social */}
             <div className="auth-divider"><span>or continue with</span></div>
             <div className="auth-social-row">
-              {/* Real Google Identity Services button (renders when NEXT_PUBLIC_GOOGLE_CLIENT_ID is set) */}
-              {googleClientId ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div ref={googleBtnRef} style={{ minHeight: 44 }} />
-                  {googleLoading && (
-                    <p style={{ textAlign: "center", fontSize: "0.82rem", color: "var(--color-text-muted)" }}>
-                      Signing in with Google…
-                    </p>
-                  )}
-                </div>
-              ) : (
-                // Placeholder shown when env var not set (dev without Google)
-                <button
-                  type="button"
-                  className="auth-social-btn"
-                  style={{ gridColumn: "1/-1", opacity: 0.5, cursor: "not-allowed" }}
-                  disabled
-                  title="Set NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable"
+              {/*
+                Google sits in the same grid cell as Microsoft and Apple and is
+                drawn by us, so the option is in the server-rendered markup and
+                matches Register. Google Identity Services will not let its own
+                button be restyled, so that button is laid over this one at zero
+                opacity (see .auth-social-gsi) and takes the click — the
+                credential still comes from Google's control, not ours.
+              */}
+              <div
+                className={
+                  "auth-social-slot" +
+                  (googleReady ? " is-ready" : "") +
+                  (googleLoading ? " is-busy" : "")
+                }
+              >
+                <span
+                  className={"auth-social-btn" + (googleReady ? "" : " is-unavailable")}
+                  aria-hidden={googleReady || undefined}
+                  title={
+                    googleClientId
+                      ? undefined
+                      : "Google sign-in is unavailable — NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set"
+                  }
                 >
-                  <GoogleIcon /> Google (not configured)
-                </button>
-              )}
+                  <GoogleIcon /> {googleLoading ? "Signing in…" : "Google"}
+                </span>
+                <div ref={googleBtnRef} className="auth-social-gsi" />
+              </div>
               <button type="button" className="auth-social-btn"><MicrosoftIcon /> Microsoft</button>
               <button type="button" className="auth-social-btn"><AppleIcon /> Apple</button>
             </div>
