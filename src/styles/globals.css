@@ -3,16 +3,14 @@
 @import "./teacher.css";
 
 /* ================================================================
-   Intellia360 — Global CSS
-   Global/base rules only. Page and component layout belong in
-   their respective page/layout stylesheets.
-   ================================================================= */
+   INTELLIA360 — GAMIFIED GLOBAL DESIGN SYSTEM
+   Theme: Adventure • Progress • Rewards • Energy • Play
+   ================================================================ */
 
-/*
- * Keep the reset inside Tailwind's base layer so Tailwind utilities
- * can still override base defaults. This is especially important for
- * Teacher Console buttons, spacing and text utilities.
- */
+/* =========================
+   RESET & FOUNDATION
+   ========================= */
+
 @layer base {
 
   *,
@@ -23,14 +21,11 @@
     padding: 0;
   }
 
-  /*
-   * Keep horizontal-overflow protection on html only. Applying
-   * overflow-x to body can interfere with sticky descendants.
-   */
   html {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   html,
@@ -41,16 +36,26 @@
 
   body {
     color: var(--color-text-main);
-    background-color: var(--color-bg);
+    background:
+      radial-gradient(circle at 10% 10%,
+        rgba(99, 102, 241, 0.07),
+        transparent 25%),
+      radial-gradient(circle at 90% 20%,
+        rgba(168, 85, 247, 0.06),
+        transparent 25%),
+      radial-gradient(circle at 50% 100%,
+        rgba(14, 165, 233, 0.06),
+        transparent 30%),
+      var(--color-bg);
+
     font-family: var(--font-family-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.5;
+
+    overflow-x: hidden;
   }
 
-  /*
-   * Prevent media from creating horizontal overflow.
-   */
   img,
   svg,
   video,
@@ -84,11 +89,48 @@
   textarea {
     font-family: inherit;
   }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.2);
+    color: #312e81;
+  }
 }
 
 /* ================================================================
-   Shell bases
-   ================================================================= */
+   INTELLIA360 DESIGN TOKENS
+   ================================================================ */
+
+:root {
+  --game-indigo: #6366f1;
+  --game-purple: #8b5cf6;
+  --game-violet: #7c3aed;
+  --game-blue: #3b82f6;
+  --game-cyan: #06b6d4;
+  --game-green: #22c55e;
+  --game-yellow: #facc15;
+  --game-orange: #f97316;
+  --game-pink: #ec4899;
+
+  --game-dark: #172554;
+  --game-text: #1e293b;
+  --game-muted: #64748b;
+
+  --game-card: rgba(255, 255, 255, 0.88);
+  --game-border: rgba(99, 102, 241, 0.14);
+
+  --game-shadow:
+    0 10px 30px rgba(30, 41, 59, 0.08);
+
+  --game-shadow-hover:
+    0 18px 45px rgba(79, 70, 229, 0.16);
+
+  --game-radius: 22px;
+  --game-radius-small: 14px;
+}
+
+/* ================================================================
+   MAIN SHELLS
+   ================================================================ */
 
 .student-shell,
 .teacher-shell {
@@ -96,31 +138,517 @@
   min-height: 100vh;
 }
 
+.student-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+/* subtle game-world background */
+.student-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 15% 20%,
+      rgba(99, 102, 241, 0.09) 0,
+      transparent 18%),
+    radial-gradient(circle at 85% 35%,
+      rgba(168, 85, 247, 0.08) 0,
+      transparent 18%);
+}
+
+/* floating decorative layer */
+.student-shell::after {
+  content: "";
+  position: fixed;
+  width: 280px;
+  height: 280px;
+  right: -140px;
+  bottom: 10%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+
+  background: rgba(99, 102, 241, 0.05);
+  filter: blur(5px);
+
+  animation: worldFloat 8s ease-in-out infinite;
+}
+
 /* ================================================================
-   Scrollbar
-   ================================================================= */
+   GAMIFIED TYPOGRAPHY
+   ================================================================ */
+
+.student-shell h1 {
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--game-dark);
+}
+
+.student-shell h2 {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--game-dark);
+}
+
+.student-shell h3 {
+  font-weight: 750;
+  color: var(--game-text);
+}
+
+.student-shell p {
+  color: var(--game-muted);
+}
+
+/* gradient heading utility */
+.game-gradient-text {
+  background: linear-gradient(110deg,
+      var(--game-indigo),
+      var(--game-purple),
+      var(--game-pink));
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ================================================================
+   GAMIFIED CARDS
+   ================================================================ */
+
+.game-card,
+.student-card {
+  position: relative;
+  overflow: hidden;
+
+  background: var(--game-card);
+  border: 1px solid var(--game-border);
+  border-radius: var(--game-radius);
+
+  box-shadow: var(--game-shadow);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.game-card::before,
+.student-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(135deg,
+      rgba(255, 255, 255, 0.55),
+      transparent 45%);
+
+  pointer-events: none;
+}
+
+.game-card:hover,
+.student-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: var(--game-shadow-hover);
+}
+
+/* ================================================================
+   QUEST / MISSION CARDS
+   ================================================================ */
+
+.quest-card {
+  position: relative;
+  overflow: hidden;
+
+  border-radius: 24px;
+  border: 2px solid rgba(99, 102, 241, 0.12);
+
+  background:
+    linear-gradient(145deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(245, 243, 255, 0.94));
+
+  box-shadow:
+    0 8px 25px rgba(79, 70, 229, 0.08);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.quest-card:hover {
+  transform: translateY(-8px) rotate(-0.4deg);
+
+  border-color: rgba(99, 102, 241, 0.35);
+
+  box-shadow:
+    0 18px 40px rgba(79, 70, 229, 0.17);
+}
+
+.quest-card::after {
+  content: "✦";
+
+  position: absolute;
+  top: 12px;
+  right: 16px;
+
+  font-size: 18px;
+  color: var(--game-yellow);
+
+  opacity: 0.8;
+
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* ================================================================
+   GAMIFIED BUTTONS
+   ================================================================ */
+
+.game-button,
+.student-shell button.primary,
+.student-shell .btn-primary {
+  position: relative;
+  overflow: hidden;
+
+  min-height: 44px;
+  padding: 11px 20px;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(135deg,
+      var(--game-indigo),
+      var(--game-purple));
+
+  color: white;
+  font-weight: 750;
+
+  box-shadow:
+    0 6px 0 rgba(67, 56, 202, 0.35),
+    0 10px 25px rgba(99, 102, 241, 0.2);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.game-button::before,
+.student-shell button.primary::before,
+.student-shell .btn-primary::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: -120%;
+
+  width: 80%;
+  height: 100%;
+
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent);
+
+  transform: skewX(-20deg);
+
+  transition: left 0.55s ease;
+}
+
+.game-button:hover,
+.student-shell button.primary:hover,
+.student-shell .btn-primary:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+
+  box-shadow:
+    0 8px 0 rgba(67, 56, 202, 0.35),
+    0 15px 32px rgba(99, 102, 241, 0.28);
+}
+
+.game-button:hover::before,
+.student-shell button.primary:hover::before,
+.student-shell .btn-primary:hover::before {
+  left: 130%;
+}
+
+.game-button:active,
+.student-shell button.primary:active,
+.student-shell .btn-primary:active {
+  transform: translateY(3px);
+
+  box-shadow:
+    0 3px 0 rgba(67, 56, 202, 0.35),
+    0 6px 15px rgba(99, 102, 241, 0.18);
+}
+
+/* ================================================================
+   XP / PROGRESS BARS
+   ================================================================ */
+
+.xp-bar,
+.progress-bar {
+  position: relative;
+
+  width: 100%;
+  height: 11px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e2e8f0;
+
+  box-shadow:
+    inset 0 2px 4px rgba(15, 23, 42, 0.08);
+}
+
+.xp-bar>*,
+.progress-bar>* {
+  position: relative;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(90deg,
+      var(--game-blue),
+      var(--game-indigo),
+      var(--game-purple));
+
+  box-shadow:
+    0 0 14px rgba(99, 102, 241, 0.35);
+
+  animation: progressGlow 2.5s ease-in-out infinite;
+}
+
+/* ================================================================
+   XP BADGE
+   ================================================================ */
+
+.xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(135deg,
+      #fff7ed,
+      #fef3c7);
+
+  border: 1px solid rgba(245, 158, 11, 0.25);
+
+  color: #b45309;
+
+  font-weight: 800;
+
+  box-shadow:
+    0 5px 15px rgba(245, 158, 11, 0.12);
+}
+
+/* ================================================================
+   REWARD / BADGE EFFECT
+   ================================================================ */
+
+.reward-badge {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 58px;
+  height: 58px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 30% 25%,
+      #ffffff,
+      #ddd6fe 35%,
+      #8b5cf6);
+
+  border: 3px solid white;
+
+  box-shadow:
+    0 0 0 4px rgba(139, 92, 246, 0.12),
+    0 10px 25px rgba(124, 58, 237, 0.25);
+
+  animation: badgeFloat 3s ease-in-out infinite;
+}
+
+.reward-badge::before,
+.reward-badge::after {
+  content: "✦";
+
+  position: absolute;
+
+  color: var(--game-yellow);
+  font-size: 13px;
+
+  animation: sparkle 1.8s ease-in-out infinite;
+}
+
+.reward-badge::before {
+  top: -9px;
+  right: -5px;
+}
+
+.reward-badge::after {
+  bottom: -7px;
+  left: -7px;
+  animation-delay: 0.7s;
+}
+
+/* ================================================================
+   GAMIFIED INPUTS
+   ================================================================ */
+
+.game-input,
+.student-shell input,
+.student-shell select,
+.student-shell textarea {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.game-input:focus,
+.student-shell input:focus,
+.student-shell select:focus,
+.student-shell textarea:focus {
+  outline: none;
+
+  border-color: var(--game-indigo);
+
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.11),
+    0 8px 20px rgba(99, 102, 241, 0.08);
+
+  transform: translateY(-1px);
+}
+
+/* ================================================================
+   GLASS PANELS
+   ================================================================ */
+
+.game-glass {
+  background: rgba(255, 255, 255, 0.72);
+
+  border: 1px solid rgba(255, 255, 255, 0.75);
+
+  box-shadow:
+    0 15px 40px rgba(30, 41, 59, 0.08);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border-radius: 24px;
+}
+
+/* ================================================================
+   LEVEL / STATUS CHIPS
+   ================================================================ */
+
+.level-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 11px;
+
+  border-radius: 999px;
+
+  background: #eef2ff;
+
+  color: #4338ca;
+
+  border: 1px solid rgba(99, 102, 241, 0.16);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ================================================================
+   HOVER LIFT UTILITY
+   ================================================================ */
+
+.hover-lift {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-7px);
+  box-shadow: var(--game-shadow-hover);
+}
+
+/* ================================================================
+   ICON BOUNCE
+   ================================================================ */
+
+.game-icon {
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.game-card:hover .game-icon,
+.quest-card:hover .game-icon {
+  transform: scale(1.12) rotate(-5deg);
+  filter: drop-shadow(0 6px 8px rgba(99, 102, 241, 0.2));
+}
+
+/* ================================================================
+   SCROLLBAR — GAMIFIED
+   ================================================================ */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(226, 232, 240, 0.45);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-pill);
+  background:
+    linear-gradient(180deg,
+      var(--game-indigo),
+      var(--game-purple));
+
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background:
+    linear-gradient(180deg,
+      var(--game-purple),
+      var(--game-pink));
 }
 
 /* ================================================================
-   Utilities
-   ================================================================= */
+   SAFE TEXT WRAPPING
+   ================================================================ */
 
 .sr-only {
   position: absolute;
@@ -144,13 +672,99 @@
 }
 
 /* ================================================================
-   Common animations
-   ================================================================= */
+   PAGE ENTRANCE
+   ================================================================ */
+
+.animate-page {
+  animation: pageEnter 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-card {
+  animation: cardEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ================================================================
+   GAMIFIED ANIMATIONS
+   ================================================================ */
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes worldFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-25px) scale(1.05);
+  }
+}
+
+@keyframes badgeFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-7px) rotate(2deg);
+  }
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8) rotate(0deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.25) rotate(20deg);
+  }
+}
+
+@keyframes progressGlow {
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.12);
+  }
+}
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
 
   to {
@@ -162,7 +776,7 @@
 @keyframes slideUpPopup {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.95);
+    transform: translateY(16px) scale(0.94);
   }
 
   to {
@@ -174,7 +788,7 @@
 @keyframes pulse-ring {
   0% {
     transform: scale(0.8);
-    opacity: 1;
+    opacity: 0.8;
   }
 
   100% {
@@ -191,4 +805,336 @@
   100% {
     background-position: 200% center;
   }
+}
+
+/* ================================================================
+   STAGGERED CARD ANIMATION
+   ================================================================ */
+
+.student-shell .game-card:nth-child(1),
+.student-shell .quest-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.student-shell .game-card:nth-child(2),
+.student-shell .quest-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.student-shell .game-card:nth-child(3),
+.student-shell .quest-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.student-shell .game-card:nth-child(4),
+.student-shell .quest-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+/* ================================================================
+   MOBILE
+   ================================================================ */
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .student-shell {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .student-shell h1 {
+    font-size: clamp(1.7rem, 7vw, 2.2rem);
+  }
+
+  .student-shell h2 {
+    font-size: clamp(1.35rem, 5vw, 1.8rem);
+  }
+
+  .game-card,
+  .student-card,
+  .quest-card {
+    border-radius: 18px;
+  }
+
+  .game-button {
+    min-height: 42px;
+    padding: 10px 16px;
+  }
+}
+
+/* ================================================================
+   REDUCED MOTION — ACCESSIBILITY
+   ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   INTELLIA360 — RESPONSIVE HEADER
+   Desktop → Tablet → Mobile
+   ============================================================ */
+
+/* ---------- TABLET ---------- */
+@media (max-width: 1100px) {
+
+  .home-page .header-inner {
+    min-height: 82px;
+    gap: 18px;
+    padding-inline: 24px;
+  }
+
+  .home-page .home-logo-image {
+    width: 105px;
+    height: 48px;
+  }
+
+  .home-page .desktop-nav {
+    gap: 8px;
+  }
+
+  .home-page .header-nav-link,
+  .home-page .header-dropdown-trigger {
+    font-size: 14px;
+    padding-inline: 8px;
+  }
+
+  .home-page .header-actions {
+    gap: 8px;
+  }
+}
+
+
+/* ============================================================
+   TABLET / SMALL LAPTOP
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+  .home-page .header-main {
+    height: auto !important;
+    min-height: 70px !important;
+  }
+
+  .home-page .header-inner {
+    min-height: 70px;
+    width: 100%;
+    padding: 10px 20px;
+    gap: 12px;
+  }
+
+  /* Logo */
+  .home-page .home-logo {
+    flex-shrink: 0;
+  }
+
+  .home-page .home-logo-image {
+    width: 110px;
+    height: 46px;
+  }
+
+  /* Hide desktop navigation */
+  .home-page .desktop-nav {
+    display: none !important;
+  }
+
+  /* Keep actions visible */
+  .home-page .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  /* Hide desktop dropdown */
+  .home-page .header-mega-menu {
+    display: none !important;
+  }
+
+  /* Prevent dropdown from affecting header */
+  .home-page .header-mega-dropdown {
+    display: none !important;
+  }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+  .home-page .header-main {
+    min-height: 64px !important;
+  }
+
+  .home-page .header-inner {
+    min-height: 64px;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+
+  .home-page .home-logo-image {
+    width: 100px;
+    height: 42px;
+  }
+
+  .home-page .header-actions {
+    gap: 6px;
+  }
+
+  .home-page .header-login-btn {
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .home-page .header-signup-btn {
+    min-height: 38px;
+    padding: 0 13px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  /* Mobile menu button */
+  .home-page .mobile-menu-btn,
+  .home-page .header-mobile-menu-btn,
+  .home-page .hamburger-btn {
+    width: 40px;
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+
+    color: #2563eb;
+
+    font-size: 21px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+      background .2s ease,
+      transform .2s ease,
+      box-shadow .2s ease;
+  }
+
+  .home-page .mobile-menu-btn:hover,
+  .home-page .header-mobile-menu-btn:hover,
+  .home-page .hamburger-btn:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(37, 99, 235, .12);
+  }
+}
+
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+  .home-page .header-inner {
+    padding: 7px 11px;
+  }
+
+  .home-page .home-logo-image {
+    width: 88px;
+    height: 38px;
+  }
+
+  .home-page .header-actions {
+    gap: 4px;
+  }
+
+  .home-page .header-login-btn {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .home-page .header-signup-btn {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .home-page .mobile-menu-btn,
+  .home-page .header-mobile-menu-btn,
+  .home-page .hamburger-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 19px;
+  }
+}
+
+
+/* ============================================================
+   EXTRA SMALL DEVICES
+   ============================================================ */
+
+@media (max-width: 360px) {
+
+  .home-page .home-logo-image {
+    width: 80px;
+  }
+
+  .home-page .header-login-btn {
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .home-page .header-signup-btn {
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+}
+
+
+/* ============================================================
+   TOUCH DEVICES
+   ============================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+
+  .home-page .header-nav-link,
+  .home-page .header-dropdown-trigger,
+  .home-page .mobile-menu-btn,
+  .home-page .hamburger-btn {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+
+/* ============================================================
+   PREVENT HORIZONTAL OVERFLOW
+   ============================================================ */
+
+.home-page .header-main,
+.home-page .header-inner {
+  max-width: 100%;
+  overflow: visible;
+}
+
+.home-page .header-inner>* {
+  min-width: 0;
 }

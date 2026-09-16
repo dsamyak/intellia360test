@@ -1,143 +1,529 @@
-/* Student Dashboard responsive layout helpers.
-   Keep this file beside dashboard/page.tsx. */
-
 /* =========================================================
-   DASHBOARD WIDTH / OVERFLOW
+   INTELLIA360 — STUDENT DASHBOARD
+   Premium Gamified / Quest UI
+   File:
+   src/app/student/dashboard/dashboard.css
    ========================================================= */
 
-.student-dashboard-page,
-.student-dashboard-page * {
-    min-width: 0;
-}
-
-.student-dashboard-page {
-    width: 100%;
-    max-width: 1280px;
-    margin-inline: auto;
-    overflow-x: clip;
-    box-sizing: border-box;
-}
-
-.student-dashboard-stats-grid,
-.student-dashboard-progress-grid,
-.student-dashboard-learning-hub,
-.student-dashboard-bottom-grid {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-}
-
-.student-dashboard-stats-grid>*,
-.student-dashboard-progress-grid>*,
-.student-dashboard-learning-hub>*,
-.student-dashboard-bottom-grid>* {
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
-}
 
 /* =========================================================
-   IMPORTANT:
-   DASHBOARD SCROLLS — SIDEBAR DOES NOT
-   The page shell/body stay fixed to viewport height.
-   Only .student-main-content gets vertical scrolling.
+   1. PAGE FOUNDATION
+   ========================================================= */
+
+.student-dashboard-page {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 18px 40px !important;
+    isolation: isolate;
+}
+
+.student-dashboard-page::before {
+    content: "";
+    position: fixed;
+    width: 420px;
+    height: 420px;
+    top: 80px;
+    right: -180px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle,
+            rgba(124, 58, 237, 0.10) 0%,
+            rgba(59, 130, 246, 0.04) 45%,
+            transparent 72%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.student-dashboard-page::after {
+    content: "";
+    position: fixed;
+    width: 350px;
+    height: 350px;
+    bottom: 0;
+    left: -160px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle,
+            rgba(6, 182, 212, 0.08) 0%,
+            transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+
+/* =========================================================
+   2. DASHBOARD SECTIONS
+   ========================================================= */
+
+.student-dashboard-page section {
+    position: relative;
+}
+
+.student-dashboard-page h1,
+.student-dashboard-page h2,
+.student-dashboard-page h3,
+.student-dashboard-page h4 {
+    letter-spacing: -0.025em;
+}
+
+.student-dashboard-page p {
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   3. HERO / ADVENTURE AREA
+   ========================================================= */
+
+.student-dashboard-page>section:first-of-type {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+}
+
+.student-dashboard-page>section:first-of-type::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 85% 15%,
+            rgba(255, 255, 255, 0.18),
+            transparent 28%),
+        radial-gradient(circle at 10% 90%,
+            rgba(255, 255, 255, 0.10),
+            transparent 25%);
+    z-index: 2;
+}
+
+
+/* =========================================================
+   4. STATS — XP / GEMS / STREAK / LESSONS
+   ========================================================= */
+
+.student-dashboard-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin-top: 20px !important;
+}
+
+.student-dashboard-stats-grid>* {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgba(124, 58, 237, 0.10) !important;
+    border-radius: 22px !important;
+    background:
+        linear-gradient(145deg,
+            rgba(255, 255, 255, 0.98),
+            rgba(248, 250, 252, 0.95)) !important;
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.07),
+        0 2px 6px rgba(15, 23, 42, 0.04) !important;
+    transition:
+        transform 0.28s ease,
+        box-shadow 0.28s ease,
+        border-color 0.28s ease;
+}
+
+.student-dashboard-stats-grid>*::before {
+    content: "";
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    top: -45px;
+    right: -35px;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.student-dashboard-stats-grid>*:hover {
+    transform: translateY(-6px);
+    border-color: rgba(124, 58, 237, 0.22) !important;
+    box-shadow:
+        0 18px 38px rgba(15, 23, 42, 0.11),
+        0 0 0 1px rgba(124, 58, 237, 0.05) !important;
+}
+
+
+/* =========================================================
+   5. MAIN CONTENT GRIDS
+   ========================================================= */
+
+.student-dashboard-progress-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.student-dashboard-learning-hub {
+    margin-top: 22px;
+}
+
+.student-dashboard-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.85fr);
+    gap: 18px;
+    margin-top: 22px;
+}
+
+
+/* =========================================================
+   6. GENERIC GAMIFIED PANELS
+   ========================================================= */
+
+.student-dashboard-page .dashboard-card,
+.student-dashboard-page .learning-panel,
+.student-dashboard-page .progress-panel,
+.student-dashboard-page .achievement-panel {
+    position: relative;
+    border: 1px solid rgba(124, 58, 237, 0.10);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow:
+        0 12px 32px rgba(15, 23, 42, 0.07);
+}
+
+
+/* =========================================================
+   7. LEARNING HUB
+   ========================================================= */
+
+.student-dashboard-learning-hub {
+    position: relative;
+}
+
+.student-dashboard-learning-hub::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 28px;
+    pointer-events: none;
+    background:
+        linear-gradient(120deg,
+            rgba(124, 58, 237, 0.08),
+            transparent 35%,
+            rgba(6, 182, 212, 0.07));
+}
+
+.student-dashboard-learning-hub>* {
+    position: relative;
+}
+
+
+/* Resource cards */
+.student-dashboard-learning-hub a,
+.student-dashboard-learning-hub button {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+}
+
+.student-dashboard-learning-hub a:hover,
+.student-dashboard-learning-hub button:hover {
+    transform: translateY(-7px) scale(1.01);
+    filter: saturate(1.08);
+    box-shadow:
+        0 18px 35px rgba(15, 23, 42, 0.14);
+}
+
+
+/* =========================================================
+   8. UPCOMING ACTIVITIES
+   ========================================================= */
+
+.student-dashboard-page [class*="upcoming"] {
+    transition: transform 0.25s ease;
+}
+
+.student-dashboard-page [class*="upcoming"]>* {
+    transition:
+        transform 0.22s ease,
+        background 0.22s ease;
+}
+
+.student-dashboard-page [class*="upcoming"]>*:hover {
+    transform: translateX(5px);
+}
+
+
+/* =========================================================
+   9. ACHIEVEMENTS
+   ========================================================= */
+
+.student-dashboard-page [class*="achievement"] {
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.student-dashboard-page [class*="achievement"]:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 14px 28px rgba(15, 23, 42, 0.10);
+}
+
+
+/* =========================================================
+   10. PROGRESS / XP VISUALS
+   ========================================================= */
+
+.student-dashboard-page [role="progressbar"] {
+    overflow: hidden;
+    border-radius: 999px;
+}
+
+.student-dashboard-page [role="progressbar"]>* {
+    position: relative;
+    overflow: hidden;
+}
+
+.student-dashboard-page [role="progressbar"]>*::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.40),
+            transparent);
+    animation: dashboardShimmer 2.4s infinite;
+}
+
+
+/* =========================================================
+   11. BUTTONS / CTA
+   ========================================================= */
+
+.student-dashboard-page button,
+.student-dashboard-page a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.student-dashboard-page button:not(:disabled):active,
+.student-dashboard-page a:active {
+    transform: scale(0.97);
+}
+
+.student-dashboard-page button:focus-visible,
+.student-dashboard-page a:focus-visible {
+    outline: 3px solid rgba(124, 58, 237, 0.28);
+    outline-offset: 3px;
+}
+
+
+/* =========================================================
+   12. QUEST / REWARD FEEL
+   ========================================================= */
+
+.student-dashboard-page [class*="reward"],
+.student-dashboard-page [class*="xp"],
+.student-dashboard-page [class*="gem"] {
+    position: relative;
+}
+
+.student-dashboard-page [class*="xp"]::after,
+.student-dashboard-page [class*="gem"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        linear-gradient(120deg,
+            transparent 20%,
+            rgba(255, 255, 255, 0.18),
+            transparent 70%);
+}
+
+
+/* =========================================================
+   13. SIDEBAR
+   ========================================================= */
+
+.student-sidebar-container {
+    flex: 0 0 200px;
+    width: 200px;
+}
+
+.student-sidebar-topic {
+    position: relative;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.student-sidebar-topic:hover {
+    transform: translateX(3px);
+    background: rgba(124, 58, 237, 0.055) !important;
+}
+
+
+/* Active topic — quest style */
+.student-sidebar-topic.active {
+    color: #4c1d95 !important;
+    background:
+        linear-gradient(135deg,
+            #f5f3ff,
+            #ede9fe) !important;
+    border: 1px solid #c4b5fd !important;
+    box-shadow:
+        inset 4px 0 0 #7c3aed,
+        0 7px 18px rgba(124, 58, 237, 0.12) !important;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-title {
+    color: #4c1d95 !important;
+    font-weight: 800 !important;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-current {
+    color: #5b21b6 !important;
+    background: #ffffff !important;
+    border: 1px solid #c4b5fd !important;
+    font-weight: 900 !important;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-dot {
+    color: #fff !important;
+    background:
+        linear-gradient(135deg,
+            #7c3aed,
+            #4f46e5) !important;
+    box-shadow:
+        0 0 0 3px #ddd6fe,
+        0 0 16px rgba(124, 58, 237, 0.35) !important;
+}
+
+
+/* =========================================================
+   14. DASHBOARD BODY / SCROLLING
    ========================================================= */
 
 .student-shell {
-    height: 100vh !important;
-    min-height: 100vh !important;
-    overflow: hidden !important;
+    width: 100%;
+    min-height: 100vh;
 }
 
 .student-body {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: stretch !important;
-    width: 100% !important;
-    height: calc(100vh - 72px) !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
+    display: flex;
+    width: 100%;
+    min-height: 0;
 }
 
-/* Keep sidebar fixed while dashboard content scrolls. */
-.student-sidebar-container {
-    position: sticky !important;
-    top: 0 !important;
-    align-self: flex-start !important;
-
-    flex: 0 0 200px !important;
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-
-    height: calc(100vh - 72px) !important;
-    min-height: calc(100vh - 72px) !important;
-    max-height: calc(100vh - 72px) !important;
-
-    overflow: hidden !important;
-    z-index: 20 !important;
-}
-
-/* Only chapter/topic navigation can scroll inside sidebar. */
 .student-sidebar-scroll-area {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* Grade card stays at bottom and is not part of scroll area. */
-.student-sidebar-footer {
-    flex: 0 0 auto !important;
-    position: relative !important;
-    z-index: 30 !important;
-    margin-top: 0 !important;
-}
-
-/* Main dashboard is the ONLY page scroller. */
 .student-main-content {
-    flex: 1 1 auto !important;
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-
-    height: calc(100vh - 72px) !important;
-    min-height: 0 !important;
-
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    -webkit-overflow-scrolling: touch;
-
-    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
-/* Prevent child sections/cards from creating another horizontal overflow. */
-.student-main-content>*,
-.student-main-content section,
-.student-main-content main,
-.student-main-content article {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-}
-
-.student-main-content [class*="grid"],
-.student-main-content [class*="Grid"],
-.student-main-content [class*="row"],
-.student-main-content [class*="Row"],
-.student-main-content table {
-    min-width: 0 !important;
-    max-width: 100% !important;
-}
-
-/* Dashboard itself should not become a second scroll container. */
-.student-dashboard-page {
-    min-height: 0 !important;
-}
 
 /* =========================================================
-   DASHBOARD GRIDS
+   15. SCROLLBAR
+   ========================================================= */
+
+.student-main-content::-webkit-scrollbar,
+.student-sidebar-scroll-area::-webkit-scrollbar {
+    width: 7px;
+}
+
+.student-main-content::-webkit-scrollbar-track,
+.student-sidebar-scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.student-main-content::-webkit-scrollbar-thumb,
+.student-sidebar-scroll-area::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background:
+        linear-gradient(180deg,
+            #a78bfa,
+            #6366f1);
+}
+
+.student-main-content::-webkit-scrollbar-thumb:hover,
+.student-sidebar-scroll-area::-webkit-scrollbar-thumb:hover {
+    background:
+        linear-gradient(180deg,
+            #7c3aed,
+            #4f46e5);
+}
+
+
+/* =========================================================
+   16. ANIMATIONS
+   ========================================================= */
+
+@keyframes dashboardShimmer {
+    0% {
+        transform: translateX(-130%);
+    }
+
+    100% {
+        transform: translateX(320%);
+    }
+}
+
+@keyframes dashboardFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes dashboardGlow {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 rgba(124, 58, 237, 0);
+    }
+
+    50% {
+        box-shadow:
+            0 0 25px rgba(124, 58, 237, 0.16);
+    }
+}
+
+
+/* =========================================================
+   17. DESKTOP
+   ========================================================= */
+
+@media (min-width: 1200px) {
+    .student-dashboard-page {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+
+    .student-dashboard-stats-grid {
+        gap: 18px !important;
+    }
+}
+
+
+/* =========================================================
+   18. TABLET
    ========================================================= */
 
 @media (max-width: 1100px) {
@@ -145,209 +531,147 @@
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    .student-dashboard-progress-grid {
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .student-dashboard-learning-hub>div:nth-child(2) {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
+    .student-dashboard-progress-grid,
     .student-dashboard-bottom-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-
-    .student-dashboard-bottom-grid> :last-child {
-        grid-column: 1 / -1;
-    }
-}
-
-/* =========================================================
-   TABLET
-   ========================================================= */
-
-@media (max-width: 900px) {
-    .student-body {
-        height: calc(100vh - 64px) !important;
+        grid-template-columns: 1fr;
     }
 
     .student-sidebar-container {
-        flex-basis: 72px !important;
-        width: 72px !important;
-        min-width: 72px !important;
-        max-width: 72px !important;
-
-        height: calc(100vh - 64px) !important;
-        min-height: calc(100vh - 64px) !important;
-        max-height: calc(100vh - 64px) !important;
-    }
-
-    .student-main-content {
-        height: calc(100vh - 64px) !important;
-        padding: 16px !important;
+        flex-basis: 72px;
+        width: 72px;
     }
 }
 
+
 /* =========================================================
-   MOBILE
+   19. SMALL TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .student-dashboard-page {
+        padding: 0 14px 30px !important;
+    }
+
+    .student-dashboard-learning-hub {
+        margin-top: 18px;
+    }
+}
+
+
+/* =========================================================
+   20. MOBILE
    ========================================================= */
 
 @media (max-width: 768px) {
     .student-dashboard-page {
-        max-width: 100%;
-        padding-inline: 12px !important;
+        padding: 0 12px 28px !important;
     }
 
-    .student-dashboard-stats-grid,
+    .student-dashboard-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        margin-top: 14px !important;
+    }
+
     .student-dashboard-progress-grid,
     .student-dashboard-bottom-grid {
-        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-top: 16px;
     }
 
-    .student-dashboard-learning-hub>div:nth-child(2) {
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .student-dashboard-bottom-grid> :last-child {
-        grid-column: auto;
-    }
-
-    .student-dashboard-progress-grid>div>div:nth-child(2) {
-        flex-wrap: wrap;
-    }
-
-    .student-dashboard-page img,
-    .student-dashboard-page svg,
-    .student-dashboard-page video,
-    .student-dashboard-page iframe {
-        max-width: 100%;
-    }
-
-    /* Sidebar remains a fixed icon rail. */
     .student-sidebar-container {
-        flex-basis: 72px !important;
-        width: 72px !important;
-        min-width: 72px !important;
-        max-width: 72px !important;
+        flex-basis: 72px;
+        width: 72px;
+    }
+
+    .student-main-content {
+        width: 100%;
+    }
+
+    .student-dashboard-page>section:first-of-type {
+        border-radius: 22px;
     }
 }
 
+
 /* =========================================================
-   SMALL MOBILE
+   21. SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 600px) {
     .student-dashboard-page {
-        padding-inline: 10px !important;
+        padding: 0 10px 24px !important;
     }
 
-    .student-dashboard-stats-grid,
-    .student-dashboard-progress-grid,
-    .student-dashboard-learning-hub,
-    .student-dashboard-bottom-grid {
-        gap: 12px !important;
+    .student-dashboard-stats-grid {
+        gap: 10px !important;
     }
 
-    .student-dashboard-progress-grid>div,
-    .student-dashboard-bottom-grid>div,
-    .student-dashboard-learning-hub {
-        padding: 14px !important;
-    }
-
-    .student-dashboard-progress-grid>div>div:nth-child(2) {
-        flex-direction: column;
-        align-items: flex-start !important;
+    .student-dashboard-stats-grid>* {
+        border-radius: 18px !important;
     }
 }
 
+
+/* =========================================================
+   22. VERY SMALL MOBILE
+   ========================================================= */
+
 @media (max-width: 480px) {
+    .student-dashboard-stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
     .student-dashboard-page {
-        padding-inline: 8px !important;
-    }
-
-    .student-dashboard-learning-hub {
-        border-radius: 16px !important;
-    }
-
-    .student-body {
-        height: calc(100vh - 60px) !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
     }
 
     .student-sidebar-container {
-        flex-basis: 58px !important;
-        width: 58px !important;
-        min-width: 58px !important;
-        max-width: 58px !important;
-
-        height: calc(100vh - 60px) !important;
-        min-height: calc(100vh - 60px) !important;
-        max-height: calc(100vh - 60px) !important;
+        flex-basis: 58px;
+        width: 58px;
     }
 
-    .student-main-content {
-        height: calc(100vh - 60px) !important;
+    .student-dashboard-page>section:first-of-type {
+        border-radius: 18px;
     }
 }
 
+
 /* =========================================================
-   SCROLLBAR
+   23. TOUCH DEVICES
    ========================================================= */
 
-.student-main-content {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.32) transparent;
+@media (hover: none) {
+    .student-dashboard-stats-grid>*:hover {
+        transform: none;
+    }
+
+    .student-dashboard-learning-hub a:hover,
+    .student-dashboard-learning-hub button:hover {
+        transform: none;
+        filter: none;
+    }
+
+    .student-sidebar-topic:hover {
+        transform: none;
+    }
 }
 
-.student-main-content::-webkit-scrollbar {
-    width: 7px;
-}
-
-.student-main-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.student-main-content::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.32);
-    border-radius: 999px;
-}
 
 /* =========================================================
-   REDUCED MOTION
+   24. ACCESSIBILITY
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
-    .student-sidebar-container,
-    .student-main-content {
+    *,
+    *::before,
+    *::after {
         scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
-}
-
-/* ===== CURRENT LESSON — VISIBLE TEXT ===== */
-
-.student-sidebar-topic.active {
-    color: #7c2d12 !important;
-    background: #fff3e8 !important;
-    border: 1px solid #fb923c !important;
-    box-shadow:
-        inset 3px 0 0 #f97316,
-        0 4px 10px rgba(249, 115, 22, 0.12) !important;
-}
-
-.student-sidebar-topic.active .student-sidebar-topic-title {
-    color: #7c2d12 !important;
-    font-weight: 800 !important;
-}
-
-.student-sidebar-topic.active .student-sidebar-topic-current {
-    color: #9a3412 !important;
-    background: #ffffff !important;
-    border: 1px solid #fdba74 !important;
-    font-weight: 900 !important;
-}
-
-.student-sidebar-topic.active .student-sidebar-topic-dot {
-    color: #ffffff !important;
-    background: #f97316 !important;
-    box-shadow: 0 0 0 2px #fed7aa !important;
 }
