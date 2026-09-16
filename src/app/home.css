@@ -13555,3 +13555,632 @@
         flex: 1 1 100%;
     }
 }
+
+/* ============================================================
+   INTELLIA360 — STUDENT DASHBOARD
+   GAMIFIED EXPERIENCE / WOW UI
+   Add this section at the VERY END of globals.css
+   ============================================================ */
+
+.student-dashboard-page {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 24px;
+    overflow-x: hidden;
+
+    background:
+        radial-gradient(circle at 5% 5%,
+            rgba(99, 102, 241, 0.13),
+            transparent 25%),
+        radial-gradient(circle at 95% 10%,
+            rgba(168, 85, 247, 0.12),
+            transparent 25%),
+        radial-gradient(circle at 50% 100%,
+            rgba(6, 182, 212, 0.08),
+            transparent 28%),
+        #f7f9ff;
+
+    color: #172554;
+}
+
+
+/* ============================================================
+   DASHBOARD BACKGROUND DECORATION
+   ============================================================ */
+
+.student-dashboard-page::before,
+.student-dashboard-page::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.student-dashboard-page::before {
+    width: 320px;
+    height: 320px;
+    top: 120px;
+    right: -160px;
+
+    background: rgba(124, 58, 237, 0.08);
+    filter: blur(40px);
+}
+
+.student-dashboard-page::after {
+    width: 260px;
+    height: 260px;
+    bottom: 80px;
+    left: -130px;
+
+    background: rgba(14, 165, 233, 0.08);
+    filter: blur(40px);
+}
+
+
+/* ============================================================
+   ALL DASHBOARD CONTENT ABOVE BACKGROUND
+   ============================================================ */
+
+.student-dashboard-page>* {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ============================================================
+   STATS GRID
+   ============================================================ */
+
+.student-dashboard-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+
+.student-dashboard-stats-grid>* {
+    position: relative;
+    overflow: hidden;
+
+    border: 1px solid rgba(99, 102, 241, 0.10) !important;
+    border-radius: 22px !important;
+
+    background:
+        linear-gradient(145deg,
+            rgba(255, 255, 255, .98),
+            rgba(248, 250, 255, .96)) !important;
+
+    box-shadow:
+        0 10px 30px rgba(30, 41, 59, 0.07),
+        0 2px 7px rgba(99, 102, 241, 0.05) !important;
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+}
+
+.student-dashboard-stats-grid>*::before {
+    content: "";
+    position: absolute;
+
+    width: 100px;
+    height: 100px;
+
+    right: -45px;
+    top: -45px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(135deg,
+            rgba(99, 102, 241, .10),
+            rgba(168, 85, 247, .03));
+}
+
+.student-dashboard-stats-grid>*:hover {
+    transform: translateY(-5px);
+
+    border-color: rgba(99, 102, 241, 0.20) !important;
+
+    box-shadow:
+        0 18px 38px rgba(30, 41, 59, 0.11),
+        0 5px 15px rgba(99, 102, 241, 0.08) !important;
+}
+
+
+/* ============================================================
+   STAT ICONS
+   ============================================================ */
+
+.student-dashboard-stats-grid>* [class*="icon"] {
+    position: relative;
+    z-index: 2;
+
+    box-shadow:
+        0 7px 16px rgba(15, 23, 42, 0.08);
+
+    transition:
+        transform .25s ease;
+}
+
+.student-dashboard-stats-grid>*:hover [class*="icon"] {
+    transform: scale(1.08) rotate(-4deg);
+}
+
+
+/* ============================================================
+   PROGRESS SECTION
+   ============================================================ */
+
+.student-dashboard-progress-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, .85fr);
+    gap: 16px;
+    margin-top: 18px;
+}
+
+
+/* ============================================================
+   GAMIFIED PANELS
+   ============================================================ */
+
+.student-dashboard-progress-grid>*,
+.student-dashboard-bottom-grid>* {
+    position: relative;
+    overflow: hidden;
+
+    border: 1px solid rgba(99, 102, 241, 0.10) !important;
+    border-radius: 24px !important;
+
+    background: rgba(255, 255, 255, .94) !important;
+
+    box-shadow:
+        0 12px 32px rgba(15, 23, 42, .065);
+
+    backdrop-filter: blur(12px);
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease;
+}
+
+.student-dashboard-progress-grid>*:hover,
+.student-dashboard-bottom-grid>*:hover {
+    box-shadow:
+        0 18px 40px rgba(15, 23, 42, .10);
+}
+
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+
+.student-dashboard-page [class*="progress"] {
+    transition: width .7s cubic-bezier(.22, 1, .36, 1);
+}
+
+
+/* ============================================================
+   LEARNING HUB
+   ============================================================ */
+
+.student-dashboard-learning-hub {
+    position: relative;
+    margin-top: 22px;
+    padding: 2px 0;
+}
+
+.student-dashboard-learning-hub::before {
+    content: "";
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    top: -70px;
+    right: 10%;
+
+    border-radius: 50%;
+
+    background: rgba(124, 58, 237, .07);
+    filter: blur(35px);
+
+    pointer-events: none;
+}
+
+
+.student-dashboard-learning-hub h2 {
+    color: #172554;
+    font-weight: 900;
+    letter-spacing: -0.4px;
+}
+
+
+/* ============================================================
+   LEARNING HUB GRID
+   ============================================================ */
+
+.learning-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+
+/* ============================================================
+   RESOURCE CARDS
+   ============================================================ */
+
+.learning-hub-grid>* {
+    position: relative;
+    min-height: 190px;
+
+    overflow: hidden;
+
+    border-radius: 23px !important;
+
+    box-shadow:
+        0 13px 28px rgba(15, 23, 42, .12);
+
+    transition:
+        transform .28s cubic-bezier(.22, 1, .36, 1),
+        box-shadow .28s ease;
+}
+
+.learning-hub-grid>*::before {
+    content: "";
+
+    position: absolute;
+
+    width: 150px;
+    height: 150px;
+
+    right: -60px;
+    top: -60px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, .13);
+}
+
+.learning-hub-grid>*::after {
+    content: "";
+
+    position: absolute;
+
+    width: 70px;
+    height: 70px;
+
+    left: -30px;
+    bottom: -30px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, .08);
+}
+
+.learning-hub-grid>*:hover {
+    transform: translateY(-8px) scale(1.015);
+
+    box-shadow:
+        0 22px 42px rgba(15, 23, 42, .18);
+}
+
+
+/* ============================================================
+   RESOURCE ICON
+   ============================================================ */
+
+.learning-hub-grid>* [class*="icon"] {
+    transition:
+        transform .3s ease,
+        box-shadow .3s ease;
+}
+
+.learning-hub-grid>*:hover [class*="icon"] {
+    transform: translateY(-3px) rotate(3deg) scale(1.07);
+
+    box-shadow:
+        0 10px 22px rgba(0, 0, 0, .12);
+}
+
+
+/* ============================================================
+   RESOURCE BUTTON
+   ============================================================ */
+
+.learning-hub-grid>* a {
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.learning-hub-grid>* a:hover {
+    transform: translateX(4px);
+
+    box-shadow:
+        0 7px 15px rgba(15, 23, 42, .12);
+}
+
+
+/* ============================================================
+   BOTTOM GRID
+   ============================================================ */
+
+.student-dashboard-bottom-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.05fr) minmax(0, .95fr) minmax(0, .95fr);
+
+    gap: 16px;
+
+    margin-top: 20px;
+}
+
+
+/* ============================================================
+   ACTIVITY ITEMS
+   ============================================================ */
+
+.student-dashboard-page [class*="activity"] {
+    transition:
+        transform .2s ease,
+        background .2s ease;
+}
+
+.student-dashboard-page [class*="activity"]:hover {
+    transform: translateX(4px);
+}
+
+
+/* ============================================================
+   ACHIEVEMENT ITEMS
+   ============================================================ */
+
+.student-dashboard-page [class*="achievement"] {
+    transition:
+        transform .2s ease,
+        background .2s ease;
+}
+
+.student-dashboard-page [class*="achievement"]:hover {
+    transform: translateX(4px);
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.student-dashboard-page a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.student-dashboard-page a[class*="button"] {
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.student-dashboard-page a[class*="button"]:hover {
+    transform: translateY(-2px);
+}
+
+
+/* ============================================================
+   FLOATING ANIMATION
+   ============================================================ */
+
+@keyframes studentDashboardFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+
+/* ============================================================
+   GLOW PULSE
+   ============================================================ */
+
+@keyframes studentDashboardGlow {
+
+    0%,
+    100% {
+        opacity: .55;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: .9;
+        transform: scale(1.06);
+    }
+}
+
+
+/* ============================================================
+   HERO / DASHBOARD VISUAL
+   ============================================================ */
+
+.student-dashboard-page [class*="hero"] {
+    position: relative;
+}
+
+.student-dashboard-page [class*="hero"]::after {
+    content: "";
+
+    position: absolute;
+
+    width: 90px;
+    height: 90px;
+
+    top: 15px;
+    right: 12%;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle,
+            rgba(255, 255, 255, .35),
+            transparent 70%);
+
+    pointer-events: none;
+
+    animation:
+        studentDashboardGlow 3s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   ACTIVE SIDEBAR TOPIC
+   ============================================================ */
+
+.student-sidebar-topic.active {
+    position: relative;
+
+    color: #5b21b6 !important;
+
+    background:
+        linear-gradient(135deg,
+            #f5f3ff,
+            #ede9fe) !important;
+
+    border: 1px solid #c4b5fd !important;
+
+    box-shadow:
+        inset 4px 0 0 #7c3aed,
+        0 7px 18px rgba(124, 58, 237, .10) !important;
+
+    transform: translateX(2px);
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-title {
+    color: #5b21b6 !important;
+    font-weight: 900 !important;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-current {
+    color: #6d28d9 !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #c4b5fd !important;
+
+    font-weight: 900 !important;
+}
+
+.student-sidebar-topic.active .student-sidebar-topic-dot {
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(135deg,
+            #7c3aed,
+            #a855f7) !important;
+
+    box-shadow:
+        0 0 0 3px #ede9fe,
+        0 5px 12px rgba(124, 58, 237, .25) !important;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .learning-hub-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .student-dashboard-bottom-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 900px) {
+
+    .student-dashboard-progress-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-dashboard-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .student-dashboard-page {
+        padding: 16px;
+    }
+
+    .student-dashboard-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .learning-hub-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .student-dashboard-page {
+        padding: 12px;
+    }
+
+    .student-dashboard-stats-grid {
+        gap: 8px;
+    }
+
+    .student-dashboard-stats-grid>* {
+        border-radius: 18px !important;
+    }
+
+    .student-dashboard-progress-grid>*,
+    .student-dashboard-bottom-grid>* {
+        border-radius: 19px !important;
+    }
+
+    .learning-hub-grid>* {
+        min-height: 175px;
+        border-radius: 19px !important;
+    }
+}
+
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .student-dashboard-page *,
+    .student-dashboard-page *::before,
+    .student-dashboard-page *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
