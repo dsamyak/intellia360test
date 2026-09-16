@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { config } from 'dotenv';
 import { PrismaClient, Role, AssignmentStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -28,14 +29,40 @@ if (!process.env.DATABASE_URL) {
 // the right owner with no setup; the password is read from the environment so no
 // admin credential is ever committed to the repository.
 //
-// Set ADMIN_PASSWORD in .env.local (gitignored). Without it the seed falls back
-// to the shared demo password and says so, which is fine for a throwaway demo
-// database and wrong for anything else.
-const DEMO_PASSWORD = 'Password123!';
+// Set ADMIN_PASSWORD in .env.local (gitignored). There is deliberately no
+// fallback: a literal password in this file is a published password once the
+// repository is readable by anyone, so the seed refuses to run without one
+// rather than quietly granting ADMIN a credential an attacker can look up.
+
+/**
+ * A password no one has to keep secret in advance because nothing but this run
+ * knows it. Satisfies PasswordSchema in src/lib/auth/validation.ts: >= 8 chars,
+ * a letter, a digit and a symbol — the suffix guarantees all three regardless
+ * of what the random segment happens to contain.
+ */
+function generatePassword(): string {
+  return `${randomBytes(12).toString('base64url')}aA1!`;
+}
+
+// Demo logins are shared with whoever is trying the app, so they may come from
+// the environment — but an unset value generates a fresh password per run and
+// prints it below, instead of shipping one in the repository.
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD?.trim() || generatePassword();
+const DEMO_PASSWORD_FROM_ENV = Boolean(process.env.DEMO_PASSWORD?.trim());
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim() || 'intelliasg@gmail.com';
 const ADMIN_NAME = process.env.ADMIN_NAME?.trim() || 'Platform Admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEMO_PASSWORD;
-const ADMIN_PASSWORD_FROM_ENV = Boolean(process.env.ADMIN_PASSWORD);
+const ADMIN_PASSWORD_INPUT = process.env.ADMIN_PASSWORD?.trim();
+
+if (!ADMIN_PASSWORD_INPUT) {
+  console.error('❌ ADMIN_PASSWORD is not set.');
+  console.error(`   Set it in ${envLocalPath} (gitignored) and run the seed again.`);
+  console.error('   The seed will not fall back to a built-in password: this file');
+  console.error('   is public, so any password written here is public too.');
+  process.exit(1);
+}
+
+// Narrowed past the guard above, so the rest of the seed can treat it as set.
+const ADMIN_PASSWORD: string = ADMIN_PASSWORD_INPUT;
 
 const prisma = new PrismaClient();
 
@@ -71,11 +98,12 @@ async function main() {
       // requestedRole intentionally omitted — admin is not a "requested" role
     },
   });
+  console.log(`  ✓ Admin:   ${ADMIN_EMAIL}  / (from ADMIN_PASSWORD)`);
   console.log(
-    `  ✓ Admin:   ${ADMIN_EMAIL}  / ` +
-      (ADMIN_PASSWORD_FROM_ENV
-        ? '(from ADMIN_PASSWORD)'
-        : `${DEMO_PASSWORD}  ⚠ ADMIN_PASSWORD not set — using the demo password`)
+    `  ✓ Demo logins use: ${DEMO_PASSWORD}` +
+      (DEMO_PASSWORD_FROM_ENV
+        ? '  (from DEMO_PASSWORD)'
+        : '  ⚠ generated for this run only — copy it now, it is not stored')
   );
 
   // 1. Create Demo Teacher
@@ -271,12 +299,7 @@ async function main() {
   });
 
   console.log('✅ Database seeded successfully!');
-  console.log(
-    `  ✓ Admin:   ${ADMIN_EMAIL}` +
-      (ADMIN_PASSWORD_FROM_ENV
-        ? '  / (from ADMIN_PASSWORD)'
-        : `  / ${DEMO_PASSWORD}  ⚠ set ADMIN_PASSWORD in .env.local`)
-  );
+  console.log(`  ✓ Admin:   ${ADMIN_EMAIL}  / (from ADMIN_PASSWORD)`);
   console.log(`  ✓ Teacher: teacher@intellia.dev  / ${DEMO_PASSWORD}`);
   console.log(`  ✓ Students: alex, maya, ethan, sophia @intellia.dev / ${DEMO_PASSWORD}`);
 }
