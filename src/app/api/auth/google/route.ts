@@ -10,7 +10,13 @@
  *   5. Extract email + name → upsert User → issue our own session cookie.
  *
  * Env vars required:
- *   GOOGLE_CLIENT_ID   — from Google Cloud Console → Credentials
+ *   NEXT_PUBLIC_GOOGLE_CLIENT_ID — from Google Cloud Console → Credentials.
+ *       The client needs this to ask Google for a token, so it is public by
+ *       definition; the audience we verify below has to be the same value.
+ *   GOOGLE_CLIENT_ID — optional server-side alias for the same client ID.
+ *       Set it if you would rather keep the two sides configured separately;
+ *       when it is absent we fall back to the public one rather than refuse
+ *       every sign-in the button has already started.
  *   GOOGLE_CLIENT_SECRET — only needed if you use server-side code flow;
  *                          for ID-token-only flow only CLIENT_ID is required.
  */
@@ -74,9 +80,14 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Verify Google ID token ─────────────────────────────────────────────────
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  // Same client ID the button was initialised with — a token minted for one
+  // client ID must not be accepted as proof of sign-in for another.
+  const clientId =
+    process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   if (!clientId) {
-    console.error("[auth/google] GOOGLE_CLIENT_ID is not set");
+    console.error(
+      "[auth/google] neither GOOGLE_CLIENT_ID nor NEXT_PUBLIC_GOOGLE_CLIENT_ID is set"
+    );
     return NextResponse.json<AuthResponse>(
       { success: false, message: "Google sign-in is not configured on this server." },
       { status: 503 }
