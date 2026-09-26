@@ -1,61 +1,35 @@
 {
   "name": "intellia360",
   "version": "1.0.0",
-  "description": "Intellia360 — AI-powered adaptive learning platform (Next.js + Prisma + MongoDB)",
+  "description": "Intellia360 monorepo — AI-powered adaptive learning platform (Next.js + Prisma + MongoDB)",
   "private": true,
   "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "seed": "ts-node prisma/seed.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push",
-    "db:backup": "node scripts/backup.mjs --trigger manual",
-    "db:restore": "node scripts/restore.mjs",
-    "db:verify-backup": "node scripts/verify-backup.mjs",
-    "db:restore-curriculum": "node scripts/restore-curriculum.mjs",
-    "db:maintenance": "node scripts/db-maintenance.mjs",
-    "db:indexes": "prisma db push"
-  },
-  "dependencies": {
-    "@prisma/client": "6.19.0",
-    "@tailwindcss/postcss": "^4.3.3",
-    "bcryptjs": "^3.0.3",
-    "groq-sdk": "^1.5.0",
-    "jose": "^6.2.8",
-    "lucide-react": "^1.30.0",
-    "next": "16.2.12",
-    "openai": "^7.5.0",
-    "pdfjs-dist": "^5.4.296",
-    "postcss": "^8.5.26",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-icons": "^5.7.0",
-    "react-pdf": "^10.5.0",
-    "recharts": "^3.10.1",
-    "resend": "6.18.1",
-    "tailwindcss": "^4.3.3",
-    "uuid": "^14.0.1",
-    "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^22.9.0",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/uuid": "^10.0.0",
-    "dotenv": "17.4.2",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.12",
-    "prettier": "^3.3.3",
-    "prisma": "6.19.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "dev": "node scripts/dev.mjs",
+    "dev:frontend": "npm run dev -w @intellia360/frontend --",
+    "dev:backend": "npm run dev -w @intellia360/backend --",
+    "build": "npm run build -w @intellia360/backend && npm run build -w @intellia360/frontend",
+    "build:frontend": "npm run build -w @intellia360/frontend --",
+    "build:backend": "npm run build -w @intellia360/backend --",
+    "start": "npm run start -w @intellia360/backend --",
+    "lint": "npm run lint -w @intellia360/backend && npm run lint -w @intellia360/frontend",
+    "typecheck": "npm run typecheck -w @intellia360/shared && tsc --noEmit -p apps/backend && tsc --noEmit -p apps/frontend",
+    "seed": "npm run seed -w @intellia360/backend --",
+    "prisma:generate": "npm run prisma:generate -w @intellia360/backend --",
+    "prisma:migrate": "npm run prisma:migrate -w @intellia360/backend --",
+    "prisma:push": "npm run prisma:push -w @intellia360/backend --",
+    "db:backup": "npm run db:backup -w @intellia360/backend --",
+    "db:restore": "npm run db:restore -w @intellia360/backend --",
+    "db:verify-backup": "npm run db:verify-backup -w @intellia360/backend --",
+    "db:restore-curriculum": "npm run db:restore-curriculum -w @intellia360/backend --",
+    "db:maintenance": "npm run db:maintenance -w @intellia360/backend --",
+    "db:indexes": "npm run db:indexes -w @intellia360/backend --"
   }
 }

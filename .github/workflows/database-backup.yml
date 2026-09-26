@@ -39,6 +39,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    # The backup scripts and prisma/ belong to the API in apps/backend.
+    defaults:
+      run:
+        working-directory: apps/backend
+
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +53,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        working-directory: .
         run: npm ci
 
       - name: Generate Prisma client
@@ -72,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: intellia360-backup-${{ github.run_id }}
-          path: backups/*.ndjson.gz
+          path: apps/backend/backups/*.ndjson.gz
           retention-days: 30
           if-no-files-found: error
 
