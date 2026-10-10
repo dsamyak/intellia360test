@@ -1,7 +1,9 @@
 # Intellia360 — AWS Deployment Runbook
 
 How Intellia360 runs on AWS, how to build the environment once, and how
-deploys work. Replace these placeholders throughout:
+deploys work. For a complete step-by-step walkthrough (every console setting and
+command, go-live checks, troubleshooting), see
+[AWS-DEPLOYMENT-GUIDE.md](AWS-DEPLOYMENT-GUIDE.md), also available as a PDF. Replace these placeholders throughout:
 
 | Placeholder | Example |
 |---|---|
@@ -405,7 +407,7 @@ Alarms to create, with an SNS email topic:
 
 | Alarm | Condition |
 |---|---|
-| EC2 `StatusCheckFailed` | ≥ 1 for 2 min, plus the *Recover instance* action |
+| EC2 `StatusCheckFailed_System` | ≥ 1 for 2 min, plus the *Recover instance* action (recovery only works with the *System* check) |
 | EC2 `CPUUtilization` | > 80 % for 15 min |
 | `mem_used_percent` | > 90 % for 10 min |
 | disk `used_percent` | > 85 % |
@@ -465,7 +467,10 @@ each grade's `curriculum.json` at frontend build time (the same as before the
 split), so a curriculum change reaches students on the next frontend build,
 which a commit of that file triggers.
 
-**Backups** keep running from `.github/workflows/database-backup.yml`; see
+**Backups:** `.github/workflows/database-backup.yml` runs on a GitHub-hosted
+runner, which cannot reach Atlas while its network access allows only the EC2
+Elastic IP. Use Atlas Cloud Backup and/or a nightly `npm run db:backup` cron on
+the server instead (guide, section 19). See also
 [DATABASE-BACKUP-RECOVERY.md](DATABASE-BACKUP-RECOVERY.md).
 
 ---

@@ -316,7 +316,8 @@ Defined in `apps/backend/prisma/schema.prisma` as the `Role` enum:
 
 | Document | Contents |
 |---|---|
-| [docs/DEPLOYMENT-AWS.md](docs/DEPLOYMENT-AWS.md) | AWS architecture, one-time setup, deploys, security checklist |
+| [docs/AWS-DEPLOYMENT-GUIDE.md](docs/AWS-DEPLOYMENT-GUIDE.md) ([PDF](docs/AWS-DEPLOYMENT-GUIDE.pdf)) | Step-by-step AWS deployment: every setting and command, go-live checks, operations, troubleshooting |
+| [docs/DEPLOYMENT-AWS.md](docs/DEPLOYMENT-AWS.md) | AWS architecture and condensed reference |
 | [docs/DATABASE-BACKUP-RECOVERY.md](docs/DATABASE-BACKUP-RECOVERY.md) | Backups, restore drills, recovery scenarios |
 | [docs/AUTHENTICATION_FLOW.md](docs/AUTHENTICATION_FLOW.md), [docs/AUTHENTICATION_AUDIT_REPORT.md](docs/AUTHENTICATION_AUDIT_REPORT.md), `docs/auth/` | Authentication design and audit |
 | `docs/product/` | PRD and TRD |
@@ -324,4 +325,5 @@ Defined in `apps/backend/prisma/schema.prisma` as the `Role` enum:
 | `docs/reference/` | UI reference screenshots |
 | `docs/implementation-plans/` | Implementation plans |
 #   i n t e l l i a 3 6 0 t e s t  
+ #   i n t e l l i a 3 6 0 - f i n a l  
  
